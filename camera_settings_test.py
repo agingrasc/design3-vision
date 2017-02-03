@@ -1,6 +1,6 @@
 import cv2
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 gain = False
 cap.set(cv2.CAP_PROP_GAIN, gain)
@@ -8,15 +8,14 @@ cap.set(cv2.CAP_PROP_GAIN, gain)
 fps = 10
 cap.set(cv2.CAP_PROP_FPS, fps)
 
-contrast = 20
+contrast = 0.1
 cap.set(cv2.CAP_PROP_CONTRAST, contrast)
 
-saturation = 20
+saturation = 0.3
 cap.set(cv2.CAP_PROP_SATURATION, saturation)
 
-exposure = -1
+exposure = 0.2
 cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)
-cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
 cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
 
 while True:
@@ -44,29 +43,30 @@ while True:
             cap.set(cv2.CAP_PROP_FPS, fps)
             print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
 
-
         elif key == ord('d'):
-            contrast += 1
+            contrast += 0.01
             cap.set(cv2.CAP_PROP_CONTRAST, contrast)
             print(cap.get(cv2.CAP_PROP_CONTRAST))
         elif key == ord('a'):
-            contrast -= 1
+            contrast -= 0.01
             cap.set(cv2.CAP_PROP_CONTRAST, contrast)
             print(cap.get(cv2.CAP_PROP_CONTRAST))
+
         elif key == ord('e'):
-            saturation += 1
+            saturation += 0.01
             cap.set(cv2.CAP_PROP_SATURATION, saturation)
             print(cap.get(cv2.CAP_PROP_SATURATION))
         elif key == ord('q'):
-            saturation -= 1
+            saturation -= 0.01
             cap.set(cv2.CAP_PROP_SATURATION, saturation)
             print(cap.get(cv2.CAP_PROP_SATURATION))
+
         elif key == ord('z'):
-            exposure += 1
+            exposure += 0.01
             cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
             print(cap.get(cv2.CAP_PROP_EXPOSURE))
         elif key == ord('c'):
-            exposure -= 1
+            exposure -= 0.01
             cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
             print(cap.get(cv2.CAP_PROP_EXPOSURE))
 
