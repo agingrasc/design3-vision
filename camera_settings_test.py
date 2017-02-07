@@ -16,6 +16,7 @@ def init_video_capture():
     capture.set(cv2.CAP_PROP_FPS, fps)
     capture.set(cv2.CAP_PROP_CONTRAST, contrast)
     capture.set(cv2.CAP_PROP_SATURATION, saturation)
+    return capture
 
 
 if __name__ == "__main__":
