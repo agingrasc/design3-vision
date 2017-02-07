@@ -1,7 +1,7 @@
 import cv2
 import os
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 cap.set(cv2.CAP_PROP_FPS, 15)
 print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))

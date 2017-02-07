@@ -2,73 +2,48 @@ import cv2
 
 cap = cv2.VideoCapture(0)
 
-gain = False
-cap.set(cv2.CAP_PROP_GAIN, gain)
 
-fps = 10
-cap.set(cv2.CAP_PROP_FPS, fps)
-
+fps = 15
 contrast = 0.1
-cap.set(cv2.CAP_PROP_CONTRAST, contrast)
-
 saturation = 0.3
+auto_gain = False
+auto_exposure = False
+
+cap.set(cv2.CAP_PROP_GAIN, auto_gain)
+cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, auto_exposure)
+cap.set(cv2.CAP_PROP_FPS, fps)
+cap.set(cv2.CAP_PROP_CONTRAST, contrast)
 cap.set(cv2.CAP_PROP_SATURATION, saturation)
 
-exposure = 0.2
-cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)
-cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
-
 while True:
-    ret, frame = cap.read()
+    has_frame, frame = cap.read()
 
-    if ret == True:
-
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        rgb = frame
-
-        cv2.imshow('frame', rgb)
+    if has_frame:
+        
+        cv2.imshow('Setting app', frame)
 
         key = cv2.waitKey(1)
 
-        if key == ord('x'):
+        if key == ord('q'):
             break
 
-
-        elif key == ord('w'):
-            fps += 5
-            cap.set(cv2.CAP_PROP_FPS, fps)
-            print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
-        elif key == ord('s'):
-            fps -= 5
-            cap.set(cv2.CAP_PROP_FPS, fps)
-            print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
-
-        elif key == ord('d'):
+        elif key == ord('c'):
             contrast += 0.01
             cap.set(cv2.CAP_PROP_CONTRAST, contrast)
-            print(cap.get(cv2.CAP_PROP_CONTRAST))
-        elif key == ord('a'):
+            print("Contrast: {}".format(cap.get(cv2.CAP_PROP_CONTRAST)))
+        elif key == ord('v'):
             contrast -= 0.01
             cap.set(cv2.CAP_PROP_CONTRAST, contrast)
-            print(cap.get(cv2.CAP_PROP_CONTRAST))
+            print("Contrast: {}".format(cap.get(cv2.CAP_PROP_CONTRAST)))
 
-        elif key == ord('e'):
+        elif key == ord('s'):
             saturation += 0.01
             cap.set(cv2.CAP_PROP_SATURATION, saturation)
-            print(cap.get(cv2.CAP_PROP_SATURATION))
-        elif key == ord('q'):
+            print("Saturation: {}".format(cap.get(cv2.CAP_PROP_SATURATION)))
+        elif key == ord('d'):
             saturation -= 0.01
             cap.set(cv2.CAP_PROP_SATURATION, saturation)
-            print(cap.get(cv2.CAP_PROP_SATURATION))
-
-        elif key == ord('z'):
-            exposure += 0.01
-            cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
-            print(cap.get(cv2.CAP_PROP_EXPOSURE))
-        elif key == ord('c'):
-            exposure -= 0.01
-            cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
-            print(cap.get(cv2.CAP_PROP_EXPOSURE))
+            print("Saturation: {}".format(cap.get(cv2.CAP_PROP_SATURATION)))
 
 cap.release()
 cv2.destroyAllWindows()
