@@ -1,22 +1,25 @@
 import cv2
 
-
-
-
 fps = 15
 contrast = 0.1
 saturation = 0.3
 auto_gain = False
 auto_exposure = False
 
-if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
+DEFAULT_CAMERA_INDEX = 0
 
-    cap.set(cv2.CAP_PROP_GAIN, auto_gain)
-    cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, auto_exposure)
-    cap.set(cv2.CAP_PROP_FPS, fps)
-    cap.set(cv2.CAP_PROP_CONTRAST, contrast)
-    cap.set(cv2.CAP_PROP_SATURATION, saturation)
+
+def init_video_capture():
+    capture = cv2.VideoCapture(DEFAULT_CAMERA_INDEX)
+    capture.set(cv2.CAP_PROP_GAIN, auto_gain)
+    capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, auto_exposure)
+    capture.set(cv2.CAP_PROP_FPS, fps)
+    capture.set(cv2.CAP_PROP_CONTRAST, contrast)
+    capture.set(cv2.CAP_PROP_SATURATION, saturation)
+
+
+if __name__ == "__main__":
+    cap = init_video_capture()
 
     while True:
         has_frame, frame = cap.read()
