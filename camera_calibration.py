@@ -14,6 +14,7 @@ objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
 gray_image = None
 
+
 def find_chessboard(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -25,10 +26,10 @@ def find_chessboard(frame):
         cv2.cornerSubPix(gray, corners, (5, 5), (-1, -1), criteria)
         imgpoints.append(corners)
 
-        frame = cv2.drawChessboardCorners(frame, (9, 6), corners, has_corners)
-
+        # frame = cv2.drawChessboardCorners(frame, (9, 6), corners, has_corners)
 
     return frame
+
 
 def calibrate_from_pictures():
     images = glob.glob('calibration/*.jpg')
@@ -38,8 +39,9 @@ def calibrate_from_pictures():
 
         image = find_chessboard(image)
 
-        cv2.imshow("Image", image)
-        cv2.waitKey(100)
+        # cv2.imshow("Image", image)
+        # cv2.waitKey(1000)
+
 
 def calibrate_from_video_capture():
     cap = cv2.VideoCapture(0)
@@ -60,17 +62,54 @@ def calibrate_from_video_capture():
     cv2.destroyAllWindows()
 
 
+def draw(img, corners, imgpts):
+    imgpts = np.int32(imgpts).reshape(-1, 2)
+
+    # draw ground floor in green
+    img = cv2.drawContours(img, [imgpts[:4]], -1, (0, 255, 0), -3)
+
+    # draw pillars in blue color
+    for i, j in zip(range(4), range(4, 8)):
+        img = cv2.line(img, tuple(imgpts[i]), tuple(imgpts[j]), (255), 3)
+
+    # draw top layer in red color
+    img = cv2.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
+
+    return img
+
+def build_square_tower(x, y, height):
+    size = 3
+
+    return np.float32([[x, y, 0],
+                       [x, y + size, 0],
+                       [x + size, y + size, 0],
+                       [x + size, y, 0],
+
+                       [x, y, -height],
+                       [x, y + size, -height],
+                       [x + size, y + size, -height],
+                       [x + size, y, -height]])
+
 if __name__ == "__main__":
     # calibrate_from_video_capture()
 
     calibrate_from_pictures()
-    
-    image = cv2.imread("./calibration/image0.jpg")
+
+    axis = build_square_tower(0, 0, 4)
+
+    image = cv2.imread("./calibration/image1.jpg")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    has_corners, corners = cv2.findChessboardCorners(image, (9, 6), None)
+    corners2 = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), criteria)
 
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, image.shape[::-1], None, None)
 
-    #undistorted = cv2.undistort(image, mtx, dist)
+    imgpts, jac = cv2.projectPoints(axis, np.array(rvecs[1]), np.array(tvecs[1]), mtx, dist)
 
-    #cv2.imshow("Undistored", undistorted)
-    #cv2.waitKey()
+    image = cv2.imread('./calibration/image9.jpg')
+
+    img = draw(image, corners2, imgpts)
+
+    cv2.imshow('Pose', img)
+    cv2.waitKey()
