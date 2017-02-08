@@ -5,42 +5,42 @@ import glob
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-objp = np.zeros((6 * 9, 3), np.float32)
-objp[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
-
 # Arrays to store object points and image points from all the images.
 objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
 gray_image = None
 
+def create_object_points():
+    object_points = np.zeros((6 * 9, 3), np.float32)
+    object_points[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
+    return object_points
 
-def find_chessboard(frame):
+def find_chessboard(frame, object_points):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     has_corners, corners = cv2.findChessboardCorners(gray, (9, 6), None)
 
     if has_corners:
-        objpoints.append(objp)
+        objpoints.append(object_points)
 
         cv2.cornerSubPix(gray, corners, (5, 5), (-1, -1), criteria)
         imgpoints.append(corners)
 
-        # frame = cv2.drawChessboardCorners(frame, (9, 6), corners, has_corners)
+        frame = cv2.drawChessboardCorners(frame, (9, 6), corners, has_corners)
 
     return frame
 
 
-def calibrate_from_pictures():
+def calibrate_from_pictures(object_points):
     images = glob.glob('calibration/*.jpg')
 
     for image_filename in images:
         image = cv2.imread(image_filename)
 
-        image = find_chessboard(image)
+        image = find_chessboard(image, object_points)
 
-        # cv2.imshow("Image", image)
-        # cv2.waitKey(1000)
+        cv2.imshow("Image", image)
+        cv2.waitKey(1000)
 
 
 def calibrate_from_video_capture():
@@ -69,16 +69,16 @@ def draw(img, corners, imgpts):
     img = cv2.drawContours(img, [imgpts[:4]], -1, (0, 255, 0), -3)
 
     # draw pillars in blue color
-    for i, j in zip(range(4), range(4, 8)):
-        img = cv2.line(img, tuple(imgpts[i]), tuple(imgpts[j]), (255), 3)
+    #for i, j in zip(range(4), range(4, 8)):
+        #img = cv2.line(img, tuple(imgpts[i]), tuple(imgpts[j]), (255), 3)
 
     # draw top layer in red color
-    img = cv2.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
+    #img = cv2.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
 
     return img
 
-def build_square_tower(x, y, height):
-    size = 3
+def build_cube(x, y, height):
+    size = 12.8
 
     return np.float32([[x, y, 0],
                        [x, y + size, 0],
@@ -91,25 +91,37 @@ def build_square_tower(x, y, height):
                        [x + size, y, -height]])
 
 if __name__ == "__main__":
-    # calibrate_from_video_capture()
+    objp = create_object_points()
 
-    calibrate_from_pictures()
+    calibrate_from_pictures(objp)
 
-    axis = build_square_tower(0, 0, 4)
+    cube_object_points = build_cube(0.1, 0.7955, 0)
 
-    image = cv2.imread("./calibration/image1.jpg")
+    image = cv2.imread("./calibration/image0.jpg")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     has_corners, corners = cv2.findChessboardCorners(image, (9, 6), None)
     corners2 = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), criteria)
 
-    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, image.shape[::-1], None, None)
+    ret, intrinsic_matrix, distortion_matrix, rotation_vectors, translation_vectors = cv2.calibrateCamera(
+        objpoints, imgpoints, image.shape[::-1], None, None)
 
-    imgpts, jac = cv2.projectPoints(axis, np.array(rvecs[1]), np.array(tvecs[1]), mtx, dist)
+    cube_image_points, jacobian = cv2.projectPoints(
+        cube_object_points, 
+        np.array(rotation_vectors[0]), 
+        np.array(translation_vectors[0]), 
+        intrinsic_matrix, 
+        distortion_matrix)
 
-    image = cv2.imread('./calibration/image9.jpg')
+ 
+    image = cv2.imread('./calibration/image14.jpg')
 
-    img = draw(image, corners2, imgpts)
+    h,  w = image.shape[:2]
+    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(intrinsic_matrix,distortion_matrix,(w,h),0,(w,h))
 
-    cv2.imshow('Pose', img)
+    image = cv2.undistort(image, intrinsic_matrix, distortion_matrix, None, None)
+
+    image = draw(image, corners2, cube_image_points)
+
+    cv2.imshow('Pose', image)
     cv2.waitKey()

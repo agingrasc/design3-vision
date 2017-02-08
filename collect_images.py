@@ -8,7 +8,7 @@ print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
 
 raw_dir = os.listdir('./raw')
 
-index = 0
+index = 14
 
 while True:
     ret, frame = cap.read()
