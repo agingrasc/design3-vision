@@ -1,5 +1,13 @@
 *~
 .DS_Store
+
+./static/node_modules
+
+node_modules
+
 *.pyc
 __pycache__/
+
+processed/*.jpg
+
 .idea

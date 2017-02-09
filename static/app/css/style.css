@@ -1,0 +1,18 @@
+button {
+    outline: none;
+}
+
+button.list-group-item {
+    text-align: center;
+}
+
+.img {
+    min-width: 640px;
+    min-height: 480px;
+    cursor: crosshair;
+}
+
+.images__list {
+    max-height: 420px;
+    overflow-y: scroll;
+}
