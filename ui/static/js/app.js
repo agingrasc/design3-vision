@@ -1,13 +1,14 @@
-(function() {
+(function () {
     "use strict";
 
-    var imageCount = document.getElementById("imageCount");
 
     var CalibrationImagesListView = {
         el: document.getElementById('calibrationImagesListView'),
+        imageCount: document.getElementById('imageCount'),
 
-        render: function(images) {
-            imageCount.innerText = images.length.toString();
+        render: function (images) {
+            this.imageCount.innerText = images.length.toString();
+
             for (var i = 0; i < images.length; i++) {
                 var currentImagePath = images[i];
                 var listElement = createImageListElement(currentImagePath);
@@ -19,8 +20,8 @@
     var CurrentImageView = {
         el: document.getElementById('currentImageView'),
 
-        init: function() {
-            this.el.addEventListener('click', function(event) {
+        init: function () {
+            this.el.addEventListener('click', function (event) {
                 event.preventDefault();
 
                 var boundingRect = this.el.getBoundingClientRect();
@@ -33,27 +34,23 @@
             }.bind(this));
         },
 
-        updateImage: function(imagePath) {
-            this.render(imagePath);
-        },
-
-        render: function(image) {
-            window.requestAnimationFrame(function() {
+        render: function (image) {
+            window.requestAnimationFrame(function () {
                 this.el.src = image.src;
             }.bind(this));
         }
     };
 
-    var ClickView = {
-        el: document.getElementById('clickView'),
+    var CursorPositionView = {
+        el: document.getElementById('cursorPositionView'),
 
-        render: function(position) {
+        render: function (position) {
             this.el.innerText = "(" + position.x.toString() + ", " + position.y.toString() + ")";
         }
     };
 
     var MainController = {
-        init: function(images) {
+        init: function (images) {
             CalibrationImagesListView.render(images.calibration.images);
 
             CurrentImageView.render(images.calibration.images[0]);
@@ -61,9 +58,9 @@
     };
 
     var ImageService = {
-        getImagesInfos: function(callback) {
+        getImagesInfos: function (callback) {
             var imagesInfosRequest = new XMLHttpRequest();
-            imagesInfosRequest.onload = function(event) {
+            imagesInfosRequest.onload = function (event) {
                 callback(JSON.parse(event.target.response));
             };
             imagesInfosRequest.open("GET", 'http://localhost:5000/images-infos');
@@ -90,9 +87,7 @@
         return imageListElement;
     }
 
-    CurrentImageView.init();
-
-    window.addEventListener('mousemove', function(event) {
+    window.addEventListener('mousemove', function (event) {
         if (event.target === CurrentImageView.el) {
             var boundingRect = event.target.getBoundingClientRect();
             var position = {
@@ -100,9 +95,10 @@
                 y: event.y
             };
 
-            ClickView.render(getPositionRelativeTo(position, boundingRect));
+            CursorPositionView.render(getPositionRelativeTo(position, boundingRect));
         }
     });
 
+    CurrentImageView.init();
     ImageService.getImagesInfos(MainController.init);
 }());
