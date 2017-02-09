@@ -26,17 +26,17 @@ def send_image_infos():
 
 @app.route('/', methods=["GET"])
 def index():
-    return send_from_directory('static/app', 'index.html')
+    return send_from_directory('static', 'index.html')
 
 
 @app.route('/css/<path:filename>', methods=['GET'])
 def css(filename):
-    return send_from_directory('static/app/css', filename)
+    return send_from_directory('static/css', filename)
 
 
 @app.route('/js/<path:filename>', methods=['GET'])
 def js(filename):
-    return send_from_directory('static/app/js', filename)
+    return send_from_directory('static/js', filename)
 
 
 @app.route('/images/<path:filename>', methods=["GET"])

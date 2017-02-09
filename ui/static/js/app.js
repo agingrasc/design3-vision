@@ -1,13 +1,14 @@
 (function () {
     "use strict";
 
-    var imageCount = document.getElementById("imageCount");
 
     var CalibrationImagesListView = {
         el: document.getElementById('calibrationImagesListView'),
+        imageCount: document.getElementById('imageCount'),
 
         render: function (images) {
-            imageCount.innerText = images.length.toString();
+            this.imageCount.innerText = images.length.toString();
+
             for (var i = 0; i < images.length; i++) {
                 var currentImagePath = images[i];
                 var listElement = createImageListElement(currentImagePath);
@@ -40,8 +41,8 @@
         }
     };
 
-    var ClickView = {
-        el: document.getElementById('clickView'),
+    var CursorPositionView = {
+        el: document.getElementById('cursorPositionView'),
 
         render: function (position) {
             this.el.innerText = "(" + position.x.toString() + ", " + position.y.toString() + ")";
@@ -86,8 +87,6 @@
         return imageListElement;
     }
 
-    CurrentImageView.init();
-
     window.addEventListener('mousemove', function (event) {
         if (event.target === CurrentImageView.el) {
             var boundingRect = event.target.getBoundingClientRect();
@@ -96,9 +95,10 @@
                 y: event.y
             };
 
-            ClickView.render(getPositionRelativeTo(position, boundingRect));
+            CursorPositionView.render(getPositionRelativeTo(position, boundingRect));
         }
     });
 
+    CurrentImageView.init();
     ImageService.getImagesInfos(MainController.init);
 }());
