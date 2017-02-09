@@ -13,14 +13,9 @@ app = Flask(__name__)
 
 @app.route('/images-infos', methods=["GET"])
 def send_image_infos():
-    calibration_images = [create_image_response_object(filename) for filename in
-                          os.listdir(CALIBRATION_IMAGES_DIRECTORY)]
-
-    calibration_images.sort(key=lambda item: item['created_at'], reverse=True)
-
     response_body = {
         "calibration": {
-            "images": calibration_images
+            "images": get_calibration_images_infos()
         }
     }
 
@@ -47,6 +42,13 @@ def js(filename):
 @app.route('/images/<path:filename>', methods=["GET"])
 def send_image(filename):
     return send_file(CALIBRATION_IMAGES_DIRECTORY + "/" + filename, mimetype='image/jpeg')
+
+
+def get_calibration_images_infos():
+    filenames = os.listdir(CALIBRATION_IMAGES_DIRECTORY)
+    calibration_images = [create_image_response_object(filename) for filename in filenames]
+    calibration_images.sort(key=lambda item: item['created_at'], reverse=True)
+    return calibration_images
 
 
 def create_image_response_object(filename):
