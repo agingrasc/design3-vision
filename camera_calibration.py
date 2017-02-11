@@ -10,10 +10,12 @@ objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
 gray_image = None
 
+
 def create_object_points():
     object_points = np.zeros((6 * 9, 3), np.float32)
     object_points[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
     return object_points
+
 
 def find_chessboard(frame, object_points):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -69,13 +71,14 @@ def draw(img, corners, imgpts):
     img = cv2.drawContours(img, [imgpts[:4]], -1, (0, 255, 0), -3)
 
     # draw pillars in blue color
-    #for i, j in zip(range(4), range(4, 8)):
-        #img = cv2.line(img, tuple(imgpts[i]), tuple(imgpts[j]), (255), 3)
+    # for i, j in zip(range(4), range(4, 8)):
+    # img = cv2.line(img, tuple(imgpts[i]), tuple(imgpts[j]), (255), 3)
 
     # draw top layer in red color
-    #img = cv2.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
+    # img = cv2.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
 
     return img
+
 
 def build_cube(x, y, height):
     size = 12.8
@@ -89,6 +92,7 @@ def build_cube(x, y, height):
                        [x, y + size, -height],
                        [x + size, y + size, -height],
                        [x + size, y, -height]])
+
 
 if __name__ == "__main__":
     objp = create_object_points()
@@ -107,17 +111,16 @@ if __name__ == "__main__":
         objpoints, imgpoints, image.shape[::-1], None, None)
 
     cube_image_points, jacobian = cv2.projectPoints(
-        cube_object_points, 
-        np.array(rotation_vectors[0]), 
-        np.array(translation_vectors[0]), 
-        intrinsic_matrix, 
+        cube_object_points,
+        np.array(rotation_vectors[0]),
+        np.array(translation_vectors[0]),
+        intrinsic_matrix,
         distortion_matrix)
 
- 
     image = cv2.imread('./calibration/image14.jpg')
 
-    h,  w = image.shape[:2]
-    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(intrinsic_matrix,distortion_matrix,(w,h),0,(w,h))
+    h, w = image.shape[:2]
+    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(intrinsic_matrix, distortion_matrix, (w, h), 0, (w, h))
 
     image = cv2.undistort(image, intrinsic_matrix, distortion_matrix, None, None)
 
