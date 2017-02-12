@@ -36,7 +36,7 @@
 
         render: function (image) {
             window.requestAnimationFrame(function () {
-                this.el.src = image.src;
+                this.el.src = image.url;
             }.bind(this));
         }
     };
@@ -45,7 +45,22 @@
         el: document.getElementById('cursorPositionView'),
 
         render: function (position) {
-            this.el.innerText = "(" + position.x.toString() + ", " + position.y.toString() + ")";
+            requestAnimationFrame(function() {
+                this.el.innerText = "(" + position.x.toString() + ", " + position.y.toString() + ")";
+            }.bind(this));
+        }
+    };
+
+    var CalibrationButton = {
+        el: document.getElementById('showCalibrationPoints'),
+
+        init: function () {
+            this.el.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                var currentImage = MainController.getCurrentImage();
+                CurrentImageView.render({url: currentImage.chessboard_url});
+            });
         }
     };
 
@@ -55,7 +70,7 @@
         init: function (images) {
             CalibrationImagesListView.render(images.calibration.images);
 
-            this.currentImage = images.calibration.images[0];
+            this.updateCurrentImage(images.calibration.images[0]);
 
             CurrentImageView.render(this.currentImage);
         },
@@ -64,7 +79,7 @@
             return this.currentImage;
         },
 
-        updateCurrentImage: function(image) {
+        updateCurrentImage: function (image) {
             this.currentImage = image;
 
             CurrentImageView.render(image);
@@ -96,21 +111,10 @@
         imageListElement.addEventListener('click', function onClick(event) {
             event.preventDefault();
 
-
             MainController.updateCurrentImage(image);
         });
         return imageListElement;
     }
-
-    var showCalibrationPointsButton = document.getElementById('showCalibrationPoints');
-
-    showCalibrationPointsButton.addEventListener('click', function (event) {
-        event.preventDefault();
-
-        var currentImage = MainController.getCurrentImage();
-
-        CurrentImageView.render({ src: currentImage.calibration_points })
-    });
 
     window.addEventListener('mousemove', function (event) {
         if (event.target === CurrentImageView.el) {
@@ -125,6 +129,7 @@
     });
 
     CurrentImageView.init();
+    CalibrationButton.init();
 
     ImageService.getImagesInfos(MainController.init.bind(MainController));
 }());
