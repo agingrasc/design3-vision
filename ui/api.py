@@ -29,6 +29,12 @@ def index():
     return send_from_directory('static', 'index.html')
 
 
+@app.route('/images/<string:id>/chessboard', methods=["GET"])
+def get_chessboard(id):
+    filename = id + '.jpg'
+    return send_file('../chessboard/' + filename, mimetype='image/jpeg')
+
+
 @app.route('/css/<path:filename>', methods=['GET'])
 def css(filename):
     return send_from_directory('static/css', filename)
@@ -55,6 +61,7 @@ def create_image_response_object(filename):
     return {
         "name": filename,
         "src": 'http://localhost:5000/images/' + filename,
+        "calibration_points": "http://localhost:5000/images/" + filename.split('.jpg')[0] + "/chessboard",
         "created_at": os.path.getctime(CALIBRATION_IMAGES_DIRECTORY + '/' + filename)
     }
 

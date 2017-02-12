@@ -50,10 +50,24 @@
     };
 
     var MainController = {
+        currentImage: null,
+
         init: function (images) {
             CalibrationImagesListView.render(images.calibration.images);
 
-            CurrentImageView.render(images.calibration.images[0]);
+            this.currentImage = images.calibration.images[0];
+
+            CurrentImageView.render(this.currentImage);
+        },
+
+        getCurrentImage: function () {
+            return this.currentImage;
+        },
+
+        updateCurrentImage: function(image) {
+            this.currentImage = image;
+
+            CurrentImageView.render(image);
         }
     };
 
@@ -82,10 +96,21 @@
         imageListElement.addEventListener('click', function onClick(event) {
             event.preventDefault();
 
-            CurrentImageView.render(image);
+
+            MainController.updateCurrentImage(image);
         });
         return imageListElement;
     }
+
+    var showCalibrationPointsButton = document.getElementById('showCalibrationPoints');
+
+    showCalibrationPointsButton.addEventListener('click', function (event) {
+        event.preventDefault();
+
+        var currentImage = MainController.getCurrentImage();
+
+        CurrentImageView.render({ src: currentImage.calibration_points })
+    });
 
     window.addEventListener('mousemove', function (event) {
         if (event.target === CurrentImageView.el) {
@@ -100,5 +125,6 @@
     });
 
     CurrentImageView.init();
-    ImageService.getImagesInfos(MainController.init);
+
+    ImageService.getImagesInfos(MainController.init.bind(MainController));
 }());

@@ -16,3 +16,7 @@ button.list-group-item {
     max-height: 420px;
     overflow-y: scroll;
 }
+
+.panel-footer {
+    overflow: auto;
+}
