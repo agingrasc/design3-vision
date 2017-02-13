@@ -9,6 +9,7 @@ from flask import send_from_directory
 CALIBRATION_IMAGES_DIRECTORY = '../calibration'
 CHESSBOARD_IMAGES_DIRECTORY = '../chessboard/'
 UNDISTORT_IMAGES_DIRECTORY = '../undistort/'
+STATIC_FOLDER = './static'
 
 app = Flask(__name__)
 
@@ -28,7 +29,7 @@ def send_image_infos():
 
 @app.route('/', methods=["GET"])
 def index():
-    return send_from_directory('static', 'index.html')
+    return send_from_directory(STATIC_FOLDER, 'index.html')
 
 
 @app.route('/images/<path:filename>', methods=["GET"])
@@ -50,12 +51,12 @@ def get_chessboard(id):
 
 @app.route('/css/<path:filename>', methods=['GET'])
 def css(filename):
-    return send_from_directory('static/css', filename)
+    return send_from_directory(STATIC_FOLDER + "/css", filename)
 
 
 @app.route('/js/<path:filename>', methods=['GET'])
 def js(filename):
-    return send_from_directory('static/js', filename)
+    return send_from_directory(STATIC_FOLDER + "/js", filename)
 
 
 def get_calibration_images_infos():
