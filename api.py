@@ -6,9 +6,9 @@ from flask import make_response
 from flask import send_file
 from flask import send_from_directory
 
-CALIBRATION_IMAGES_DIRECTORY = '../calibration'
-CHESSBOARD_IMAGES_DIRECTORY = '../chessboard/'
-UNDISTORT_IMAGES_DIRECTORY = '../undistort/'
+CALIBRATION_IMAGES_DIRECTORY = './calibration'
+CHESSBOARD_IMAGES_DIRECTORY = './chessboard/'
+UNDISTORT_IMAGES_DIRECTORY = './undistort/'
 STATIC_FOLDER = './static'
 
 app = Flask(__name__)

@@ -1,7 +1,7 @@
 *~
 .DS_Store
 
-ui/static/node_modules
+static/node_modules
 
 node_modules
 
