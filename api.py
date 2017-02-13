@@ -10,14 +10,15 @@ from flask import send_from_directory
 
 from camera.camera import Camera
 
-CALIBRATION_IMAGES_DIRECTORY = './calibration'
-CHESSBOARD_IMAGES_DIRECTORY = './chessboard/'
-UNDISTORT_IMAGES_DIRECTORY = './undistort/'
+CALIBRATION_IMAGES_DIRECTORY = './data/images/calibration'
+CHESSBOARD_IMAGES_DIRECTORY = './data/images/chessboard/'
+UNDISTORT_IMAGES_DIRECTORY = './data/images/undistort/'
+CONFIG_DIRECTORY = './config/'
 STATIC_FOLDER = './static'
 
 app = Flask(__name__)
 camera = Camera()
-camera.load_camera_model(os.path.abspath('./camera_matrix.json'))
+camera.load_camera_model(os.path.abspath('./config/camera_matrix.json'))
 
 
 @app.route('/images-infos', methods=["GET"])
@@ -57,7 +58,7 @@ def get_chessboard(id):
 
 @app.route('/camera_parameters', methods=["GET"])
 def get_camera_parameters():
-    return send_from_directory('.', 'camera_matrix.json')
+    return send_from_directory(CONFIG_DIRECTORY, 'camera_matrix.json')
 
 
 @app.route('/world_coordinates', methods=['POST'])

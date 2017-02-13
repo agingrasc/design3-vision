@@ -1,11 +1,11 @@
-import cv2
 import os
-import numpy as np
 import time
-
 from multiprocessing.dummy import Pool as ThreadPool
 
-from image import Image
+import cv2
+import numpy as np
+
+from camera.image import Image
 
 times = []
 
