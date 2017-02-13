@@ -3,8 +3,11 @@ import os
 from flask import Flask
 from flask import jsonify
 from flask import make_response
+from flask import request
 from flask import send_file
 from flask import send_from_directory
+
+from camera.camera import Camera
 
 CALIBRATION_IMAGES_DIRECTORY = './calibration'
 CHESSBOARD_IMAGES_DIRECTORY = './chessboard/'
@@ -12,6 +15,8 @@ UNDISTORT_IMAGES_DIRECTORY = './undistort/'
 STATIC_FOLDER = './static'
 
 app = Flask(__name__)
+camera = Camera()
+camera.load_camera_model(os.path.abspath('./camera_matrix.json'))
 
 
 @app.route('/images-infos', methods=["GET"])
@@ -47,6 +52,16 @@ def undistorted(id):
 def get_chessboard(id):
     filename = id + '.jpg'
     return send_file(CHESSBOARD_IMAGES_DIRECTORY + "/" + filename, mimetype='image/jpeg')
+
+
+@app.route('/world_coordinates', methods=['POST'])
+def get_world_coordinates():
+    coordinate = request.get_json()
+    print(coordinate)
+    x = coordinate['x']
+    y = coordinate['y']
+    world_coordinates = camera.compute_image_to_world_coordinate(x, y, 0).tolist()
+    return make_response(jsonify({"world_coordinates": world_coordinates}))
 
 
 @app.route('/css/<path:filename>', methods=['GET'])

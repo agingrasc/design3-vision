@@ -30,7 +30,7 @@
                     y: event.y
                 };
 
-                console.log(getPositionRelativeTo(position, boundingRect));
+                CoordinateTransformService.getWorldCoordinates(getPositionRelativeTo(position, boundingRect));
             }.bind(this));
         },
 
@@ -51,6 +51,17 @@
         }
     };
 
+    var CoordinateTransformView = {
+        el: document.getElementById('coordinateTransformView'),
+
+        render: function (image, world) {
+            requestAnimationFrame(function () {
+                this.el.innerText = "(" + image.x.toString() + ", " + image.y.toString() + ")" + " --> " +
+                    "(" + world.x.toString() + ", " + world.y.toString() + ", " + world.z.toString() + ")";
+            }.bind(this));
+        }
+    };
+
     var CalibrationButton = {
         el: document.getElementById('showCalibrationPoints'),
 
@@ -61,6 +72,26 @@
                 var currentImage = MainController.getCurrentImage();
                 CurrentImageView.render({url: currentImage.chessboard_url});
             });
+        }
+    };
+
+    var CoordinateTransformService = {
+        getWorldCoordinates: function (coordinates) {
+            var coordinateTransformRequest = new XMLHttpRequest();
+            coordinateTransformRequest.onload = function (event) {
+                var data = JSON.parse(event.target.response);
+
+                var worldCoordinates = {
+                    x: data.world_coordinates[0].toFixed(3),
+                    y: data.world_coordinates[1].toFixed(3),
+                    z: data.world_coordinates[2].toFixed(3)
+                };
+
+                CoordinateTransformView.render(coordinates, worldCoordinates);
+            };
+            coordinateTransformRequest.open('POST', 'http://localhost:5000/world_coordinates');
+            coordinateTransformRequest.setRequestHeader('Content-Type', 'application/json, charset=utf-8;');
+            coordinateTransformRequest.send(JSON.stringify(coordinates));
         }
     };
 
