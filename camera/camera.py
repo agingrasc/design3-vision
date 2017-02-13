@@ -84,4 +84,4 @@ class Camera:
             object_x,
             object_y,
             0
-        ], dtype=float)
+        ], dtype=float).tolist()

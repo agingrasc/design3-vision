@@ -45,7 +45,7 @@ def get_image(filename):
 
 
 @app.route('/images/<string:id>/undistorted', methods=["GET"])
-def undistorted(id):
+def get_undistorted_image(id):
     filename = id + ".jpg"
     return send_file(UNDISTORT_IMAGES_DIRECTORY + "/" + filename, mimetype='image/jpeg')
 
@@ -64,9 +64,7 @@ def get_camera_parameters():
 @app.route('/world_coordinates', methods=['POST'])
 def get_world_coordinates():
     coordinate = request.get_json()
-    x = coordinate['x']
-    y = coordinate['y']
-    world_coordinates = camera.compute_image_to_world_coordinate(x, y, 0).tolist()
+    world_coordinates = camera.compute_image_to_world_coordinate(coordinate['x'], coordinate['y'], 0)
     return make_response(jsonify({"world_coordinates": world_coordinates}))
 
 
