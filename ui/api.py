@@ -8,6 +8,7 @@ from flask import send_from_directory
 
 CALIBRATION_IMAGES_DIRECTORY = '../calibration'
 CHESSBOARD_IMAGES_DIRECTORY = '../chessboard/'
+UNDISTORT_IMAGES_DIRECTORY = '../undistort/'
 
 app = Flask(__name__)
 
@@ -33,6 +34,12 @@ def index():
 @app.route('/images/<path:filename>', methods=["GET"])
 def get_image(filename):
     return send_file(CALIBRATION_IMAGES_DIRECTORY + "/" + filename, mimetype='image/jpeg')
+
+
+@app.route('/images/<string:id>/undistorted', methods=["GET"])
+def undistorted(id):
+    filename = id + ".jpg"
+    return send_file(UNDISTORT_IMAGES_DIRECTORY + "/" + filename, mimetype='image/jpeg')
 
 
 @app.route('/images/<string:id>/chessboard', methods=["GET"])
@@ -64,7 +71,8 @@ def create_image_dto(filename):
     return {
         "name": id,
         "url": 'http://localhost:5000/images/' + filename,
-        "chessboard_url": "http://localhost:5000/images/" + filename.split('.jpg')[0] + "/chessboard",
+        "chessboard_url": "http://localhost:5000/images/" + id + "/chessboard",
+        "undistorted_url": "http://localhost:5000/images/" + id + "/undistorted",
         "created_at": os.path.getctime(CALIBRATION_IMAGES_DIRECTORY + '/' + filename)
     }
 

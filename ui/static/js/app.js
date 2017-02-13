@@ -45,7 +45,7 @@
         el: document.getElementById('cursorPositionView'),
 
         render: function (position) {
-            requestAnimationFrame(function() {
+            requestAnimationFrame(function () {
                 this.el.innerText = "(" + position.x.toString() + ", " + position.y.toString() + ")";
             }.bind(this));
         }
@@ -64,6 +64,33 @@
         }
     };
 
+    var ImageDistortionButton = {
+        el: document.getElementById('showUndistorted'),
+
+        distorted: true,
+
+        init: function () {
+            this.el.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                if (this.distorted) {
+                    this.distorted = false;
+                    this.el.innerHTML = "normal";
+                    MainController.showDistortedImage();
+                } else {
+                    this.distorted = true;
+                    this.el.innerHTML = "undistort";
+                    MainController.showNormalImage();
+                }
+            }.bind(this));
+        },
+
+        reset: function () {
+            this.distorted = true;
+            this.el.innerHTML = "undistort";
+        }
+    };
+
     var MainController = {
         currentImage: null,
 
@@ -75,12 +102,22 @@
             CurrentImageView.render(this.currentImage);
         },
 
+        showDistortedImage: function () {
+            CurrentImageView.render({url: this.currentImage.undistorted_url});
+        },
+
+        showNormalImage: function () {
+            CurrentImageView.render({url: this.currentImage.url});
+        },
+
         getCurrentImage: function () {
             return this.currentImage;
         },
 
         updateCurrentImage: function (image) {
             this.currentImage = image;
+
+            ImageDistortionButton.reset();
 
             CurrentImageView.render(image);
         }
@@ -130,6 +167,7 @@
 
     CurrentImageView.init();
     CalibrationButton.init();
+    ImageDistortionButton.init();
 
     ImageService.getImagesInfos(MainController.init.bind(MainController));
 }());

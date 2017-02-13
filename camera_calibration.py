@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
 import glob
+import json
+
+from camera.camera import Camera
 
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -31,18 +34,6 @@ def find_chessboard(frame, object_points):
         frame = cv2.drawChessboardCorners(frame, (9, 6), corners, has_corners)
 
     return frame
-
-
-def calibrate_from_pictures(object_points):
-    images = glob.glob('calibration/*.jpg')
-
-    for image_filename in images:
-        image = cv2.imread(image_filename)
-
-        image = find_chessboard(image, object_points)
-
-        cv2.imshow("Image", image)
-        cv2.waitKey(1000)
 
 
 def calibrate_from_video_capture():
@@ -94,37 +85,72 @@ def build_cube(x, y, height):
                        [x + size, y, -height]])
 
 
+def prepare_for_calibration(camera):
+    camera.add_target_points(create_object_points())
+    images = glob.glob('calibration/*.jpg')
+    for image_filename in images:
+        image = cv2.imread(image_filename)
+        camera.add_image_for_calibration(image)
+
+
 if __name__ == "__main__":
-    objp = create_object_points()
+    camera = Camera()
 
-    calibrate_from_pictures(objp)
+    prepare_for_calibration(camera)
 
-    cube_object_points = build_cube(0.1, 0.7955, 0)
+    camera.calibrate()
 
-    image = cv2.imread("./calibration/image0.jpg")
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    camera_model = {
+        "camera_matrix": camera.camera_matrix.tolist(),
+    }
 
-    has_corners, corners = cv2.findChessboardCorners(image, (9, 6), None)
-    corners2 = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), criteria)
+    with open('./camera_matrix.json', 'w') as file:
+        json.dump(camera_model, file, indent=4)
 
-    ret, intrinsic_matrix, distortion_matrix, rotation_vectors, translation_vectors = cv2.calibrateCamera(
-        objpoints, imgpoints, image.shape[::-1], None, None)
+    # for image_filename in glob.glob('./calibration/*.jpg'):
+    #     image = camera.undistort(cv2.imread(image_filename))
+    #
+    #     print("Saving " + image_filename.split('/')[2])
+    #     image_name = image_filename.split('/')[2]
+    #     cv2.imwrite('./undistort/' + image_name, image)
 
-    cube_image_points, jacobian = cv2.projectPoints(
-        cube_object_points,
-        np.array(rotation_vectors[0]),
-        np.array(translation_vectors[0]),
-        intrinsic_matrix,
-        distortion_matrix)
+        # cv2.imshow('Undistort', image)
+        # cv2.waitKey(2000)
 
-    image = cv2.imread('./calibration/image14.jpg')
+        # cube_object_points = build_cube(0, 0, 0)
 
-    h, w = image.shape[:2]
-    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(intrinsic_matrix, distortion_matrix, (w, h), 0, (w, h))
 
-    image = cv2.undistort(image, intrinsic_matrix, distortion_matrix, None, None)
-
-    image = draw(image, corners2, cube_image_points)
-
-    cv2.imshow('Pose', image)
-    cv2.waitKey()
+        # ret, intrinsic_matrix, distortion_matrix, rotation_vectors, translation_vectors = cv2.calibrateCamera(
+        #     objpoints, imgpoints, image.shape[::-1], None, None)
+        #
+        # rotation_matrix, jacobian = cv2.Rodrigues(rotation_vectors[0])
+        #
+        # image = cv2.imread('./calibration/image0.jpg')
+        #
+        # h, w = image.shape[:2]
+        # newcameramtx, roi = cv2.getOptimalNewCameraMatrix(intrinsic_matrix, distortion_matrix, (w, h), 0, (w, h))
+        #
+        # image = cv2.undistort(image, intrinsic_matrix, distortion_matrix, None, None)
+        #
+        # cube_image_points, jacobian = cv2.projectPoints(
+        #     cube_object_points,
+        #     np.array(rotation_vectors[0]),
+        #     np.array(translation_vectors[0]),
+        #     intrinsic_matrix,
+        #     distortion_matrix)
+        #
+        #
+        # camera_parameters = {
+        #     "intrinsic": newcameramtx.tolist(),
+        #     "distortion": distortion_matrix.tolist(),
+        #     "rotation_matrix": rotation_matrix.tolist(),
+        #     "translation_vector": np.array(translation_vectors[0]).tolist()
+        # }
+        #
+        # with open('./camera_parameters.json', 'w') as outfile:
+        #     json.dump(camera_parameters, outfile, indent=4)
+        #
+        # image = draw(image, corners2, cube_image_points)
+        #
+        # cv2.imshow('Pose', image)
+        # cv2.waitKey()

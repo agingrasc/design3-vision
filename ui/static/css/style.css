@@ -10,6 +10,7 @@ button.list-group-item {
     min-width: 640px;
     min-height: 480px;
     cursor: crosshair;
+    margin: 0 auto;
 }
 
 .images__list {
