@@ -1,32 +1,42 @@
 import cv2
 import os
 
-cap = cv2.VideoCapture(0)
+from camera.camera import Camera
 
-cap.set(cv2.CAP_PROP_FPS, 15)
-print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
+if __name__ == '__main__':
+    camera = Camera()
+    camera.load_camera_model(os.path.abspath("./camera_matrix.json"))
 
-raw_dir = os.listdir('./raw')
+    cap = cv2.VideoCapture(0)
 
-index = 14
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FPS, 15)
 
-while True:
-    ret, frame = cap.read()
+    print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
+    print("HEIGHT: {}".format(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    print("WIDTH: {}".format(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
 
-    if ret == True:
-        cv2.imshow('frame', frame)
+    index = 0
 
-        key = cv2.waitKey(1)
+    while cap.isOpened():
+        ret, frame = cap.read()
 
-        if key == ord('s'):
-            print('Writing image')
-            filename = 'calibration/image' + str(index) + '.jpg'
-            index += 1
-            print(filename)
-            cv2.imwrite(filename, frame)
+        if ret:
 
-        elif key == ord('q'):
-            break
+            cv2.imshow('frame', frame)
 
-cap.release()
-cv2.destroyAllWindows()
+            key = cv2.waitKey(1)
+
+            if key == ord('s'):
+                print('Writing image')
+                filename = './data/images/hd/image' + str(index) + '.jpg'
+                index += 1
+                print(filename)
+                cv2.imwrite(filename, frame)
+
+            elif key == ord('q'):
+                break
+
+    cap.release()
+    cv2.destroyAllWindows()

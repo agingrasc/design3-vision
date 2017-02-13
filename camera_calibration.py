@@ -87,7 +87,7 @@ def build_cube(x, y, height):
 
 def prepare_for_calibration(camera):
     camera.add_target_points(create_object_points())
-    images = glob.glob('calibration/*.jpg')
+    images = glob.glob('data/images/hd/*.jpg')
     for image_filename in images:
         image = cv2.imread(image_filename)
         camera.add_image_for_calibration(image)
@@ -103,7 +103,9 @@ if __name__ == "__main__":
     camera_model = {
         "camera_matrix": camera.camera_matrix.tolist(),
         "reference_image_id": camera.reference_image,
-        "origin_image_coordinates": camera.origin.tolist()
+        "origin_image_coordinates": camera.origin.tolist(),
+        "distortion": camera.distortion.tolist(),
+        "intrinsic_matrix": camera.intrinsic_parameters.tolist()
     }
 
     with open('./camera_matrix.json', 'w') as file:
