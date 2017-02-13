@@ -36,19 +36,18 @@
                         <li class="list-group-item">Transformation: <span id="coordinateTransformView"></span></li>
                     </ul>
                     <div>
-                        <button id="showCalibrationPoints" class="btn btn-default pull-right">show calibration points</button>
-                        <button id="showUndistorted" class="btn btn-success pull-right">undistort</button>
+                        <div class="btn-group">
+                            <button id="showCalibrationPoints" class="btn btn-default">show calibration points
+                            </button>
+                            <button id="showUndistorted" class="btn btn-success pull-right">undistort</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading text-center">Calibration Images (<span id="imageCount">0</span>)</div>
-                <div class="panel-body">
-                    <div id="calibrationImagesListView" class='list-group images__list'></div>
-                </div>
-            </div>
+            <pre id="cameraParametersView"></pre>
+            <div id="calibrationImagesListView" class='dropdown'></div>
         </div>
     </div>
 </div>

@@ -4,18 +4,51 @@
 
     var CalibrationImagesListView = {
         el: document.getElementById('calibrationImagesListView'),
-        imageCount: document.getElementById('imageCount'),
 
         render: function (images) {
-            this.imageCount.innerText = images.length.toString();
+            this.toggleButton = document.createElement('button');
+            this.toggleButton.classList.add('btn', 'btn-default', 'dropdown-toggle');
+            this.toggleButton.innerText = "Select image";
+            this.el.appendChild(this.toggleButton);
+
+            var list = document.createElement('ul');
+            list.classList.add('dropdown-menu');
 
             for (var i = 0; i < images.length; i++) {
                 var currentImagePath = images[i];
                 var listElement = createImageListElement(currentImagePath);
-                this.el.appendChild(listElement);
+                list.appendChild(listElement);
+            }
+
+            this.el.appendChild(list);
+
+            this.el.addEventListener('click', function (event) {
+                event.preventDefault();
+                this.classList.toggle('open');
+            }.bind(this.el));
+        },
+
+        updateImage: function(image) {
+            if (image.name) {
+                this.toggleButton.innerText = image.name;
             }
         }
     };
+
+    function createImageListElement(image) {
+        var listItem = document.createElement('li');
+        var imageListElement = document.createElement("a");
+        imageListElement.innerText = image.name;
+        imageListElement.addEventListener('click', function onClick(event) {
+            event.preventDefault();
+
+            MainController.updateCurrentImage(image);
+            CalibrationImagesListView.updateImage(image);
+        });
+        listItem.appendChild(imageListElement);
+        return listItem;
+    }
+
 
     var CurrentImageView = {
         el: document.getElementById('currentImageView'),
@@ -92,6 +125,17 @@
             coordinateTransformRequest.open('POST', 'http://localhost:5000/world_coordinates');
             coordinateTransformRequest.setRequestHeader('Content-Type', 'application/json, charset=utf-8;');
             coordinateTransformRequest.send(JSON.stringify(coordinates));
+        },
+
+        loadCameraParameters: function () {
+            var cameraParametersRequest = new XMLHttpRequest();
+            cameraParametersRequest.onload = function () {
+                var data = event.target.response;
+                var cameraParametersView = document.getElementById("cameraParametersView");
+                cameraParametersView.innerText = data;
+            };
+            cameraParametersRequest.open('GET', 'http://localhost:5000/camera_parameters');
+            cameraParametersRequest.send();
         }
     };
 
@@ -172,18 +216,6 @@
         };
     }
 
-    function createImageListElement(image) {
-        var imageListElement = document.createElement("button");
-        imageListElement.classList.add('list-group-item');
-        imageListElement.innerText = image.name;
-        imageListElement.addEventListener('click', function onClick(event) {
-            event.preventDefault();
-
-            MainController.updateCurrentImage(image);
-        });
-        return imageListElement;
-    }
-
     window.addEventListener('mousemove', function (event) {
         if (event.target === CurrentImageView.el) {
             var boundingRect = event.target.getBoundingClientRect();
@@ -201,4 +233,5 @@
     ImageDistortionButton.init();
 
     ImageService.getImagesInfos(MainController.init.bind(MainController));
+    CoordinateTransformService.loadCameraParameters();
 }());

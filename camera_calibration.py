@@ -102,10 +102,28 @@ if __name__ == "__main__":
 
     camera_model = {
         "camera_matrix": camera.camera_matrix.tolist(),
+        "reference_image_id": camera.reference_image,
+        "origin_image_coordinates": camera.origin.tolist()
     }
 
     with open('./camera_matrix.json', 'w') as file:
         json.dump(camera_model, file, indent=4)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # for image_filename in glob.glob('./calibration/*.jpg'):
     #     image = camera.undistort(cv2.imread(image_filename))
@@ -138,7 +156,6 @@ if __name__ == "__main__":
         #     np.array(translation_vectors[0]),
         #     intrinsic_matrix,
         #     distortion_matrix)
-        #
         #
         # camera_parameters = {
         #     "intrinsic": newcameramtx.tolist(),

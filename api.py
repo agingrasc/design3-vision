@@ -1,4 +1,5 @@
 import os
+import json
 
 from flask import Flask
 from flask import jsonify
@@ -54,10 +55,14 @@ def get_chessboard(id):
     return send_file(CHESSBOARD_IMAGES_DIRECTORY + "/" + filename, mimetype='image/jpeg')
 
 
+@app.route('/camera_parameters', methods=["GET"])
+def get_camera_parameters():
+    return send_from_directory('.', 'camera_matrix.json')
+
+
 @app.route('/world_coordinates', methods=['POST'])
 def get_world_coordinates():
     coordinate = request.get_json()
-    print(coordinate)
     x = coordinate['x']
     y = coordinate['y']
     world_coordinates = camera.compute_image_to_world_coordinate(x, y, 0).tolist()
