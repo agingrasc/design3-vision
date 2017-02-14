@@ -9,6 +9,7 @@ from flask import send_file
 from flask import send_from_directory
 
 from camera.camera import Camera
+from camera.camera import CameraModel
 
 CALIBRATION_IMAGES_DIRECTORY = './data/images/calibration'
 CHESSBOARD_IMAGES_DIRECTORY = './data/images/chessboard/'
@@ -17,8 +18,13 @@ CONFIG_DIRECTORY = './config/'
 STATIC_FOLDER = './static'
 
 app = Flask(__name__)
-camera = Camera()
-camera.load_camera_model(os.path.abspath('./config/camera_matrix.json'))
+
+with open('./config/camera_matrix.json') as file:
+    camera_parameters = json.load(file)
+
+    camera = Camera(
+        CameraModel(None, None, camera_parameters['camera_matrix'], None, None, None, None)
+    )
 
 
 @app.route('/images-infos', methods=["GET"])
@@ -64,7 +70,7 @@ def get_camera_parameters():
 @app.route('/world_coordinates', methods=['POST'])
 def get_world_coordinates():
     coordinate = request.get_json()
-    world_coordinates = camera.compute_image_to_world_coordinate(coordinate['x'], coordinate['y'], 0)
+    world_coordinates = camera.image_to_world_coordinate(coordinate['x'], coordinate['y'], 0)
     return make_response(jsonify({"world_coordinates": world_coordinates}))
 
 

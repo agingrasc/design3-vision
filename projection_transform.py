@@ -4,7 +4,7 @@ from camera.camera import Camera
 
 if __name__ == '__main__':
     camera = Camera()
-    camera.load_camera_model(os.path.abspath('./config/camera_matrix.json'))
+    camera.load(os.path.abspath('./config/camera_matrix.json'))
 
     x1 = 71
     y1 = 129

@@ -87,7 +87,7 @@ def build_cube(x, y, height):
 
 def prepare_for_calibration(camera):
     camera.add_target_points(create_object_points())
-    images = glob.glob('calibration/*.jpg')
+    images = glob.glob('data/images/calibration/*.jpg')
     for image_filename in images:
         image = cv2.imread(image_filename)
         camera.add_image_for_calibration(image)
@@ -100,14 +100,8 @@ if __name__ == "__main__":
 
     camera.calibrate()
 
-    camera_model = {
-        "camera_matrix": camera.camera_matrix.tolist(),
-        "reference_image_id": camera.reference_image,
-        "origin_image_coordinates": camera.origin.tolist()
-    }
-
-    with open('./camera_matrix.json', 'w') as file:
-        json.dump(camera_model, file, indent=4)
+    with open('./camera_model.json', 'w') as file:
+        json.dump(camera.camera_model.describe(), file, indent=4)
 
 
 
@@ -125,12 +119,12 @@ if __name__ == "__main__":
 
 
 
-    # for image_filename in glob.glob('./calibration/*.jpg'):
-    #     image = camera.undistort(cv2.imread(image_filename))
-    #
-    #     print("Saving " + image_filename.split('/')[2])
-    #     image_name = image_filename.split('/')[2]
-    #     cv2.imwrite('./undistort/' + image_name, image)
+        # for image_filename in glob.glob('./calibration/*.jpg'):
+        #     image = camera.undistort(cv2.imread(image_filename))
+        #
+        #     print("Saving " + image_filename.split('/')[2])
+        #     image_name = image_filename.split('/')[2]
+        #     cv2.imwrite('./undistort/' + image_name, image)
 
         # cv2.imshow('Undistort', image)
         # cv2.waitKey(2000)
