@@ -2,52 +2,27 @@
     "use strict";
 
 
-    var CalibrationImagesListView = {
-        el: document.getElementById('calibrationImagesListView'),
+    var ImageListView = {
+        el: document.getElementById('imagesListView'),
 
-        render: function (images) {
-            this.toggleButton = document.createElement('button');
-            this.toggleButton.classList.add('btn', 'btn-default', 'dropdown-toggle');
-            this.toggleButton.innerText = "Select image";
-            this.el.appendChild(this.toggleButton);
-
-            var list = document.createElement('ul');
-            list.classList.add('dropdown-menu');
-
-            for (var i = 0; i < images.length; i++) {
-                var currentImagePath = images[i];
-                var listElement = createImageListElement(currentImagePath);
-                list.appendChild(listElement);
-            }
-
-            this.el.appendChild(list);
-
-            this.el.addEventListener('click', function (event) {
+        createImageListElement: function (image) {
+            var imageListElement = document.createElement("button");
+            imageListElement.classList.add('list-group-item');
+            imageListElement.innerText = image.name;
+            imageListElement.addEventListener('click', function onClick(event) {
                 event.preventDefault();
-                this.classList.toggle('open');
-            }.bind(this.el));
+                MainController.updateCurrentImage(image);
+            });
+            return imageListElement;
         },
 
-        updateImage: function(image) {
-            if (image.name) {
-                this.toggleButton.innerText = image.name;
+        render: function (images) {
+            for (var i = 0; i < images.length; i++) {
+                var currentImagePath = images[i];
+                this.el.appendChild(this.createImageListElement(currentImagePath));
             }
         }
     };
-
-    function createImageListElement(image) {
-        var listItem = document.createElement('li');
-        var imageListElement = document.createElement("a");
-        imageListElement.innerText = image.name;
-        imageListElement.addEventListener('click', function onClick(event) {
-            event.preventDefault();
-
-            MainController.updateCurrentImage(image);
-            CalibrationImagesListView.updateImage(image);
-        });
-        listItem.appendChild(imageListElement);
-        return listItem;
-    }
 
 
     var CurrentImageView = {
@@ -67,9 +42,9 @@
             }.bind(this));
         },
 
-        render: function (image) {
+        render: function (image_url) {
             window.requestAnimationFrame(function () {
-                this.el.src = image.url;
+                this.el.src = image_url;
             }.bind(this));
         }
     };
@@ -103,7 +78,7 @@
                 event.preventDefault();
 
                 var currentImage = MainController.getCurrentImage();
-                CurrentImageView.render({url: currentImage.chessboard_url});
+                CurrentImageView.render(currentImage.chessboard_url);
             });
         }
     };
@@ -125,24 +100,13 @@
             coordinateTransformRequest.open('POST', 'http://localhost:5000/world_coordinates');
             coordinateTransformRequest.setRequestHeader('Content-Type', 'application/json, charset=utf-8;');
             coordinateTransformRequest.send(JSON.stringify(coordinates));
-        },
-
-        loadCameraParameters: function () {
-            var cameraParametersRequest = new XMLHttpRequest();
-            cameraParametersRequest.onload = function () {
-                var data = event.target.response;
-                var cameraParametersView = document.getElementById("cameraParametersView");
-                cameraParametersView.innerText = data;
-            };
-            cameraParametersRequest.open('GET', 'http://localhost:5000/camera_parameters');
-            cameraParametersRequest.send();
         }
     };
 
     var ImageDistortionButton = {
         el: document.getElementById('showUndistorted'),
 
-        distorted: true,
+        distorted: false,
 
         init: function () {
             this.el.addEventListener('click', function (event) {
@@ -150,19 +114,19 @@
 
                 if (this.distorted) {
                     this.distorted = false;
-                    this.el.innerHTML = "normal";
-                    MainController.showDistortedImage();
+                    this.el.innerHTML = "show original";
+                    MainController.showUndistortedImage();
                 } else {
                     this.distorted = true;
-                    this.el.innerHTML = "undistort";
-                    MainController.showNormalImage();
+                    this.el.innerHTML = "show undistorted";
+                    MainController.showOriginalImage();
                 }
             }.bind(this));
         },
 
         reset: function () {
-            this.distorted = true;
-            this.el.innerHTML = "undistort";
+            this.distorted = false;
+            this.el.innerHTML = "show original";
         }
     };
 
@@ -170,31 +134,27 @@
         currentImage: null,
 
         init: function (images) {
-            CalibrationImagesListView.render(images.calibration.images);
-
-            this.updateCurrentImage(images.calibration.images[0]);
-
-            CurrentImageView.render(this.currentImage);
+            ImageListView.render(images.calibration.images);
+            this.updateCurrentImage(images.calibration.images[3]);
+            this.showUndistortedImage();
         },
 
-        showDistortedImage: function () {
-            CurrentImageView.render({url: this.currentImage.undistorted_url});
+        showUndistortedImage: function () {
+            CurrentImageView.render(this.currentImage.undistorted_url);
         },
 
-        showNormalImage: function () {
-            CurrentImageView.render({url: this.currentImage.url});
-        },
-
-        getCurrentImage: function () {
-            return this.currentImage;
+        showOriginalImage: function () {
+            CurrentImageView.render(this.currentImage.url);
         },
 
         updateCurrentImage: function (image) {
             this.currentImage = image;
-
             ImageDistortionButton.reset();
+            CurrentImageView.render(this.currentImage.undistorted_url);
+        },
 
-            CurrentImageView.render(image);
+        getCurrentImage: function () {
+            return this.currentImage;
         }
     };
 
@@ -202,7 +162,8 @@
         getImagesInfos: function (callback) {
             var imagesInfosRequest = new XMLHttpRequest();
             imagesInfosRequest.onload = function (event) {
-                callback(JSON.parse(event.target.response));
+                var data = JSON.parse(event.target.response);
+                callback(data);
             };
             imagesInfosRequest.open("GET", 'http://localhost:5000/images-infos');
             imagesInfosRequest.send();
@@ -233,5 +194,4 @@
     ImageDistortionButton.init();
 
     ImageService.getImagesInfos(MainController.init.bind(MainController));
-    CoordinateTransformService.loadCameraParameters();
 }());

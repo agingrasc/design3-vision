@@ -19,7 +19,7 @@ STATIC_FOLDER = './static'
 
 app = Flask(__name__)
 
-with open('./config/camera_matrix.json') as file:
+with open('./config/camera_model.json') as file:
     camera_parameters = json.load(file)
 
     camera = Camera(

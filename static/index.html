@@ -25,8 +25,24 @@
 </nav>
 <div class="container">
     <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">Calibration Images</div>
+                <div class="panel-body">
+                    <div id="imagesListView" class="list-group images-list"></div>
+                </div>
+            </div>
+
+        </div>
         <div class="col-md-8">
             <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="btn-group pull-right">
+                        <button id="showCalibrationPoints" class="btn btn-default">show calibration points
+                        </button>
+                        <button id="showUndistorted" class="btn btn-success pull-right">show original</button>
+                    </div>
+                </div>
                 <div class="panel-body">
                     <img id="currentImageView" class="img img-responsive">
                 </div>
@@ -35,19 +51,8 @@
                         <li class="list-group-item">Cursor: <span id="cursorPositionView"></span></li>
                         <li class="list-group-item">Transformation: <span id="coordinateTransformView"></span></li>
                     </ul>
-                    <div>
-                        <div class="btn-group">
-                            <button id="showCalibrationPoints" class="btn btn-default">show calibration points
-                            </button>
-                            <button id="showUndistorted" class="btn btn-success pull-right">undistort</button>
-                        </div>
-                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <pre id="cameraParametersView"></pre>
-            <div id="calibrationImagesListView" class='dropdown'></div>
         </div>
     </div>
 </div>
