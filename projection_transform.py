@@ -1,20 +1,15 @@
-import os
+import json
 
-from camera.camera import Camera
+from camera.camera import CameraModel
 
 if __name__ == '__main__':
-    camera = Camera()
-    camera.load(os.path.abspath('./config/camera_matrix.json'))
+    with open('./config/camera_model.json') as file:
+        camera_parameters = json.load(file)
 
-    x1 = 71
-    y1 = 129
+    camera = CameraModel(None, None, camera_parameters['camera_matrix'], None, None, None, None)
 
-    p1 = camera.compute_image_to_world_coordinate(x1, y1, 0)
+    p1 = camera.compute_image_to_world_coordinates(324.5, 294, 8.72)
+    p2 = camera.compute_image_to_world_coordinates(324.5, 294, 0)
 
-    x2 = 248
-    y2 = 128
-
-    p2 = camera.compute_image_to_world_coordinate(x2, y2, 0)
-
-    print(p2[0] - p1[0])
-    print(p2[1] - p1[1])
+    print(p1)
+    print(p2)

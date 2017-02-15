@@ -22,6 +22,20 @@ button.list-group-item {
     overflow-y: scroll;
 }
 
+.list-group {
+    border: 1px solid #d9d9d9;
+    margin-bottom: 0;
+}
+
+.list-group-item {
+    border: none;
+    border-top: 1px solid #d9d9d9;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
 .panel-heading,
 .panel-footer {
     overflow: auto;

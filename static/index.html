@@ -48,10 +48,38 @@
                     <img id="currentImageView" class="img img-responsive">
                 </div>
                 <div class="panel-footer">
-                    <ul class="list-group">
-                        <li class="list-group-item">Cursor: <span id="cursorPositionView"></span></li>
-                        <li class="list-group-item">Transformation: <span id="coordinateTransformView"></span></li>
-                    </ul>
+                    <div class="col-md-6">
+                        <ul class="list-group">
+                            <li class="list-group-item">Cursor: <span id="cursorPositionView"></span></li>
+                            <li class="list-group-item">Image --> World: <br><span
+                                    id="coordinateTransformView"></span></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <div>
+                            <form id="selectZ">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="selectZ" id="tableOption" value="table" checked>
+                                        Table - 0cm
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="selectZ" id="robotOption" value="robot">
+                                        Robot - 20cm
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="selectZ" id="obstacleOption" value="obstacle">
+                                        Obstacle - 41cm
+                                    </label>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>

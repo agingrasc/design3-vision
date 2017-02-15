@@ -84,7 +84,10 @@
     };
 
     var CoordinateTransformService = {
+        z: 0.0,
+
         getWorldCoordinates: function (coordinates) {
+            coordinates.z = this.z;
             var coordinateTransformRequest = new XMLHttpRequest();
             coordinateTransformRequest.onload = function (event) {
                 var data = JSON.parse(event.target.response);
@@ -100,6 +103,20 @@
             coordinateTransformRequest.open('POST', 'http://localhost:5000/world_coordinates');
             coordinateTransformRequest.setRequestHeader('Content-Type', 'application/json, charset=utf-8;');
             coordinateTransformRequest.send(JSON.stringify(coordinates));
+        },
+
+        setZ: function(zElement) {
+            switch (zElement) {
+                case 'table':
+                    this.z = 0.0;
+                    break;
+                case 'robot':
+                    this.z = 20.0 / 4.7;
+                    break;
+                case 'obstacle':
+                    this.z = 41.0 / 4.7;
+                    break;
+            }
         }
     };
 
@@ -188,6 +205,14 @@
             CursorPositionView.render(getPositionRelativeTo(position, boundingRect));
         }
     });
+
+    var selectZ = document.getElementById('selectZ');
+
+    for(var i = 0; i < selectZ.length; i++) {
+        selectZ[i].onclick = function() {
+            CoordinateTransformService.setZ(this.value);
+        };
+    }
 
     CurrentImageView.init();
     CalibrationButton.init();

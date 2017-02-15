@@ -83,30 +83,27 @@ class CameraModel:
                  distortion_coefficients, rotation_matrix, translation_vector, origin):
         self.intrinsic_parameters = intrinsic_parameters
         self.extrinsic_parameters = extrinsic_parameters
-        self.camera_matrix = camera_matrix
+        self.camera_matrix = np.array(camera_matrix)
         self.distortion_coefficients = distortion_coefficients
         self.rotation_matrix = rotation_matrix
         self.translation_vector = translation_vector
         self.origin = origin
 
-    def compute_image_to_world_coordinates(self, u, v, z):
+    def compute_image_to_world_coordinates(self, u, v, d):
         m = self.camera_matrix
+        A = np.array(m[0] - (u * m[2]))
+        B = np.array(m[1] - (v * m[2]))
 
-        object_x = ((-m[0][3] + u * m[2][3]) * (m[1][1] - v * m[2][1]) - (m[1][3] - v * m[2][3]) * (
-            -m[0][1] + u * m[2][1])) / \
-                   ((m[0][0] - u * m[2][0]) * (m[1][1] - v * m[2][1]) + (m[0][1] - u * m[2][1]) * (
-                       -m[1][0] + v * m[2][0]))
+        u1 = A[:3]
+        d1 = A[3]
+        u2 = B[:3]
+        d2 = B[3]
+        u3 = np.array([0, 0, 1])
+        d3 = d
 
-        object_y = ((-m[0][3] + u * m[2][3]) * (-m[1][0] + v * m[2][0]) - (m[1][3] - v * m[2][3]) * (
-            m[0][0] - u * m[2][0])) / \
-                   ((m[0][0] - u * m[2][0]) * (m[1][1] - v * m[2][1]) + (m[0][1] - u * m[2][1]) * (
-                       -m[1][0] + v * m[2][0]))
+        P = ((-d1 * np.cross(u2, u3)) + (-d2 * np.cross(u3, u1)) + (-d3 * np.cross(u1, u2))) / np.dot(u1.T, np.cross(u2, u3))
 
-        return np.array([
-            object_x,
-            object_y,
-            0
-        ], dtype=float).tolist()
+        return np.array(P, dtype=float).tolist()
 
     def describe(self):
         return {

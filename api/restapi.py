@@ -60,7 +60,7 @@ class FlaskRESTAPI:
 
     def get_world_coordinates(self):
         coordinate = request.get_json()
-        world_coordinates = self.camera_service.image_to_world_coordinate(coordinate['x'], coordinate['y'], 0)
+        world_coordinates = self.camera_service.image_to_world_coordinate(coordinate['x'], coordinate['y'], coordinate['z'])
         return make_response(jsonify({"world_coordinates": world_coordinates}))
 
     def css(self, filename):
