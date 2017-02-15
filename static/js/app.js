@@ -43,9 +43,14 @@
         },
 
         render: function (image_url) {
-            window.requestAnimationFrame(function () {
-                this.el.src = image_url;
-            }.bind(this));
+            var context = this.el.getContext('2d');
+            var imgObj = new Image();
+            imgObj.onload = function () {
+                window.requestAnimationFrame(function () {
+                    context.drawImage(imgObj, 0, 0, imgObj.width, imgObj.height);
+                });
+            };
+            imgObj.src = image_url;
         }
     };
 
@@ -105,7 +110,7 @@
             coordinateTransformRequest.send(JSON.stringify(coordinates));
         },
 
-        setZ: function(zElement) {
+        setZ: function (zElement) {
             switch (zElement) {
                 case 'table':
                     this.z = 0.0;
@@ -208,8 +213,8 @@
 
     var selectZ = document.getElementById('selectZ');
 
-    for(var i = 0; i < selectZ.length; i++) {
-        selectZ[i].onclick = function() {
+    for (var i = 0; i < selectZ.length; i++) {
+        selectZ[i].onclick = function () {
             CoordinateTransformService.setZ(this.value);
         };
     }
