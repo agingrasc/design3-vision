@@ -104,21 +104,6 @@ if __name__ == "__main__":
         json.dump(camera.camera_model.describe(), file, indent=4)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         # for image_filename in glob.glob('./calibration/*.jpg'):
         #     image = camera.undistort(cv2.imread(image_filename))
         #

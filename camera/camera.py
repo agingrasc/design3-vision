@@ -19,6 +19,13 @@ class Camera:
     def image_to_world_coordinate(self, x, y, z):
         return self.camera_model.compute_image_to_world_coordinates(x, y, z)
 
+    def load_camera_model(self, filepath):
+        with open(filepath) as file:
+            camera_parameters = json.load(file)
+            self.camera_matrix = camera_parameters['camera_matrix']
+            self.distortion = np.array(camera_parameters["distortion"])
+            self.intrinsic_parameters = np.array(camera_parameters["intrinsic_matrix"])
+
     def add_image_for_calibration(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         has_corners, corners = cv2.findChessboardCorners(image, (9, 6), None)
