@@ -28,7 +28,17 @@
     var CurrentImageView = {
         el: document.getElementById('currentImageView'),
 
+        image: null,
+
         init: function () {
+            var context = this.el.getContext('2d');
+            this.image = new Image();
+            this.image.onload = function () {
+                window.requestAnimationFrame(function () {
+                    context.drawImage(this.image, 0, 0, this.image.width, this.image.height);
+                }.bind(CurrentImageView));
+            };
+
             this.el.addEventListener('click', function (event) {
                 event.preventDefault();
 
@@ -43,14 +53,7 @@
         },
 
         render: function (image_url) {
-            var context = this.el.getContext('2d');
-            var imgObj = new Image();
-            imgObj.onload = function () {
-                window.requestAnimationFrame(function () {
-                    context.drawImage(imgObj, 0, 0, imgObj.width, imgObj.height);
-                });
-            };
-            imgObj.src = image_url;
+            this.image.src = image_url;
         }
     };
 
@@ -212,7 +215,6 @@
     });
 
     var selectZ = document.getElementById('selectZ');
-
     for (var i = 0; i < selectZ.length; i++) {
         selectZ[i].onclick = function () {
             CoordinateTransformService.setZ(this.value);
