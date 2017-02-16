@@ -1,6 +1,7 @@
 (function () {
     "use strict";
-
+    var fixOriginX = 0;
+    var fixOriginY = 0;
 
     var ImageListView = {
         el: document.getElementById('imagesListView'),
@@ -128,6 +129,21 @@
         }
     };
 
+    var FixOriginButton = {
+        el: document.getElementById('fixOrigin'),
+
+        init: function () {
+            this.el.addEventListener('click', function (event) {
+                event.preventDefault();
+                var fixOriginXY = document.getElementById("originXY").value.split(",");
+                if(!isNaN(fixOriginXY[0]) && !isNaN(fixOriginXY[1])){
+                     fixOriginX = fixOriginXY[0];
+                     fixOriginY = fixOriginXY[1];
+                }
+            });
+        }
+    };
+
     var ImageDistortionButton = {
         el: document.getElementById('showUndistorted'),
 
@@ -197,8 +213,8 @@
 
     function getPositionRelativeTo(cursorPosition, boundingRect) {
         return {
-            x: cursorPosition.x - boundingRect.left,
-            y: cursorPosition.y - boundingRect.top
+            x: cursorPosition.x - boundingRect.left - fixOriginX,
+            y: cursorPosition.y - boundingRect.top - fixOriginY
         };
     }
 
@@ -224,6 +240,7 @@
     CurrentImageView.init();
     CalibrationButton.init();
     ImageDistortionButton.init();
+    FixOriginButton.init();
 
     ImageService.getImagesInfos(MainController.init.bind(MainController));
 }());
