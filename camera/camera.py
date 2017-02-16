@@ -5,21 +5,18 @@ import numpy as np
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
-class Camera:
-    def __init__(self, camera_model=None):
-        self.camera_model = camera_model
-
+class Calibration:
+    def __init__(self):
+        self.calibration_images = []
         self.target_points = []
         self.target_image_points = []
         self.target_object_points = []
-
-        self.calibration_images = []
         self.reference_image_index = 0
 
-    def image_to_world_coordinate(self, x, y, z):
-        return self.camera_model.compute_image_to_world_coordinates(x, y, z)
+    def add_target_points(self, target_points):
+        self.target_points = target_points
 
-    def add_image_for_calibration(self, image):
+    def add_image(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         has_corners, corners = cv2.findChessboardCorners(image, (9, 6), None)
         if has_corners:
@@ -29,10 +26,7 @@ class Camera:
             corners = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), criteria)
             self.target_image_points.append(corners)
 
-    def add_target_points(self, target_points):
-        self.target_points = target_points
-
-    def calibrate(self):
+    def create_camera_model(self):
         (
             ret,
             intrinsic_parameters,
@@ -47,7 +41,7 @@ class Camera:
             rotation_matrix, translation_vectors[self.reference_image_index]), axis=1)
         camera_matrix = self.compute_camera_matrix(intrinsic_parameters, extrinsic_parameters)
 
-        self.camera_model = CameraModel(
+        return CameraModel(
             intrinsic_parameters,
             extrinsic_parameters,
             camera_matrix,
@@ -70,12 +64,6 @@ class Camera:
             self.calibration_images[calibration_image_index].shape[::-1],
             None, None
         )
-
-    def undistort_image(self, image):
-        return cv2.undistort(image,
-                             self.camera_model.intrinsic_parameters,
-                             self.camera_model.distortion_coefficients,
-                             None, None)
 
 
 class CameraModel:
@@ -101,9 +89,13 @@ class CameraModel:
         u3 = np.array([0, 0, 1])
         d3 = d
 
-        P = ((-d1 * np.cross(u2, u3)) + (-d2 * np.cross(u3, u1)) + (-d3 * np.cross(u1, u2))) / np.dot(u1.T, np.cross(u2, u3))
+        P = ((-d1 * np.cross(u2, u3)) + (-d2 * np.cross(u3, u1)) + (-d3 * np.cross(u1, u2))) / np.dot(u1.T,
+                                                                                                      np.cross(u2, u3))
 
         return np.array(P, dtype=float).tolist()
+
+    def undistort_image(self, image):
+        return cv2.undistort(image, self.intrinsic_parameters, self.distortion_coefficients, None, None)
 
     def describe(self):
         return {
@@ -112,5 +104,6 @@ class CameraModel:
             "camera_matrix": self.camera_matrix.tolist(),
             "rotation_matrix": self.rotation_matrix.tolist(),
             "translation_vector": self.translation_vector.tolist(),
+            "distortion_coefficients": self.distortion_coefficients.tolist(),
             "origin_image_coordinates": self.origin.tolist()
         }
