@@ -1,7 +1,7 @@
 (function () {
     "use strict";
-    var fixOriginX = 0;
-    var fixOriginY = 0;
+    var originX = 0;
+    var originY = 0;
 
     var ImageListView = {
         el: document.getElementById('imagesListView'),
@@ -115,21 +115,47 @@
             }
         }
     };
+    var SetOriginInput = {
+        el: document.getElementById("originXY"),
 
-    var FixOriginButton = {
-        el: document.getElementById('fixOrigin'),
+        init: function () {
+            this.el.addEventListener('focus', function (event) {
+                event.preventDefault();
+                document.getElementById("originXY").value = "";
+            });
+        }
+    };
+
+    var SetOriginButton = {
+        el: document.getElementById('setOrigin'),
 
         init: function () {
             this.el.addEventListener('click', function (event) {
                 event.preventDefault();
-                var fixOriginXY = document.getElementById("originXY").value.split(",");
-                if(!isNaN(fixOriginXY[0]) && !isNaN(fixOriginXY[1])){
-                     fixOriginX = fixOriginXY[0];
-                     fixOriginY = fixOriginXY[1];
+                var setOriginXY = document.getElementById("originXY").value.split(",");
+                if(!isNaN(setOriginXY[0]) && !isNaN(setOriginXY[1])){
+                     originX = setOriginXY[0];
+                     originY = setOriginXY[1];
                 }
             });
         }
     };
+
+    var ResetOriginButton = {
+        el: document.getElementById('resetOrigin'),
+
+        init: function () {
+            this.el.addEventListener('click', function (event) {
+                event.preventDefault();
+                var resetOriginXY = document.getElementById("originXY");
+                resetOriginXY.value = "0,0";
+                originX = 0;
+                originY = 0;
+            });
+        }
+    };
+
+
 
     var ImageDistortionButton = {
         el: document.getElementById('showUndistorted'),
@@ -200,8 +226,8 @@
 
     function getPositionRelativeTo(cursorPosition, boundingRect) {
         return {
-            x: cursorPosition.x - boundingRect.left - fixOriginX,
-            y: cursorPosition.y - boundingRect.top - fixOriginY
+            x: cursorPosition.x - boundingRect.left - originX,
+            y: cursorPosition.y - boundingRect.top - originY
         };
     }
 
@@ -239,7 +265,10 @@
     CurrentImageView.init();
     CalibrationButton.init();
     ImageDistortionButton.init();
-    FixOriginButton.init();
+    SetOriginInput.init();
+    SetOriginButton.init();
+    ResetOriginButton.init();
+
 
     ImageService.getImagesInfos(MainController.init.bind(MainController));
 }());
