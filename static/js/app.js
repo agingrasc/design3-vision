@@ -25,7 +25,6 @@
         }
     };
 
-
     var CurrentImageView = {
         el: document.getElementById('currentImageView'),
 
@@ -39,18 +38,6 @@
                     context.drawImage(this.image, 0, 0, this.image.width, this.image.height);
                 }.bind(CurrentImageView));
             };
-
-            this.el.addEventListener('click', function (event) {
-                event.preventDefault();
-
-                var boundingRect = this.el.getBoundingClientRect();
-                var position = {
-                    x: event.x,
-                    y: event.y
-                };
-
-                CoordinateTransformService.getWorldCoordinates(getPositionRelativeTo(position, boundingRect));
-            }.bind(this));
         },
 
         render: function (image_url) {
@@ -229,6 +216,18 @@
             CursorPositionView.render(getPositionRelativeTo(position, boundingRect));
         }
     });
+
+    CurrentImageView.el.addEventListener('click', function (event) {
+        event.preventDefault();
+
+        var boundingRect = this.el.getBoundingClientRect();
+        var position = {
+            x: event.x,
+            y: event.y
+        };
+
+        CoordinateTransformService.getWorldCoordinates(getPositionRelativeTo(position, boundingRect));
+    }.bind(CurrentImageView));
 
     var selectZ = document.getElementById('selectZ');
     for (var i = 0; i < selectZ.length; i++) {
