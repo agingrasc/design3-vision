@@ -69,12 +69,12 @@ class Calibration:
 class CameraModel:
     def __init__(self, intrinsic_parameters, extrinsic_parameters, camera_matrix,
                  distortion_coefficients, rotation_matrix, translation_vector, origin):
-        self.intrinsic_parameters = intrinsic_parameters
-        self.extrinsic_parameters = extrinsic_parameters
+        self.intrinsic_parameters = np.array(intrinsic_parameters)
+        self.extrinsic_parameters = np.array(extrinsic_parameters)
         self.camera_matrix = np.array(camera_matrix)
-        self.distortion_coefficients = distortion_coefficients
-        self.rotation_matrix = rotation_matrix
-        self.translation_vector = translation_vector
+        self.distortion_coefficients = np.array(distortion_coefficients)
+        self.rotation_matrix = np.array(rotation_matrix)
+        self.translation_vector = np.array(translation_vector)
         self.origin = origin
 
     def compute_image_to_world_coordinates(self, u, v, d):
