@@ -6,7 +6,8 @@ criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
 class Calibration:
-    def __init__(self):
+    def __init__(self, camera_factory):
+        self.camera_factory = camera_factory
         self.calibration_images = []
         self.target_points = []
         self.target_image_points = []
@@ -26,7 +27,7 @@ class Calibration:
             corners = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), criteria)
             self.target_image_points.append(corners)
 
-    def create_camera_model(self):
+    def do_calibration(self):
         (
             ret,
             intrinsic_parameters,
@@ -35,10 +36,28 @@ class Calibration:
             translation_vectors
         ) = self.get_calibration_parameters(self.reference_image_index)
 
-        translation_vector = translation_vectors[self.reference_image_index]
-        rotation_matrix = self.get_rotation_matrix_from(rotation_vectors[self.reference_image_index])
-        extrinsic_parameters = np.concatenate((
-            rotation_matrix, translation_vectors[self.reference_image_index]), axis=1)
+        return self.camera_factory.create_camera_model(
+            intrinsic_parameters,
+            translation_vectors[self.reference_image_index],
+            rotation_vectors[self.reference_image_index],
+            distortion_coefficients,
+            self.target_image_points[0][0]
+        )
+
+    def get_calibration_parameters(self, calibration_image_index):
+        return cv2.calibrateCamera(
+            self.target_object_points,
+            self.target_image_points,
+            self.calibration_images[calibration_image_index].shape[::-1],
+            None, None
+        )
+
+
+class CameraFactory:
+    def create_camera_model(self, intrinsic_parameters, translation_vector, rotation_vector,
+                            distortion_coefficients, origin):
+        rotation_matrix = self.get_rotation_matrix_from(rotation_vector)
+        extrinsic_parameters = np.concatenate((rotation_matrix, translation_vector), axis=1)
         camera_matrix = self.compute_camera_matrix(intrinsic_parameters, extrinsic_parameters)
 
         return CameraModel(
@@ -48,22 +67,14 @@ class Calibration:
             distortion_coefficients,
             rotation_matrix,
             translation_vector,
-            self.target_image_points[0][0])
-
-    def compute_camera_matrix(self, intrinsic_parameters, extrinsic_parameters):
-        return np.dot(intrinsic_parameters, extrinsic_parameters)
+            origin)
 
     def get_rotation_matrix_from(self, rotation_vector):
         rotation_matrix, jacobian = cv2.Rodrigues(rotation_vector)
         return rotation_matrix
 
-    def get_calibration_parameters(self, calibration_image_index):
-        return cv2.calibrateCamera(
-            self.target_object_points,
-            self.target_image_points,
-            self.calibration_images[calibration_image_index].shape[::-1],
-            None, None
-        )
+    def compute_camera_matrix(self, intrinsic_parameters, extrinsic_parameters):
+        return np.dot(intrinsic_parameters, extrinsic_parameters)
 
 
 class CameraModel:

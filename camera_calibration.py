@@ -4,6 +4,7 @@ import glob
 import json
 
 from camera.camera import Calibration
+from camera.camera import CameraFactory
 
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -30,7 +31,8 @@ def save_camera_model(camera_model):
 
 
 if __name__ == "__main__":
-    calibration = Calibration()
+    camera_factory = CameraFactory()
+    calibration = Calibration(camera_factory)
 
     calibration.add_target_points(create_object_points())
 
@@ -38,7 +40,7 @@ if __name__ == "__main__":
     for image in images:
         calibration.add_image(image)
 
-    camera_model = calibration.create_camera_model()
+    camera_model = calibration.do_calibration()
 
     save_camera_model(camera_model)
 
