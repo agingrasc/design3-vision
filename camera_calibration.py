@@ -4,6 +4,7 @@ import glob
 import json
 
 from camera.camera import Calibration
+from camera.camera import CalibrationTargetNotFoundError
 from camera.camera import CameraFactory
 
 # termination criteria
@@ -38,7 +39,11 @@ if __name__ == "__main__":
 
     images = load_calibration_images()
     for image in images:
-        calibration.add_image(image)
+        try:
+            calibration.collect_target_image(image)
+        except CalibrationTargetNotFoundError:
+            print("Calibration target not found on image, skipping image")
+            continue
 
     camera_model = calibration.do_calibration()
 

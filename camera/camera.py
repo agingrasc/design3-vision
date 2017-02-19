@@ -5,6 +5,10 @@ import numpy as np
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
+class CalibrationTargetNotFoundError(Exception):
+    pass
+
+
 class Calibration:
     def __init__(self, camera_factory):
         self._camera_factory = camera_factory
@@ -17,15 +21,17 @@ class Calibration:
     def add_target_points(self, target_points):
         self._target_points = target_points
 
-    def add_image(self, image):
+    def collect_target_image(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        has_corners, corners = cv2.findChessboardCorners(image, (9, 6), None)
-        if has_corners:
+        has_target, corners = cv2.findChessboardCorners(image, (9, 6), None)
+        if has_target:
             self._target_object_points.append(self._target_points)
             self._calibration_images.append(image)
 
             corners = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), criteria)
             self._target_image_points.append(corners)
+        else:
+            raise CalibrationTargetNotFoundError
 
     def do_calibration(self):
         (
