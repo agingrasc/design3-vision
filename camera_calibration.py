@@ -43,13 +43,3 @@ if __name__ == "__main__":
     camera_model = calibration.do_calibration()
 
     save_camera_model(camera_model)
-
-    # for image_filename in glob.glob('./calibration/*.jpg'):
-    #     image = camera.undistort(cv2.imread(image_filename))
-    #
-    #     print("Saving " + image_filename.split('/')[2])
-    #     image_name = image_filename.split('/')[2]
-    #     cv2.imwrite('./undistort/' + image_name, image)
-
-    # h, w = image.shape[:2]
-    # newcameramtx, roi = cv2.getOptimalNewCameraMatrix(intrinsic_matrix, distortion_matrix, (w, h), 0, (w, h))
