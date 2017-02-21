@@ -1,7 +1,7 @@
 import cv2
 
 if __name__ == '__main__':
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
             if key == ord('s'):
                 print('Writing image')
-                filename = './data/images/hd/image' + str(index) + '.jpg'
+                filename = './data/images/robot_targets/image' + str(index) + '.jpg'
                 index += 1
                 print(filename)
                 cv2.imwrite(filename, frame)
