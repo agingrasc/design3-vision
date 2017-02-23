@@ -13,9 +13,10 @@ UNDISTORT_IMAGES_DIRECTORY = '../data/images/undistort'
 
 
 class FlaskRESTAPI:
-    def __init__(self, static_folder, camera_service):
+    def __init__(self, static_folder, camera_service, calibration_service):
         self.static_folder = static_folder
         self.camera_service = camera_service
+        self.calibration_service = calibration_service
 
         self.api = Flask(__name__, static_folder=static_folder)
 
@@ -27,6 +28,8 @@ class FlaskRESTAPI:
         self.api.add_url_rule('/images/<string:filename>', 'image', self.get_image)
         self.api.add_url_rule('/images/<string:id>/undistorted', 'undistorted', self.get_undistorted_image)
         self.api.add_url_rule('/images/<string:id>/chessboard', 'chessboard', self.get_chessboard)
+
+        self.api.add_url_rule('/calibration/create', 'calibration-create', self.create_calibration)
 
         self.api.add_url_rule('/world_coordinates', 'world-coordinates', self.get_world_coordinates, methods=['POST'])
 
@@ -71,6 +74,12 @@ class FlaskRESTAPI:
 
     def js(self, filename):
         return send_from_directory(self.static_folder + "/js", filename)
+
+    def create_calibration(self):
+        directory = "../data/images/calibration"
+        images = [directory + "/" + filename for filename in os.listdir(directory)]
+        camera_model_dto = self.calibration_service.calibrate_from_images(images)
+        return make_response(jsonify(camera_model_dto))
 
     def get_calibration_images_infos(self):
         filenames = os.listdir(CALIBRATION_IMAGES_DIRECTORY)
