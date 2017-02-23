@@ -63,10 +63,10 @@ class CameraFactory:
                             distortion_coefficients, origin):
         rotation_matrix = self._get_rotation_matrix_from(rotation_vector)
         extrinsic_parameters = self._get_extrinsic_parameters(rotation_matrix, translation_vector)
-
         camera_matrix = self._compute_camera_matrix(intrinsic_parameters, extrinsic_parameters)
 
         return CameraModel(
+            1,
             intrinsic_parameters,
             extrinsic_parameters,
             camera_matrix,
@@ -97,8 +97,9 @@ class CameraFactory:
 
 
 class CameraModel:
-    def __init__(self, intrinsic_parameters, extrinsic_parameters, camera_matrix,
+    def __init__(self, id, intrinsic_parameters, extrinsic_parameters, camera_matrix,
                  distortion_coefficients, rotation_matrix, translation_vector, origin):
+        self._id = id
         self._intrinsic_parameters = np.array(intrinsic_parameters)
         self._extrinsic_parameters = np.array(extrinsic_parameters)
         self._camera_matrix = np.array(camera_matrix)
@@ -106,6 +107,9 @@ class CameraModel:
         self._rotation_matrix = np.array(rotation_matrix)
         self._translation_vector = np.array(translation_vector)
         self._origin = origin
+
+    def get_id(self):
+        return self._id
 
     def compute_image_to_world_coordinates(self, u, v, d):
         m = self._camera_matrix
