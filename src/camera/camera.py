@@ -1,8 +1,7 @@
 import cv2
-import json
 import numpy as np
 
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+stop_criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
 class CalibrationTargetNotFoundError(Exception):
@@ -28,7 +27,7 @@ class Calibration:
             self._target_object_points.append(self._target_points)
             self._calibration_images.append(image)
 
-            corners = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), criteria)
+            corners = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), stop_criteria)
             self._target_image_points.append(corners)
         else:
             raise CalibrationTargetNotFoundError
@@ -75,6 +74,16 @@ class CameraFactory:
             rotation_matrix,
             translation_vector,
             origin)
+
+    def create_calibration(self):
+        calibration = Calibration(self)
+        calibration.add_target_points(self.create_calibration_target_points())
+        return calibration
+
+    def create_calibration_target_points(self):
+        object_points = np.zeros((6 * 9, 3), np.float32)
+        object_points[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
+        return object_points
 
     def _get_rotation_matrix_from(self, rotation_vector):
         rotation_matrix, jacobian = cv2.Rodrigues(rotation_vector)

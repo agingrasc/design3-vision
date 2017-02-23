@@ -1,6 +1,5 @@
 import cv2
 import glob
-import math
 
 import numpy as np
 

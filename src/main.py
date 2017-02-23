@@ -5,6 +5,7 @@ from api.restapi import FlaskRESTAPI
 from camera.camera import CameraModel
 from camera.camera import CameraFactory
 from service.calibrationservice import CalibrationService
+from infrastructure.imagerepository import ImageRepository
 
 
 def load_camera_model_from(filepath):
@@ -27,11 +28,13 @@ if __name__ == "__main__":
 
     camera_factory = CameraFactory()
     calibration_service = CalibrationService(camera_factory)
+    image_repository = ImageRepository()
 
     api = FlaskRESTAPI(
         static_folder=os.path.abspath('../static'),
         camera_service=camera_model,
-        calibration_service=calibration_service
+        calibration_service=calibration_service,
+        image_repository=image_repository
     )
 
     api.run()

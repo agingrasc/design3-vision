@@ -13,10 +13,11 @@ UNDISTORT_IMAGES_DIRECTORY = '../../data/images/undistort'
 
 
 class FlaskRESTAPI:
-    def __init__(self, static_folder, camera_service, calibration_service):
+    def __init__(self, static_folder, camera_service, calibration_service, image_repository):
         self.static_folder = static_folder
         self.camera_service = camera_service
         self.calibration_service = calibration_service
+        self.image_repository = image_repository
 
         self.api = Flask(__name__, static_folder=static_folder)
 
@@ -76,8 +77,9 @@ class FlaskRESTAPI:
         return send_from_directory(self.static_folder + "/js", filename)
 
     def create_calibration(self):
-        directory = "..gi/data/images/calibration"
-        images = [directory + "/" + filename for filename in os.listdir(directory)]
+        directory = "../data/images/calibration"
+        images_filenames = [directory + "/" + filename for filename in os.listdir(directory)]
+        images = self.image_repository.load_all_images(images_filenames)
         camera_model_dto = self.calibration_service.calibrate_from_images(images)
         return make_response(jsonify(camera_model_dto))
 
