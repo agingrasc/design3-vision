@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Design 3 | Vision Tools</title>
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">Vision Tools</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="/">Calibration</a></li>
+            <li class="active"><a href="/livefeed">Live Feed</a></li>
+        </ul>
+    </div>
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-heading">World Camera Stream</div>
+                <div class="panel-body">
+                    <img class="image center-block" src="" width="640" height="360">
+                </div>
+                <div class="panel-footer" style="overflow: auto">
+                    <button id="playButton" class="btn btn-success pull-right">play</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="/js/streaming.js"></script>
+</body>
+
+</html>

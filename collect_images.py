@@ -1,32 +1,36 @@
 import cv2
-import os
 
-cap = cv2.VideoCapture(0)
+if __name__ == '__main__':
+    cap = cv2.VideoCapture(1)
 
-cap.set(cv2.CAP_PROP_FPS, 15)
-print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FPS, 15)
 
-raw_dir = os.listdir('./raw')
+    print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
+    print("HEIGHT: {}".format(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    print("WIDTH: {}".format(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
 
-index = 14
+    index = 0
 
-while True:
-    ret, frame = cap.read()
+    while cap.isOpened():
+        ret, frame = cap.read()
 
-    if ret == True:
-        cv2.imshow('frame', frame)
+        if ret:
 
-        key = cv2.waitKey(1)
+            cv2.imshow('frame', frame)
 
-        if key == ord('s'):
-            print('Writing image')
-            filename = 'calibration/image' + str(index) + '.jpg'
-            index += 1
-            print(filename)
-            cv2.imwrite(filename, frame)
+            key = cv2.waitKey(1)
 
-        elif key == ord('q'):
-            break
+            if key == ord('s'):
+                print('Writing image')
+                filename = './data/images/robot_targets/image' + str(index) + '.jpg'
+                index += 1
+                print(filename)
+                cv2.imwrite(filename, frame)
 
-cap.release()
-cv2.destroyAllWindows()
+            elif key == ord('q'):
+                break
+
+    cap.release()
+    cv2.destroyAllWindows()
