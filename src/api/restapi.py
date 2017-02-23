@@ -7,9 +7,9 @@ from flask import make_response
 from flask import jsonify
 from flask import request
 
-CALIBRATION_IMAGES_DIRECTORY = './data/images/calibration'
-CHESSBOARD_IMAGES_DIRECTORY = '../data/images/chessboard'
-UNDISTORT_IMAGES_DIRECTORY = '../data/images/undistort'
+CALIBRATION_IMAGES_DIRECTORY = '../data/images/calibration'
+CHESSBOARD_IMAGES_DIRECTORY = '../../data/images/chessboard'
+UNDISTORT_IMAGES_DIRECTORY = '../../data/images/undistort'
 
 
 class FlaskRESTAPI:
@@ -51,7 +51,7 @@ class FlaskRESTAPI:
         return send_from_directory(self.static_folder, 'livefeed.html')
 
     def get_image(self, filename):
-        return send_file('../data/images/calibration' + "/" + filename, mimetype='image/jpeg')
+        return send_file('../../data/images/calibration' + "/" + filename, mimetype='image/jpeg')
 
     def get_undistorted_image(self, id):
         filename = id + ".jpg"
@@ -76,7 +76,7 @@ class FlaskRESTAPI:
         return send_from_directory(self.static_folder + "/js", filename)
 
     def create_calibration(self):
-        directory = "../data/images/calibration"
+        directory = "..gi/data/images/calibration"
         images = [directory + "/" + filename for filename in os.listdir(directory)]
         camera_model_dto = self.calibration_service.calibrate_from_images(images)
         return make_response(jsonify(camera_model_dto))
