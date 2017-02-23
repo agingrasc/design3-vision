@@ -2,7 +2,6 @@ import json
 import os
 
 from api.restapi import FlaskRESTAPI
-
 from camera.camera import CameraModel
 
 
@@ -22,10 +21,10 @@ def load_camera_model_from(filepath):
 
 
 if __name__ == "__main__":
-    camera_model = load_camera_model_from('./config/camera_model.json')
+    camera_model = load_camera_model_from('../config/camera_model.json')
 
     api = FlaskRESTAPI(
-        static_folder=os.path.abspath('./static'),
+        static_folder=os.path.abspath('../static'),
         camera_service=camera_model
     )
 

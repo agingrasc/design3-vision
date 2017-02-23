@@ -8,8 +8,8 @@ from flask import jsonify
 from flask import request
 
 CALIBRATION_IMAGES_DIRECTORY = './data/images/calibration'
-CHESSBOARD_IMAGES_DIRECTORY = '../data/images/chessboard/'
-UNDISTORT_IMAGES_DIRECTORY = '../data/images/undistort/'
+CHESSBOARD_IMAGES_DIRECTORY = '../data/images/chessboard'
+UNDISTORT_IMAGES_DIRECTORY = '../data/images/undistort'
 
 
 class FlaskRESTAPI:
