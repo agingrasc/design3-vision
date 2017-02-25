@@ -3,7 +3,7 @@ import os
 
 from datetime import datetime
 
-from find_robot_position import RobotDetector
+from detector import RobotDetector
 from src.infrastructure.camera import JSONCameraModelRepository
 
 if __name__ == '__main__':
@@ -20,13 +20,13 @@ if __name__ == '__main__':
     now = datetime.utcnow().isoformat()
     calibration_session_dir = './data/calibrations/' + now
 
-    # os.mkdir(calibration_session_dir)
+    os.mkdir(calibration_session_dir)
 
     camera_repository = JSONCameraModelRepository('./camera_model.json')
     camera_model = camera_repository.get_camera_model_by_id(0)
     origin = camera_model.get_origin()[0]
 
-    index = 0
+    index = 20
 
     robot_detector = RobotDetector()
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
         frame = camera_model.undistort_image(frame)
 
-        position = robot_detector.detect_robot_position(frame)
+        position = robot_detector.detect_position(frame)
 
         try:
             center = position['center']

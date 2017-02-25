@@ -6,26 +6,29 @@ import math
 import numpy as np
 
 
+def euc_distance(p1, p2):
+    return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+
+
 class RobotDetector:
-    def detect_robot_position(self, image):
+    def detect_position(self, image):
         image = self._preprocess(image)
         threshold = self._threshold_robot_makers(image)
-        circles = cv2.HoughCircles(threshold, cv2.HOUGH_GRADIENT, 2.0, 12, param1=50, param2=30, minRadius=5,
-                                   maxRadius=30)
+        robot_markers = self._find_robot_markers(threshold)
 
-        position = {}
+        robot_approx_position = {}
 
-        if circles is not None:
-            circles = np.round(circles[0, :]).astype("int")
-            contours = np.array([x[0:2] for x in circles])
+        if robot_markers is not None:
+            robot_markers = np.round(robot_markers[0, :]).astype("int")
+            contours = np.array([x[0:2] for x in robot_markers])
             (x, y), radius = cv2.minEnclosingCircle(contours)
 
-            center_of_robot = [x, y]
+            approx_center = [x, y]
 
             center = (int(x), int(y))
             radius = int(radius)
 
-            if len(circles) < 3:
+            if len(robot_markers) < 3:
                 center_of_masses = []
                 cnts = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 for contour in cnts[1]:
@@ -38,7 +41,7 @@ class RobotDetector:
                     except ZeroDivisionError:
                         continue
 
-                c = closest(center_of_masses, center_of_robot)
+                c = closest_from(approx_center, center_of_masses)
 
                 contours = contours.tolist()
                 contours.append(c[0])
@@ -51,9 +54,13 @@ class RobotDetector:
                 center = (int(r_x), int(r_y))
                 radius = int(r_r)
 
-            position = {"center": center, "radius": radius}
+            robot_approx_position = {"center": center, "radius": radius}
 
-        return position
+        return robot_approx_position
+
+    def _find_robot_markers(self, image):
+        return cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, 2.0, 12, param1=50, param2=30, minRadius=5,
+                                maxRadius=30)
 
     def _preprocess(self, image):
         image = cv2.medianBlur(image, ksize=5)
@@ -69,8 +76,8 @@ class RobotDetector:
         return mask
 
 
-def closest(points, point):
-    return sorted(points, key=lambda p: math.sqrt((p[0] - point[0]) ** 2 + (p[1] - point[1]) ** 2))
+def closest_from(point, points):
+    return sorted(points, key=lambda p: euc_distance(point, p))
 
 
 if __name__ == '__main__':
@@ -80,4 +87,4 @@ if __name__ == '__main__':
     for filename in images:
         image = cv2.imread(filename)
 
-        robot_position = robot_detector.detect_robot_position(image)
+        robot_position = robot_detector.detect_position(image)
