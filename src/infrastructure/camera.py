@@ -29,7 +29,7 @@ class JSONCameraModelRepository:
                 camera_model_dto['intrinsic_parameters'],
                 camera_model_dto['extrinsic_parameters'],
                 camera_model_dto['camera_matrix'],
-                None,
+                camera_model_dto['distortion_coefficients'],
                 camera_model_dto['rotation_matrix'],
                 camera_model_dto['translation_vector'],
                 camera_model_dto['origin_image_coordinates']
