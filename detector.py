@@ -82,7 +82,7 @@ def closest_from(point, points):
 
 if __name__ == '__main__':
     robot_detector = RobotDetector()
-    images = glob.glob('data/images/robot_targets/*.jpg')
+    images = glob.glob('data/images/robot_images/*.jpg')
 
     for filename in images:
         image = cv2.imread(filename)
