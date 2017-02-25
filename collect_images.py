@@ -1,9 +1,9 @@
-import cv2
 import os
-
 from datetime import datetime
 
-from detector import RobotDetector
+import cv2
+
+from detector.robotdetector import RobotDetector
 from src.infrastructure.camera import JSONCameraModelRepository
 
 if __name__ == '__main__':

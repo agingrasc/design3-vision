@@ -10,6 +10,10 @@ def euc_distance(p1, p2):
     return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
 
+class NoRobotMarkersFound(Exception):
+    pass
+
+
 class RobotDetector:
     def detect_position(self, image):
         image = self._preprocess(image)
@@ -49,12 +53,17 @@ class RobotDetector:
                 contours.append(c[2])
                 contours = np.array(contours)
 
+                if len(contours) < 3:
+                    raise NoRobotMarkersFound
+
                 (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
 
                 center = (int(r_x), int(r_y))
                 radius = int(r_r)
 
             robot_approx_position = {"center": center, "radius": radius}
+        else:
+            raise NoRobotMarkersFound
 
         return robot_approx_position
 
