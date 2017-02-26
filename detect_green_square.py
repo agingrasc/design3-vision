@@ -5,7 +5,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 import cv2
 import numpy as np
 
-from camera.image import Image
+from src.camera.camera import Image
 
 times = []
 

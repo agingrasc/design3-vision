@@ -7,15 +7,18 @@ from flask import make_response
 from flask import jsonify
 from flask import request
 
-CALIBRATION_IMAGES_DIRECTORY = './data/images/calibration'
-CHESSBOARD_IMAGES_DIRECTORY = '../data/images/chessboard/'
-UNDISTORT_IMAGES_DIRECTORY = '../data/images/undistort/'
+CALIBRATION_IMAGES_DIRECTORY = '../data/images/calibration'
+CHESSBOARD_IMAGES_DIRECTORY = '../../data/images/chessboard'
+UNDISTORT_IMAGES_DIRECTORY = '../../data/images/undistort'
 
 
 class FlaskRESTAPI:
-    def __init__(self, static_folder, camera_service):
+    def __init__(self, static_folder, camera_service, calibration_service, image_repository, camera_model_repository):
         self.static_folder = static_folder
         self.camera_service = camera_service
+        self.calibration_service = calibration_service
+        self.image_repository = image_repository
+        self.camera_model_repository = camera_model_repository
 
         self.api = Flask(__name__, static_folder=static_folder)
 
@@ -27,6 +30,8 @@ class FlaskRESTAPI:
         self.api.add_url_rule('/images/<string:filename>', 'image', self.get_image)
         self.api.add_url_rule('/images/<string:id>/undistorted', 'undistorted', self.get_undistorted_image)
         self.api.add_url_rule('/images/<string:id>/chessboard', 'chessboard', self.get_chessboard)
+
+        self.api.add_url_rule('/calibration/create', 'calibration-create', self.create_calibration)
 
         self.api.add_url_rule('/world_coordinates', 'world-coordinates', self.get_world_coordinates, methods=['POST'])
 
@@ -48,7 +53,7 @@ class FlaskRESTAPI:
         return send_from_directory(self.static_folder, 'livefeed.html')
 
     def get_image(self, filename):
-        return send_file('../data/images/calibration' + "/" + filename, mimetype='image/jpeg')
+        return send_file('../../data/images/calibration' + "/" + filename, mimetype='image/jpeg')
 
     def get_undistorted_image(self, id):
         filename = id + ".jpg"
@@ -71,6 +76,13 @@ class FlaskRESTAPI:
 
     def js(self, filename):
         return send_from_directory(self.static_folder + "/js", filename)
+
+    def create_calibration(self):
+        directory = "../data/images/calibration"
+        images_filenames = [directory + "/" + filename for filename in os.listdir(directory)]
+        images = self.image_repository.load_all_images(images_filenames)
+        camera_model = self.calibration_service.calibrate_from_images(images)
+        return make_response(jsonify(camera_model))
 
     def get_calibration_images_infos(self):
         filenames = os.listdir(CALIBRATION_IMAGES_DIRECTORY)
