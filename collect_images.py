@@ -3,7 +3,7 @@ from datetime import datetime
 
 import cv2
 
-from detector.robotdetector import RobotDetector
+from detector.robotpositiondetector import RobotPositionDetector
 from src.infrastructure.camera import JSONCameraModelRepository
 
 if __name__ == '__main__':
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     index = 20
 
-    robot_detector = RobotDetector()
+    robot_detector = RobotPositionDetector()
 
     while cap.isOpened():
         ret, frame = cap.read()
