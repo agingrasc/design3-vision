@@ -20,56 +20,20 @@ class RobotDetector:
         threshold = self._threshold_robot_makers(image)
         robot_markers = self._find_robot_markers(threshold)
 
-        robot_approx_position = {}
+        contours = np.array([position[0:2] for position in robot_markers])
+        center, radius = self._get_enclosing_circle(contours)
 
-        if robot_markers is not None:
-            robot_markers = np.round(robot_markers[0, :]).astype("int")
-            contours = np.array([x[0:2] for x in robot_markers])
-            (x, y), radius = cv2.minEnclosingCircle(contours)
+        if self._has_all_robot_markers(robot_markers):
+            contours = self._detect_with_center_of_mass(threshold, center, contours)
 
-            approx_center = [x, y]
+            if self._has_all_robot_markers(contours):
+                raise NoRobotMarkersFound
 
-            center = (int(x), int(y))
-            radius = int(radius)
-
-            if len(robot_markers) < 3:
-                center_of_masses = []
-                cnts = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                for contour in cnts[1]:
-                    M = cv2.moments(contour)
-                    try:
-                        cX = int(M["m10"] / M["m00"])
-                        cY = int(M["m01"] / M["m00"])
-                        center = [cX, cY]
-                        center_of_masses.append(center)
-                    except ZeroDivisionError:
-                        continue
-
-                c = closest_from(approx_center, center_of_masses)
-
-                contours = contours.tolist()
-                contours.append(c[0])
-                contours.append(c[1])
-                contours.append(c[2])
-                contours = np.array(contours)
-
-                if len(contours) < 3:
-                    raise NoRobotMarkersFound
-
-                (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
-
-                center = (int(r_x), int(r_y))
-                radius = int(r_r)
-
-            robot_approx_position = {"center": center, "radius": radius}
-        else:
-            raise NoRobotMarkersFound
-
-        return robot_approx_position
-
-    def _find_robot_markers(self, image):
-        return cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, 2.0, 12, param1=50, param2=30, minRadius=5,
-                                maxRadius=30)
+            center, radius = self._get_enclosing_circle(contours)
+        return {
+            "center": center,
+            "radius": radius
+        }
 
     def _preprocess(self, image):
         image = cv2.medianBlur(image, ksize=5)
@@ -83,6 +47,44 @@ class RobotDetector:
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel)
         return mask
+
+    def _find_robot_markers(self, image):
+        robot_markers = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, 2.0, 12, param1=50, param2=30, minRadius=5,
+                                         maxRadius=30)
+        if robot_markers is not None:
+            return np.round(robot_markers[0, :]).astype("int")
+        else:
+            raise NoRobotMarkersFound
+
+    def _detect_with_center_of_mass(self, threshold, approx_center, contours):
+        center_of_masses = []
+        cnts = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in cnts[1]:
+            try:
+                center = self._find_center_of_mass(contour)
+                center_of_masses.append(center)
+            except ZeroDivisionError:
+                continue
+        c = closest_from(approx_center, center_of_masses)
+
+        contours = contours.tolist()
+        contours.append(c[0])
+        contours.append(c[1])
+        contours.append(c[2])
+        return np.array(contours)
+
+    def _find_center_of_mass(self, contour):
+        contour_moments = cv2.moments(contour)
+        center_x = int(contour_moments["m10"] / contour_moments["m00"])
+        center_y = int(contour_moments["m01"] / contour_moments["m00"])
+        return [center_x, center_y]
+
+    def _has_all_robot_markers(self, markers):
+        return len(markers) < 3
+
+    def _get_enclosing_circle(self, contours):
+        (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
+        return (int(r_x), int(r_y)), int(r_r)
 
 
 def closest_from(point, points):
