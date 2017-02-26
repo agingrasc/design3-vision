@@ -13,7 +13,7 @@ class RobotDetectorTest(unittest.TestCase):
         image_with_robot_markers = cv2.imread('./fixture/clean_image_with_robot_markers.jpg')
         expected_robot_position = (510, 370)
 
-        robot_image_position = self.robot_detector.detect_position(image_with_robot_markers)
+        robot_image_position = self.robot_detector.detect_position(image_with_robot_markers)['robot_center']
 
         self.assertEqual(robot_image_position, expected_robot_position)
 

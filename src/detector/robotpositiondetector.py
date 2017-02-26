@@ -23,14 +23,19 @@ class RobotPositionDetector:
         robot_position = self._get_robot_position(robot_markers)
 
         if self._missing_markers(robot_markers):
-            markers = self._detect_markers_from_center_of_mass(threshold, robot_position, robot_markers)
+            robot_markers = self._detect_markers_from_center_of_mass(threshold, robot_position, robot_markers)
 
-            if self._missing_markers(markers):
+            if self._missing_markers(robot_markers):
                 raise NoRobotMarkersFound
 
-            robot_position = self._get_robot_position(markers)
+            robot_position = self._get_robot_position(robot_markers)
 
-        return robot_position
+        direction = self._get_direction_vector(robot_markers, robot_position)
+
+        return {
+            "robot_center": robot_position,
+            "direction": direction
+        }
 
     def _preprocess(self, image):
         image = cv2.medianBlur(image, ksize=5)
@@ -64,13 +69,24 @@ class RobotPositionDetector:
                 center_of_masses.append(self._find_center_of_mass(contour))
             except ZeroDivisionError:
                 continue
-        neighbours = closest_from(approx_center, center_of_masses)
+
+        neighbours = order_by_neighbours(approx_center, center_of_masses)
 
         contours = contours.tolist()
         contours.append(neighbours[0])
         contours.append(neighbours[1])
         contours.append(neighbours[2])
         return np.array(contours)
+
+    def _get_direction_vector(self, markers, robot_position):
+        tip = markers[0]
+        max_mean = 0
+        for marker in markers:
+            mean = find_mean_distance(marker, markers)
+            if mean > max_mean:
+                max_mean = mean
+                tip = marker
+        return [robot_position, tip]
 
     def _find_center_of_mass(self, contour):
         contour_moments = cv2.moments(contour)
@@ -86,9 +102,25 @@ class RobotPositionDetector:
         return len(markers) < NUMBER_OF_MARKERS
 
 
-def closest_from(point, points):
+def order_by_neighbours(point, points):
     return sorted(points, key=lambda p: euc_distance(point, p))
 
+
+def find_mean_distance(point, points):
+    sum = 0
+    for p in points:
+        if point[0] != p[0] and point[1] != p[1]:
+            sum += euc_distance(point, p)
+    return sum / len(points) - 1
+
+
+def get_robot_angle(robot_position):
+    u = [1, 0]
+    v = robot_position['direction'][1] - robot_position['direction'][0]
+
+    angle = math.acos(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
+
+    return np.rad2deg(angle)
 
 if __name__ == '__main__':
     robot_detector = RobotPositionDetector()
@@ -99,6 +131,11 @@ if __name__ == '__main__':
 
         robot_position = robot_detector.detect_position(image)
 
-        cv2.circle(image, robot_position, 1, (0, 0, 0), 2)
+        degrees = get_robot_angle(robot_position)
+
+        cv2.circle(image, robot_position['robot_center'], 1, (0, 0, 0), 2)
+        cv2.line(image, tuple(robot_position['direction'][0]), tuple(robot_position['direction'][1]), (0, 255, 0), 2)
+        cv2.arrowedLine(image, (0, 0), (50, 0), (0, 255, 0), 3)
+        cv2.putText(image, str(degrees), tuple(robot_position['direction'][1]), fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1.0, color=(255, 255, 255))
         cv2.imshow("Position", image)
         cv2.waitKey(3000)
