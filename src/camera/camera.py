@@ -128,6 +128,9 @@ class CameraModel:
 
         return np.array(P, dtype=float).tolist()
 
+    def get_origin(self):
+        return self._origin
+
     def undistort_image(self, image):
         return cv2.undistort(image, self._intrinsic_parameters, self._distortion_coefficients, None, None)
 
