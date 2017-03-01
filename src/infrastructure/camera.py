@@ -1,6 +1,6 @@
 import json
 
-from camera.camera import CameraModel
+from src.camera.camera import CameraModel
 
 
 class JSONCameraModelRepository:
@@ -19,6 +19,10 @@ class JSONCameraModelRepository:
     def add_camera_model(self, camera_model):
         self._models[camera_model.get_id()] = camera_model
 
+        file = open(self._file, 'w')
+        json.dump([model.to_dto() for model in self._models.values()], file, indent=4)
+        file.close()
+
     def _load_models_from(self, file):
         with open(file, 'r') as data:
             camera_models_data = json.load(data)
@@ -34,4 +38,4 @@ class JSONCameraModelRepository:
                 camera_model_dto['translation_vector'],
                 camera_model_dto['origin_image_coordinates']
             )
-            self.add_camera_model(camera_model)
+            self._models[camera_model.get_id()] = camera_model

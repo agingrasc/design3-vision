@@ -7,7 +7,8 @@ NUMBER_OF_MARKERS = 3
 
 
 def euc_distance(p1, p2):
-    return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+    distance = math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+    return distance
 
 
 class NoRobotMarkersFound(Exception):
@@ -43,17 +44,19 @@ class RobotPositionDetector:
 
     def _threshold_robot_makers(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_fuchia_hsv = np.array([120, 90, 90])
-        higher_fuchia_hsv = np.array([205, 255, 255])
+        lower_fuchia_hsv = np.array([120, 100, 100])
+        higher_fuchia_hsv = np.array([170, 255, 255])
         mask = cv2.inRange(image, lower_fuchia_hsv, higher_fuchia_hsv)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=5)
+        cv2.imshow('After morph', mask)
         return mask
 
     def _detect_markers_from_circles(self, threshold_image):
-        robot_markers = cv2.HoughCircles(threshold_image, cv2.HOUGH_GRADIENT, 2.0, 12, param1=50, param2=30,
+        robot_markers = cv2.HoughCircles(threshold_image, cv2.HOUGH_GRADIENT, 1.8, 12, param1=50, param2=30,
                                          minRadius=5,
                                          maxRadius=30)
+
         if robot_markers is not None:
             robot_markers = np.round(robot_markers[0, :]).astype("int")
             robot_markers = np.array([position[0:2] for position in robot_markers])
@@ -70,12 +73,24 @@ class RobotPositionDetector:
             except ZeroDivisionError:
                 continue
 
-        neighbours = order_by_neighbours(approx_center, center_of_masses)
+        new_points = order_by_neighbours(approx_center, center_of_masses)
 
         contours = contours.tolist()
-        contours.append(neighbours[0])
-        contours.append(neighbours[1])
-        contours.append(neighbours[2])
+        to_add = []
+        try:
+            for new in new_points:
+                duplicate = False
+                for contour in contours:
+                    if euc_distance(new, contour) < 10 or euc_distance(new, contour) > 125:
+                        duplicate = True
+                if duplicate is False:
+                    to_add.append(new)
+
+            for add in to_add:
+                contours.append(add)
+        except Exception:
+            pass
+
         return np.array(contours)
 
     def _get_direction_vector(self, markers, robot_position):
@@ -88,15 +103,15 @@ class RobotPositionDetector:
                 tip = marker
         return [robot_position, tip]
 
+    def _get_robot_position(self, contours):
+        (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
+        return (int(r_x), int(r_y))
+
     def _find_center_of_mass(self, contour):
         contour_moments = cv2.moments(contour)
         center_x = int(contour_moments["m10"] / contour_moments["m00"])
         center_y = int(contour_moments["m01"] / contour_moments["m00"])
         return [center_x, center_y]
-
-    def _get_robot_position(self, contours):
-        (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
-        return (int(r_x), int(r_y))
 
     def _missing_markers(self, markers):
         return len(markers) < NUMBER_OF_MARKERS
@@ -111,7 +126,8 @@ def find_mean_distance(point, points):
     for p in points:
         if point[0] != p[0] and point[1] != p[1]:
             sum += euc_distance(point, p)
-    return sum / len(points) - 1
+    mean_distance = sum / len(points) - 1
+    return mean_distance
 
 
 def get_robot_angle(robot_position):
@@ -122,20 +138,28 @@ def get_robot_angle(robot_position):
 
     return np.rad2deg(angle)
 
+
 if __name__ == '__main__':
     robot_detector = RobotPositionDetector()
+
     images = glob.glob('../../data/images/robot_images/*.jpg')
 
     for filename in images:
         image = cv2.imread(filename)
 
-        robot_position = robot_detector.detect_position(image)
+        try:
+            robot_position = robot_detector.detect_position(image)
 
-        degrees = get_robot_angle(robot_position)
+            degrees = get_robot_angle(robot_position)
 
-        cv2.circle(image, robot_position['robot_center'], 1, (0, 0, 0), 2)
-        cv2.line(image, tuple(robot_position['direction'][0]), tuple(robot_position['direction'][1]), (0, 255, 0), 2)
-        cv2.arrowedLine(image, (0, 0), (50, 0), (0, 255, 0), 3)
-        cv2.putText(image, str(degrees), tuple(robot_position['direction'][1]), fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1.0, color=(255, 255, 255))
+            cv2.circle(image, robot_position['robot_center'], 1, (0, 0, 0), 2)
+            cv2.line(image, tuple(robot_position['direction'][0]), tuple(robot_position['direction'][1]), (0, 255, 0),
+                     2)
+            cv2.arrowedLine(image, (0, 0), (50, 0), (0, 255, 0), 3)
+            cv2.putText(image, str(degrees), tuple(robot_position['direction'][1]), fontFace=cv2.FONT_HERSHEY_PLAIN,
+                        fontScale=1.0, color=(255, 255, 255))
+        except NoRobotMarkersFound:
+            pass
+
         cv2.imshow("Position", image)
         cv2.waitKey(3000)

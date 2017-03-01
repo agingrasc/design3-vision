@@ -26,7 +26,7 @@ if __name__ == "__main__":
         has_frame, frame = cap.read()
 
         if has_frame:
-            
+
             cv2.imshow('Setting app', frame)
 
             key = cv2.waitKey(1)

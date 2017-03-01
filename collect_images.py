@@ -1,71 +1,111 @@
 import os
+import gzip
 from datetime import datetime
 
+import base64
+import tornado
+from tornado import websocket
 import cv2
+import requests
+import json
+import numpy as np
 
 from detector.robotpositiondetector import RobotPositionDetector
+from detector.robotpositiondetector import NoRobotMarkersFound
+from detector.robotpositiondetector import get_robot_angle
 from src.infrastructure.camera import JSONCameraModelRepository
 
-if __name__ == '__main__':
-    cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FPS, 15)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
+cap.set(cv2.CAP_PROP_FPS, 15)
 
-    print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
-    print("HEIGHT: {}".format(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-    print("WIDTH: {}".format(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
+print("HEIGHT: {}".format(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+print("WIDTH: {}".format(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
 
-    now = datetime.utcnow().isoformat()
-    calibration_session_dir = './data/calibrations/' + now
+camera_repository = JSONCameraModelRepository('./data/camera_models/camera_models.json')
+camera_model = camera_repository.get_camera_model_by_id(0)
+origin = camera_model.get_origin()[0]
 
-    os.mkdir(calibration_session_dir)
+robot_detector = RobotPositionDetector()
 
-    camera_repository = JSONCameraModelRepository('./camera_model.json')
-    camera_model = camera_repository.get_camera_model_by_id(0)
-    origin = camera_model.get_origin()[0]
+ret, frame = cap.read()
 
-    index = 20
 
-    robot_detector = RobotPositionDetector()
+def process_image(frame):
+    frame = camera_model.undistort_image(frame)
+    try:
+        robot_position = robot_detector.detect_position(frame)
+        center = robot_position['robot_center']
 
-    while cap.isOpened():
+        # world_position = camera_model.compute_image_to_world_coordinates(center[0], center[1], 10)
+
+        world_position = requests.post("http://localhost:5000/world_coordinates",
+                                       json={"x": center[0], "y": center[1], "z": -10}).json()
+        print(world_position)
+        print("Robot Position: {0}".format(world_position))
+
+        degrees = get_robot_angle(robot_position)
+
+        cv2.circle(frame, robot_position['robot_center'], 1, (0, 0, 0), 2)
+        cv2.line(frame, tuple(robot_position['direction'][0]), tuple(robot_position['direction'][1]), (0, 255, 0),
+                 2)
+        cv2.arrowedLine(frame, (0, 0), (50, 0), (0, 255, 0), 3)
+        cv2.putText(frame, str(degrees), tuple(robot_position['direction'][1]), fontFace=cv2.FONT_HERSHEY_PLAIN,
+                    fontScale=1.0, color=(255, 255, 255))
+    except Exception as e:
+        print(e)
+    cv2.circle(frame, (int(origin[0]), int(origin[1])), 2, (0, 255, 0), 2)
+    return frame, robot_position
+
+
+class EchoWebSocket(tornado.websocket.WebSocketHandler):
+    def initialize(self):
         ret, frame = cap.read()
+        frame, world_coordinate = process_image(frame)
+        self.str = base64.b64encode(frame)
 
-        frame = camera_model.undistort_image(frame)
+    def open(self):
+        print("WebSocket opened")
+        self.write_message(self.str)
 
-        position = robot_detector.detect_position(frame)
+    def on_message(self, message):
+        ret, frame = cap.read()
+        if not ret:
+            print("ERROR")
+        frame, world_position = process_image(frame)
 
-        try:
-            center = position['center']
-            radius = position['radius']
+        direction = [world_position['direction'][0], tuple(world_position['direction'][1])]
 
-            world_position = camera_model.compute_image_to_world_coordinates(center[0], center[1], 10)
+        direction = np.array(direction, dtype=int).tolist()
 
-            print("Robot Position: {0}".format(world_position))
 
-            cv2.circle(frame, center, radius, (0, 255, 0), 2)
-            cv2.circle(frame, center, 2, (0, 0, 0), -1)
-        except KeyError:
-            continue
+        body = {
+            "center": world_position['robot_center'],
+            "direction": get_robot_angle(world_position)
+        }
 
-        cv2.circle(frame, (int(origin[0]), int(origin[1])), 2, (0, 255, 0), 2)
+        req = requests.post("http://localhost:5000/set_robot_position", json=body).json()
 
-        if ret:
-            cv2.imshow('frame', frame)
+        image = cv2.imencode('.png', frame)[1]
+        self.str = base64.b64encode(image)
 
-            key = cv2.waitKey(1)
+        self.write_message(gzip.compress(image))
 
-            if key == ord('s'):
-                print('Writing image')
-                filename = "./image" + str(index) + '.jpg'
-                index += 1
-                print(filename)
-                cv2.imwrite(filename, frame)
+    def on_close(self):
+        print("WebSocket closed")
 
-            elif key == ord('q'):
-                break
+    def check_origin(self, origin):
+        print(origin)
+        return True
+
+
+if __name__ == '__main__':
+    application = tornado.web.Application([(r"/", EchoWebSocket), ])
+    application.listen(3000)
+    tornado.ioloop.IOLoop.instance().start()
 
     cap.release()
     cv2.destroyAllWindows()
