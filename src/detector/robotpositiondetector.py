@@ -3,6 +3,8 @@ import glob
 import math
 import numpy as np
 
+from infrastructure.camera import JSONCameraModelRepository
+
 NUMBER_OF_MARKERS = 3
 
 
@@ -31,11 +33,12 @@ class RobotPositionDetector:
 
             robot_position = self._get_robot_position(robot_markers)
 
-        direction = self._get_direction_vector(robot_markers, robot_position)
+        leading_marker = self._get_leading_marker(robot_markers)
+        direction_vector = [robot_position, leading_marker]
 
         return {
             "robot_center": robot_position,
-            "direction": direction
+            "direction": direction_vector
         }
 
     def _preprocess(self, image):
@@ -45,15 +48,14 @@ class RobotPositionDetector:
     def _threshold_robot_makers(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         lower_fuchia_hsv = np.array([120, 100, 100])
-        higher_fuchia_hsv = np.array([170, 255, 255])
+        higher_fuchia_hsv = np.array([176, 255, 255])
         mask = cv2.inRange(image, lower_fuchia_hsv, higher_fuchia_hsv)
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=5)
-        cv2.imshow('After morph', mask)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
         return mask
 
     def _detect_markers_from_circles(self, threshold_image):
-        robot_markers = cv2.HoughCircles(threshold_image, cv2.HOUGH_GRADIENT, 1.8, 12, param1=50, param2=30,
+        robot_markers = cv2.HoughCircles(threshold_image, cv2.HOUGH_GRADIENT, 1.7, 12, param1=50, param2=30,
                                          minRadius=5,
                                          maxRadius=30)
 
@@ -76,24 +78,22 @@ class RobotPositionDetector:
         new_points = order_by_neighbours(approx_center, center_of_masses)
 
         contours = contours.tolist()
-        to_add = []
-        try:
-            for new in new_points:
-                duplicate = False
-                for contour in contours:
-                    if euc_distance(new, contour) < 10 or euc_distance(new, contour) > 125:
-                        duplicate = True
-                if duplicate is False:
-                    to_add.append(new)
 
-            for add in to_add:
-                contours.append(add)
-        except Exception:
-            pass
+        to_add = []
+        for new in new_points:
+            duplicate = False
+            for contour in contours:
+                if euc_distance(new, contour) < 10 or euc_distance(new, contour) > 125:
+                    duplicate = True
+            if duplicate is False:
+                to_add.append(new)
+
+        for add in to_add:
+            contours.append(add)
 
         return np.array(contours)
 
-    def _get_direction_vector(self, markers, robot_position):
+    def _get_leading_marker(self, markers):
         tip = markers[0]
         max_mean = 0
         for marker in markers:
@@ -101,7 +101,7 @@ class RobotPositionDetector:
             if mean > max_mean:
                 max_mean = mean
                 tip = marker
-        return [robot_position, tip]
+        return tip
 
     def _get_robot_position(self, contours):
         (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
@@ -141,11 +141,15 @@ def get_robot_angle(robot_position):
 
 if __name__ == '__main__':
     robot_detector = RobotPositionDetector()
+    camera_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
+    camera_model = camera_repository.get_camera_model_by_id(0)
 
     images = glob.glob('../../data/images/robot_images/*.jpg')
 
     for filename in images:
         image = cv2.imread(filename)
+
+        image = camera_model.undistort_image(image)
 
         try:
             robot_position = robot_detector.detect_position(image)
