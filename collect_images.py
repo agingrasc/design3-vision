@@ -25,11 +25,6 @@ print("FPS: {}".format(cap.get(cv2.CAP_PROP_FPS)))
 print("HEIGHT: {}".format(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 print("WIDTH: {}".format(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
 
-camera_repository = JSONCameraModelRepository('./data/camera_models/camera_models.json')
-camera_model = camera_repository.get_camera_model_by_id(0)
-origin = camera_model.get_origin()[0]
-
-robot_detector = RobotPositionDetector()
 
 ret, frame = cap.read()
 
