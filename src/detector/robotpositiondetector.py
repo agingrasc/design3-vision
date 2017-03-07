@@ -4,6 +4,9 @@ import math
 import numpy as np
 
 NUMBER_OF_MARKERS = 3
+TARGET_MIN_DISTANCE = 12
+TARGET_MIN_RADIUS = 5
+TARGET_MAX_RADIUS = 30
 
 
 def euc_distance(p1, p2):
@@ -36,9 +39,8 @@ class RobotPositionDetector:
     def detect_position(self, image):
         image = self._preprocess(image)
         threshold = self._threshold_robot_makers(image)
-        detection_result = CircleDetector(12, 5, 30)
 
-        robot_markers = detection_result.detect(threshold)
+        robot_markers = CircleDetector(TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS, TARGET_MAX_RADIUS).detect(threshold)
         robot_position = self._get_robot_position(robot_markers)
 
         if self._missing_markers(robot_markers):
