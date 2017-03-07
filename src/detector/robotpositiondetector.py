@@ -3,6 +3,8 @@ import glob
 import math
 import numpy as np
 
+from infrastructure.camera import JSONCameraModelRepository
+
 NUMBER_OF_MARKERS = 3
 TARGET_MIN_DISTANCE = 12
 TARGET_MIN_RADIUS = 5
@@ -10,7 +12,8 @@ TARGET_MAX_RADIUS = 30
 
 
 def euc_distance(p1, p2):
-    return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+    distance = math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+    return distance
 
 
 class NoMatchingCirclesFound(Exception):
@@ -51,11 +54,12 @@ class RobotPositionDetector:
 
             robot_position = self._get_robot_position(robot_markers)
 
-        direction = self._get_direction_vector(robot_markers, robot_position)
+        leading_marker = self._get_leading_marker(robot_markers)
+        direction_vector = [robot_position, leading_marker]
 
         return {
             "robot_center": robot_position,
-            "direction": direction
+            "direction": direction_vector
         }
 
     def _preprocess(self, image):
@@ -64,11 +68,11 @@ class RobotPositionDetector:
 
     def _threshold_robot_makers(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_fuchia_hsv = np.array([120, 90, 90])
-        higher_fuchia_hsv = np.array([205, 255, 255])
+        lower_fuchia_hsv = np.array([120, 100, 100])
+        higher_fuchia_hsv = np.array([176, 255, 255])
         mask = cv2.inRange(image, lower_fuchia_hsv, higher_fuchia_hsv)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
         return mask
 
     def _detect_markers_from_center_of_mass(self, threshold, approx_center, contours):
@@ -80,15 +84,25 @@ class RobotPositionDetector:
             except ZeroDivisionError:
                 continue
 
-        neighbours = order_by_neighbours(approx_center, center_of_masses)
+        new_points = order_by_neighbours(approx_center, center_of_masses)
 
         contours = contours.tolist()
-        contours.append(neighbours[0])
-        contours.append(neighbours[1])
-        contours.append(neighbours[2])
+
+        to_add = []
+        for new in new_points:
+            duplicate = False
+            for contour in contours:
+                if euc_distance(new, contour) < 10 or euc_distance(new, contour) > 125:
+                    duplicate = True
+            if duplicate is False:
+                to_add.append(new)
+
+        for add in to_add:
+            contours.append(add)
+
         return np.array(contours)
 
-    def _get_direction_vector(self, markers, robot_position):
+    def _get_leading_marker(self, markers):
         tip = markers[0]
         max_mean = 0
         for marker in markers:
@@ -96,17 +110,17 @@ class RobotPositionDetector:
             if mean > max_mean:
                 max_mean = mean
                 tip = marker
-        return [robot_position, tip]
+        return tip
+
+    def _get_robot_position(self, contours):
+        (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
+        return (int(r_x), int(r_y))
 
     def _find_center_of_mass(self, contour):
         contour_moments = cv2.moments(contour)
         center_x = int(contour_moments["m10"] / contour_moments["m00"])
         center_y = int(contour_moments["m01"] / contour_moments["m00"])
         return [center_x, center_y]
-
-    def _get_robot_position(self, contours):
-        (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
-        return (int(r_x), int(r_y))
 
     def _missing_markers(self, markers):
         return len(markers) < NUMBER_OF_MARKERS
@@ -121,7 +135,8 @@ def find_mean_distance(point, points):
     for p in points:
         if point[0] != p[0] and point[1] != p[1]:
             sum += euc_distance(point, p)
-    return sum / len(points) - 1
+    mean_distance = sum / len(points) - 1
+    return mean_distance
 
 
 def get_robot_angle(robot_position):
@@ -132,20 +147,32 @@ def get_robot_angle(robot_position):
 
     return np.rad2deg(angle)
 
+
 if __name__ == '__main__':
     robot_detector = RobotPositionDetector()
+    camera_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
+    camera_model = camera_repository.get_camera_model_by_id(0)
+
     images = glob.glob('../../data/images/robot_images/*.jpg')
 
     for filename in images:
         image = cv2.imread(filename)
 
-        robot_position = robot_detector.detect_position(image)
+        image = camera_model.undistort_image(image)
 
-        degrees = get_robot_angle(robot_position)
+        try:
+            robot_position = robot_detector.detect_position(image)
 
-        cv2.circle(image, robot_position['robot_center'], 1, (0, 0, 0), 2)
-        cv2.line(image, tuple(robot_position['direction'][0]), tuple(robot_position['direction'][1]), (0, 255, 0), 2)
-        cv2.arrowedLine(image, (0, 0), (50, 0), (0, 255, 0), 3)
-        cv2.putText(image, str(degrees), tuple(robot_position['direction'][1]), fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1.0, color=(255, 255, 255))
+            degrees = get_robot_angle(robot_position)
+
+            cv2.circle(image, robot_position['robot_center'], 1, (0, 0, 0), 2)
+            cv2.line(image, tuple(robot_position['direction'][0]), tuple(robot_position['direction'][1]), (0, 255, 0),
+                     2)
+            cv2.arrowedLine(image, (0, 0), (50, 0), (0, 255, 0), 3)
+            cv2.putText(image, str(degrees), tuple(robot_position['direction'][1]), fontFace=cv2.FONT_HERSHEY_PLAIN,
+                        fontScale=1.0, color=(255, 255, 255))
+        except NoRobotMarkersFound:
+            pass
+
         cv2.imshow("Position", image)
         cv2.waitKey(3000)

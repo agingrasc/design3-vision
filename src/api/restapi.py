@@ -7,6 +7,12 @@ from flask import make_response
 from flask import jsonify
 from flask import request
 
+import requests
+
+import numpy as np
+
+from detector.robotpositiondetector import get_robot_angle
+
 CALIBRATION_IMAGES_DIRECTORY = '../data/images/calibration'
 CHESSBOARD_IMAGES_DIRECTORY = '../../data/images/chessboard'
 UNDISTORT_IMAGES_DIRECTORY = '../../data/images/undistort'
@@ -19,6 +25,7 @@ class FlaskRESTAPI:
         self.calibration_service = calibration_service
         self.image_repository = image_repository
         self.camera_model_repository = camera_model_repository
+        self.robot_position = [0, 0, 0]
 
         self.api = Flask(__name__, static_folder=static_folder)
 
@@ -30,6 +37,9 @@ class FlaskRESTAPI:
         self.api.add_url_rule('/images/<string:filename>', 'image', self.get_image)
         self.api.add_url_rule('/images/<string:id>/undistorted', 'undistorted', self.get_undistorted_image)
         self.api.add_url_rule('/images/<string:id>/chessboard', 'chessboard', self.get_chessboard)
+
+        self.api.add_url_rule('/set_robot_position', 'robot-position', self.set_robot_position, methods=["POST"])
+        self.api.add_url_rule('/go_to', 'go_to', self.go_to, methods=["POST"])
 
         self.api.add_url_rule('/calibration/create', 'calibration-create', self.create_calibration)
 
@@ -66,10 +76,49 @@ class FlaskRESTAPI:
     def get_world_coordinates(self):
         coordinate = request.get_json()
 
+        print(coordinate)
+
         world_coordinates = self.camera_service.compute_image_to_world_coordinates(
             coordinate['x'], coordinate['y'], coordinate['z'])
 
-        return make_response(jsonify({"world_coordinates": world_coordinates}))
+        response = make_response(jsonify({"world_coordinates": world_coordinates}))
+        response.headers['Access-Control-Allow-Origin'] = "*"
+        return response
+
+    def set_robot_position(self):
+        self.robot_position = request.get_json()
+        print(self.robot_position)
+        self.robot_position = {
+            "center": self.camera_service.compute_image_to_world_coordinates(
+            self.robot_position['center'][0], self.robot_position['center'][1], 10),
+            "direction": self.robot_position['direction']
+        }
+        return make_response(jsonify({"message": "robot position set", "data": self.robot_position}))
+
+    def go_to(self):
+        next_position = request.get_json()
+
+        world = self.camera_service.compute_image_to_world_coordinates(
+            next_position['x'], next_position['y'], 0)
+
+        transform = self.camera_service.compute_transform_matrix(self.robot_position['direction'], self.robot_position['center'])
+
+        next = 4.7 * np.dot(transform, np.array([world[0], world[1], 0]))
+
+        body = {
+            'x': next.tolist()[0],
+            'y': next.tolist()[1],
+            "theta": np.deg2rad(self.robot_position['direction'])
+        }
+
+        try:
+            go_to = requests.post("http://192.168.0.29:8080/go-to-position", json=body).json()
+        except Exception as e:
+            print(e)
+
+        response = make_response(jsonify(next.tolist()))
+        response.headers['Access-Control-Allow-Origin'] = "*"
+        return response
 
     def css(self, filename):
         return send_from_directory(self.static_folder + "/css", filename)
