@@ -96,17 +96,6 @@ class RobotPositionDetector:
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel)
         return mask
 
-    def _detect_markers_from_circles(self, threshold_image):
-        robot_markers = cv2.HoughCircles(threshold_image, cv2.HOUGH_GRADIENT, 2.0, 12, param1=50, param2=30,
-                                         minRadius=5,
-                                         maxRadius=30)
-        if robot_markers is not None:
-            robot_markers = np.round(robot_markers[0, :]).astype("int")
-            robot_markers = np.array([position[0:2] for position in robot_markers])
-            return robot_markers
-        else:
-            raise NoRobotMarkersFound
-
     def _detect_markers_from_center_of_mass(self, threshold, approx_center, contours):
         center_of_masses = []
         cnts = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
