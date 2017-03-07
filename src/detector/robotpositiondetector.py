@@ -6,6 +6,9 @@ import numpy as np
 from infrastructure.camera import JSONCameraModelRepository
 
 NUMBER_OF_MARKERS = 3
+TARGET_MIN_DISTANCE = 12
+TARGET_MIN_RADIUS = 5
+TARGET_MAX_RADIUS = 30
 
 
 def euc_distance(p1, p2):
@@ -13,8 +16,26 @@ def euc_distance(p1, p2):
     return distance
 
 
-class NoRobotMarkersFound(Exception):
+class NoMatchingCirclesFound(Exception):
     pass
+
+class CircleDetector:
+    def __init__(self, min_distance, min_radius, max_radius):
+        self._min_distance = min_distance
+        self._min_radius = min_radius
+        self._max_radius = max_radius
+
+    def detect(self, image):
+        circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, 1.7, self._min_distance, param1=50, param2=30,
+                                         minRadius=self._min_radius,
+                                         maxRadius=self._max_radius)
+
+        if circles is not None:
+            circles = np.round(circles[0, :]).astype("int")
+            circles = np.array([position[0:2] for position in circles])
+            return circles
+        else:
+            raise NoMatchingCirclesFound
 
 
 class RobotPositionDetector:
@@ -22,14 +43,14 @@ class RobotPositionDetector:
         image = self._preprocess(image)
         threshold = self._threshold_robot_makers(image)
 
-        robot_markers = self._detect_markers_from_circles(threshold)
+        robot_markers = CircleDetector(TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS, TARGET_MAX_RADIUS).detect(threshold)
         robot_position = self._get_robot_position(robot_markers)
 
         if self._missing_markers(robot_markers):
             robot_markers = self._detect_markers_from_center_of_mass(threshold, robot_position, robot_markers)
 
             if self._missing_markers(robot_markers):
-                raise NoRobotMarkersFound
+                raise NoMatchingCirclesFound
 
             robot_position = self._get_robot_position(robot_markers)
 
@@ -53,18 +74,6 @@ class RobotPositionDetector:
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
         return mask
-
-    def _detect_markers_from_circles(self, threshold_image):
-        robot_markers = cv2.HoughCircles(threshold_image, cv2.HOUGH_GRADIENT, 1.7, 12, param1=50, param2=30,
-                                         minRadius=5,
-                                         maxRadius=30)
-
-        if robot_markers is not None:
-            robot_markers = np.round(robot_markers[0, :]).astype("int")
-            robot_markers = np.array([position[0:2] for position in robot_markers])
-            return robot_markers
-        else:
-            raise NoRobotMarkersFound
 
     def _detect_markers_from_center_of_mass(self, threshold, approx_center, contours):
         center_of_masses = []
