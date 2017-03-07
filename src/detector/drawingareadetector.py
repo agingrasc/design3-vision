@@ -7,10 +7,7 @@ class NoDrawingAreaFound(Exception):
 
 
 class DrawingAreaDetector:
-    def __init__(self):
-        pass
-
-    def detect_area(self, image):
+    def detect(self, image):
         image = self._preprocess(image)
         mask = self._threshold_green(image)
         drawing_area = self._find_drawing_area(mask)
