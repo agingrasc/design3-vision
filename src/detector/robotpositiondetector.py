@@ -13,13 +13,59 @@ def euc_distance(p1, p2):
 class NoRobotMarkersFound(Exception):
     pass
 
+class CircleDetector:
+    def __init__(self, image):
+        self.image = image
+        self.detectionMethod = cv2.HOUGH_GRADIENT
+        self.ratio = 2.0
+        self.minDist = 12
+        self.param1 = 50
+        self.param2 = 30
+        self.minRadius = 5
+        self.maxRadius = 30
+
+    def set_detection_method(self, detection):
+        self.detectionMethod = detection
+
+    def set_ratio(self, ratio):
+        self.ratio = ratio
+
+    def set_min_dist(self, dist):
+        self.minDist = dist
+
+    def set_param1(self, param):
+        self.param1 = param
+
+    def set_param2(self, param):
+        self.param2 = param
+
+    def set_min_radius(self, radius):
+        self.minRadius = radius
+
+    def set_max_radius(self, radius):
+        self.maxRadius = radius
+
+    def detect_markers_from_circles(self):
+        robot_markers = cv2.HoughCircles(self.image, self.detectionMethod, self.ratio, self.minDist,
+                                         self.param1,
+                                         self.param2,
+                                         self.minRadius,
+                                         self.maxRadius)
+        if robot_markers is not None:
+            robot_markers = np.round(robot_markers[0, :]).astype("int")
+            robot_markers = np.array([position[0:2] for position in robot_markers])
+            return robot_markers
+        else:
+            raise NoRobotMarkersFound
+
 
 class RobotPositionDetector:
     def detect_position(self, image):
         image = self._preprocess(image)
         threshold = self._threshold_robot_makers(image)
+        detection_result = CircleDetector(threshold)
 
-        robot_markers = self._detect_markers_from_circles(threshold)
+        robot_markers = detection_result.detect_markers_from_circles()
         robot_position = self._get_robot_position(robot_markers)
 
         if self._missing_markers(robot_markers):
