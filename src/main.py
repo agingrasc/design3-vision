@@ -8,7 +8,7 @@ from infrastructure.camera import JSONCameraModelRepository
 
 if __name__ == "__main__":
     camera_model_repository = JSONCameraModelRepository('../data/camera_models/camera_models.json')
-    camera_model = camera_model_repository.get_camera_model_by_id(1)
+    camera_model = camera_model_repository.get_camera_model_by_id(0)
 
     camera_factory = CameraFactory()
     calibration_service = CalibrationService(camera_factory)
