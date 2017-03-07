@@ -123,8 +123,9 @@ def order_points(pts):
 
 if __name__ == '__main__':
     current_dir = os.getcwd()
-    raw_dir = os.path.join(current_dir, 'raw')
-    processed_dir = os.path.join(current_dir, 'processed')
+    raw_dir = os.path.join(current_dir, './data/images/raw')
+    print(raw_dir)
+    processed_dir = os.path.join(current_dir, './data/images/processed')
 
     images = []
 

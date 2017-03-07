@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import math
 
 stop_criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -106,10 +107,13 @@ class CameraModel:
         self._distortion_coefficients = np.array(distortion_coefficients)
         self._rotation_matrix = np.array(rotation_matrix)
         self._translation_vector = np.array(translation_vector)
-        self._origin = origin
+        self._origin = np.array(origin)
 
     def get_id(self):
         return self._id
+
+    def get_origin(self):
+        return self._origin
 
     def compute_image_to_world_coordinates(self, u, v, d):
         m = self._camera_matrix
@@ -128,14 +132,23 @@ class CameraModel:
 
         return np.array(P, dtype=float).tolist()
 
-    def get_origin(self):
-        return self._origin
+    def compute_transform_matrix(self, angle, position):
+        rad = np.deg2rad(angle)
+
+        transform = np.array([
+            [math.cos(rad), - math.sin(rad), position[0]],
+            [math.sin(rad), math.cos(rad), position[1]],
+            [0, 0, 1]
+        ])
+
+        return np.linalg.inv(transform)
 
     def undistort_image(self, image):
         return cv2.undistort(image, self._intrinsic_parameters, self._distortion_coefficients, None, None)
 
-    def describe(self):
+    def to_dto(self):
         return {
+            "id": self._id,
             "intrinsic_parameters": self._intrinsic_parameters.tolist(),
             "extrinsic_parameters": self._extrinsic_parameters.tolist(),
             "camera_matrix": self._camera_matrix.tolist(),
@@ -144,3 +157,20 @@ class CameraModel:
             "distortion_coefficients": self._distortion_coefficients.tolist(),
             "origin_image_coordinates": self._origin.tolist()
         }
+
+
+if __name__ == '__main__':
+    camera_model = CameraModel(None, None, None, None, None, None, None, None)
+
+    transform = camera_model.compute_transform_matrix(39, [73, 26])
+
+    point = np.array([
+        79,
+        31,
+        1
+    ])
+
+    print(transform)
+    print(point)
+
+    print(np.dot(transform, point))
