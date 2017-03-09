@@ -26,7 +26,18 @@ class ObstacleDetector:
             cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
             # draw the center of the circle
             cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
+        self.square_bounding(obstacles, cimg)
         return cimg
+
+    def square_bounding(self, obstacles, cimg):
+        i = 0
+        while i < obstacles.shape[1]:
+            min_x = obstacles[0][i][0] - obstacles[0][i][2]
+            min_y = obstacles[0][i][1] - obstacles[0][i][2]
+            height = obstacles[0][i][2]
+            width = obstacles[0][i][2]
+            cv2.rectangle(cimg, (min_x, min_y), (min_x + 2*width, min_y + 2*height), (0, 255, 0), 2)
+            i += 1
 
     def _median_blur(self, img):
         img = cv2.medianBlur(img, 5)
