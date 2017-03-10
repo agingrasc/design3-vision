@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 
 
-class Square:
+class Rectangle:
     def __init__(self, points):
-        self._contour_points = points.tolist()
+        self._contour_points = points[:, 0, :].tolist()
 
     def area(self):
         return cv2.contourArea(self.has_contour_points())
@@ -13,4 +13,4 @@ class Square:
         return np.array(self._contour_points)
 
     def draw_in(self, image):
-        cv2.drawContours(image, [self.has_contour_points()], 0, (0, 0, 255), 2)
+        cv2.drawContours(image, [self.has_contour_points()], -1, (0, 255, 0), 2)

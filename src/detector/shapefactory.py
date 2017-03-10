@@ -1,10 +1,15 @@
 import cv2
 import numpy as np
 
-from src.shape.square import Square
+from shape.rectangle import Rectangle
+from shape.square import Square
 
 
 class NotASquareError(Exception):
+    pass
+
+
+class NotARectangleError(Exception):
     pass
 
 
@@ -15,9 +20,18 @@ class ShapeFactory:
         else:
             raise NotASquareError
 
+    def create_rectangle(self, points):
+        if self._form_a_valid_rectangle(points):
+            return Rectangle(points)
+        else:
+            raise NotARectangleError
+
     def _form_a_valid_square(self, points):
         return self._points_have_four_sides(points) and self._have_all_right_angles(
             points) and self._sides_form_a_square(points)
+
+    def _form_a_valid_rectangle(self, points):
+        return self._points_have_four_sides(points) and self._sides_form_a_rectangle(points)
 
     def _points_have_four_sides(self, points):
         return len(points) == 4 and cv2.contourArea(points) > 1000 and cv2.isContourConvex(points)
@@ -26,6 +40,11 @@ class ShapeFactory:
         (x, y, w, h) = cv2.boundingRect(points)
         ar = w / float(h)
         return ar >= 0.95 and ar <= 1.05
+
+    def _sides_form_a_rectangle(self, points):
+        (x, y, w, h) = cv2.boundingRect(points)
+        ar = w / float(h)
+        return ar > 1.05
 
     def _have_all_right_angles(self, points):
         points = points.reshape(-1, 2)

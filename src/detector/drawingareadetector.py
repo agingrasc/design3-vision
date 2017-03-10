@@ -32,7 +32,7 @@ class DrawingAreaDetector:
 
     def _threshold_green(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_green_hsv = np.array([45, 100, 100])
+        lower_green_hsv = np.array([45, 40, 40])
         upper_green_hsv = np.array([80, 255, 255])
         mask = cv2.inRange(image, lower_green_hsv, upper_green_hsv)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
