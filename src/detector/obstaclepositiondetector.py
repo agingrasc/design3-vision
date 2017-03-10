@@ -8,8 +8,8 @@ from detector.robotpositiondetector import NoMatchingCirclesFound
 
 RATIO = 1
 TARGET_MIN_DISTANCE = 20
-TARGET_MIN_RADIUS = 20
-TARGET_MAX_RADIUS = 40
+TARGET_MIN_RADIUS = 30
+TARGET_MAX_RADIUS = 42
 
 
 class ObstacleDetector:
@@ -27,7 +27,7 @@ class ObstacleDetector:
             # draw the center of the circle
             cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
         self.square_bounding(obstacles, cimg)
-        return cimg
+        return cimg, obstacles
 
     def square_bounding(self, obstacles, cimg):
         i = 0
@@ -38,6 +38,30 @@ class ObstacleDetector:
             width = obstacles[0][i][2]
             cv2.rectangle(cimg, (min_x, min_y), (min_x + 2*width, min_y + 2*height), (0, 255, 0), 2)
             i += 1
+
+    def create_list_of_rect(self, obstacles):
+        lst = []
+        min_x = obstacles[0] - obstacles[2]
+        min_y = obstacles[1] - obstacles[2]
+        max_x = obstacles[0] + obstacles[2]
+        max_y = obstacles[1] + obstacles[2]
+        lst.append(min_x)
+        lst.append(min_y)
+        lst.append(max_x)
+        lst.append(max_y)
+        return lst
+
+    def list_manager(self, obstacles):
+        if obstacles.shape[1] == 0:
+            return
+        if obstacles.shape[1] == 1:
+            lst1 = self.create_list_of_rect(obstacles[0][0])
+            return lst1
+        if obstacles.shape[1] == 2:
+            lst1 = self.create_list_of_rect(obstacles[0][0])
+            lst2 = self.create_list_of_rect(obstacles[0][1])
+            return lst1, lst2
+        return
 
     def _median_blur(self, img):
         img = cv2.medianBlur(img, 5)
@@ -59,7 +83,10 @@ if __name__ == '__main__':
         image = camera_model.undistort_image(image)
 
         try:
-            cimg = obstacle_detector.detect_obstacle(image)
+            cimg = obstacle_detector.detect_obstacle(image)[0]
+            ob = obstacle_detector.detect_obstacle(image)[1]
+            ab = obstacle_detector.list_manager(ob)
+            print(ab, ': ', filename)
         except NoMatchingCirclesFound:
             pass
 
