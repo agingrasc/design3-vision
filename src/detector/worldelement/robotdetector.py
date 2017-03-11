@@ -4,6 +4,9 @@ import math
 import numpy as np
 
 from detector.shape.circledetector import NoMatchingCirclesFound, CircleDetector
+from detector.shape.squaredetector import SquareDetector
+from detector.worldelement.shapefactory import ShapeFactory
+
 from infrastructure.camera import JSONCameraModelRepository
 from world.robot import Robot
 
@@ -19,9 +22,19 @@ def euc_distance(p1, p2):
 
 
 class RobotDetector:
+    def __init__(self, shape_factory):
+        self._shape_factory = shape_factory
+
     def detect(self, image):
         image = self._preprocess(image)
         threshold = self._threshold_robot_makers(image)
+
+        robot_frame = None
+
+        squares = SquareDetector(self._shape_factory).detect(image)
+        squares = [square for square in squares if 14000 <= square.area() <= 18000]
+        if len(squares) > 0:
+            robot_frame = squares[0]
 
         robot_markers = CircleDetector(TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS, TARGET_MAX_RADIUS).detect(threshold)
         robot_position = self._get_robot_position(robot_markers)
@@ -37,7 +50,7 @@ class RobotDetector:
         leading_marker = self._get_leading_marker(robot_markers)
         direction_vector = [robot_position, leading_marker]
 
-        return Robot(robot_position, direction_vector)
+        return Robot(robot_position, direction_vector, robot_frame)
 
     def _preprocess(self, image):
         image = cv2.medianBlur(image, ksize=5)
@@ -117,7 +130,8 @@ def find_mean_distance(point, points):
 
 
 if __name__ == '__main__':
-    robot_detector = RobotDetector()
+    shape_factory = ShapeFactory()
+    robot_detector = RobotDetector(shape_factory)
     camera_repository = JSONCameraModelRepository('../../../data/camera_models/camera_models.json')
     camera_model = camera_repository.get_camera_model_by_id(0)
 

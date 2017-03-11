@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     table_detector = TableDetector(shape_factory)
     drawing_area_detector = DrawingAreaDetector(shape_factory)
-    robot_detector = RobotDetector()
+    robot_detector = RobotDetector(shape_factory)
 
     detection_service = DetectionService(drawing_area_detector, table_detector, robot_detector)
     camera_model_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
