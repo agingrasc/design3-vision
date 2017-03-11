@@ -1,17 +1,13 @@
 import os
 
+import numpy as np
+import requests
 from flask import Flask
+from flask import jsonify
+from flask import make_response
+from flask import request
 from flask import send_file
 from flask import send_from_directory
-from flask import make_response
-from flask import jsonify
-from flask import request
-
-import requests
-
-import numpy as np
-
-from detector.robotpositiondetector import get_robot_angle
 
 CALIBRATION_IMAGES_DIRECTORY = '../data/images/calibration'
 CHESSBOARD_IMAGES_DIRECTORY = '../../data/images/chessboard'

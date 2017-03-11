@@ -1,6 +1,6 @@
 import cv2
 
-from detector.robotpositiondetector import RobotPositionDetector, get_robot_angle
+from detector.worldelement.robotpositiondetector import RobotPositionDetector, get_robot_angle
 from infrastructure.camera import JSONCameraModelRepository
 
 fps = 5
