@@ -2,17 +2,20 @@ import cv2
 import numpy as np
 from operator import methodcaller
 
-from world.table import Table
-from detector.shapedetector import RectangleDetector
+from src.detector.shape.rectangledetector import RectangleDetector
+from src.detector.worldelement.worldelementdetector import WorldElementDetector
+from src.world.table import Table
+
+MIN_TABLE_AREA = 70000
 
 
-class NoTableFound(Exception):
+class NoTableFoundError(Exception):
     pass
 
 
-class TableDetector:
+class TableDetector(WorldElementDetector):
     def __init__(self, shape_factory):
-        self._shape_factory = shape_factory
+        super().__init__(shape_factory)
 
     def detect(self, image):
         mask = self._threshold_table_color(image)
@@ -21,19 +24,19 @@ class TableDetector:
 
     def _threshold_table_color(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_green_hsv = np.array([20, 10, 10])
-        upper_green_hsv = np.array([40, 120, 240])
-        mask = cv2.inRange(image, lower_green_hsv, upper_green_hsv)
+        lower_table_color = np.array([20, 10, 10])
+        upper_table_color = np.array([40, 120, 240])
+        mask = cv2.inRange(image, lower_table_color, upper_table_color)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(5, 5))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=3)
         return mask
 
     def _find_table(self, image):
         rectangles = RectangleDetector(self._shape_factory).detect(image)
-        rectangles = [rectangle for rectangle in rectangles if rectangle.area() > 70000]
+        rectangles = [rectangle for rectangle in rectangles if rectangle.area() > MIN_TABLE_AREA]
         rectangles = sorted(rectangles, key=methodcaller('area'), reverse=True)
 
         if len(rectangles) > 0:
             return Table(rectangles[0])
         else:
-            raise NoTableFound
+            raise NoTableFoundError

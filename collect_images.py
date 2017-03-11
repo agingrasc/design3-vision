@@ -1,19 +1,13 @@
-import os
-import gzip
-from datetime import datetime
-
 import base64
+import gzip
+
+import cv2
+import numpy as np
+import requests
 import tornado
 from tornado import websocket
-import cv2
-import requests
-import json
-import numpy as np
 
-from detector.robotpositiondetector import RobotPositionDetector
-from detector.robotpositiondetector import NoRobotMarkersFound
-from detector.robotpositiondetector import get_robot_angle
-from src.infrastructure.camera import JSONCameraModelRepository
+from detector.worldelement.robotpositiondetector import get_robot_angle
 
 cap = cv2.VideoCapture(0)
 

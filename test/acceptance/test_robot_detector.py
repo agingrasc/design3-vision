@@ -1,8 +1,9 @@
-import cv2
 import unittest
 
-from src.detector.robotpositiondetector import RobotPositionDetector
-from src.detector.robotpositiondetector import NoRobotMarkersFound
+import cv2
+
+from detector.worldelement.robotpositiondetector import NoRobotMarkersFound
+from detector.worldelement.robotpositiondetector import RobotPositionDetector
 
 
 class RobotDetectorTest(unittest.TestCase):

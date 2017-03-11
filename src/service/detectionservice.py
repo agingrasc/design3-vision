@@ -2,16 +2,16 @@ import glob
 import cv2
 
 from src.infrastructure.camera import JSONCameraModelRepository
-from src.detector.drawingareadetector import DrawingAreaDetector
-from src.detector.shapefactory import ShapeFactory
-from src.detector.tabledetector import TableDetector
+from src.detector.worldelement.drawingareadetector import DrawingAreaDetector
+from src.detector.worldelement.shapefactory import ShapeFactory
+from src.detector.worldelement.tabledetector import TableDetector
 
 
 class DetectionService:
     def __init__(self, drawing_area_detector, table_detector):
         self._detectors = [drawing_area_detector, table_detector]
 
-    def detect_world_elements(self, image):
+    def detect_all_world_elements(self, image):
         world_elements = []
 
         for detector in self._detectors:
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
         image = camera_model.undistort_image(image)
 
-        world_elements = detection_service.detect_world_elements(image)
+        world_elements = detection_service.detect_all_world_elements(image)
         detection_service.draw_world_elements_into(image, world_elements)
 
         cv2.imshow('World Image', image)
