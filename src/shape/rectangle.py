@@ -4,7 +4,7 @@ import numpy as np
 
 class Rectangle:
     def __init__(self, points):
-        self._contour_points = points[:, 0, :].tolist()
+        self._contour_points = points.tolist()
 
     def area(self):
         return cv2.contourArea(self.has_contour_points())
