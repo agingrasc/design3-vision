@@ -1,6 +1,7 @@
 import glob
 import cv2
 
+from detector.worldelement.robotdetector import RobotDetector
 from src.infrastructure.camera import JSONCameraModelRepository
 from src.detector.worldelement.drawingareadetector import DrawingAreaDetector
 from src.detector.worldelement.shapefactory import ShapeFactory
@@ -8,8 +9,8 @@ from src.detector.worldelement.tabledetector import TableDetector
 
 
 class DetectionService:
-    def __init__(self, drawing_area_detector, table_detector):
-        self._detectors = [drawing_area_detector, table_detector]
+    def __init__(self, drawing_area_detector, table_detector, robot_detector):
+        self._detectors = [drawing_area_detector, table_detector, robot_detector]
 
     def detect_all_world_elements(self, image):
         world_elements = []
@@ -33,8 +34,9 @@ if __name__ == '__main__':
 
     table_detector = TableDetector(shape_factory)
     drawing_area_detector = DrawingAreaDetector(shape_factory)
+    robot_detector = RobotDetector()
 
-    detection_service = DetectionService(drawing_area_detector, table_detector)
+    detection_service = DetectionService(drawing_area_detector, table_detector, robot_detector)
     camera_model_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
     camera_model = camera_model_repository.get_camera_model_by_id(0)
 

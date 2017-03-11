@@ -1,6 +1,6 @@
 import cv2
 
-from detector.worldelement.robotpositiondetector import RobotPositionDetector, get_robot_angle
+from detector.worldelement.robotdetector import RobotDetector, get_robot_angle
 from infrastructure.camera import JSONCameraModelRepository
 
 fps = 5
@@ -15,13 +15,13 @@ camera_repository = JSONCameraModelRepository('./data/camera_models/camera_model
 camera_model = camera_repository.get_camera_model_by_id(0)
 origin = camera_model.get_origin()[0]
 
-robot_detector = RobotPositionDetector()
+robot_detector = RobotDetector()
 
 
 def process_image(frame):
     frame = camera_model.undistort_image(frame)
     try:
-        robot_position = robot_detector.detect_position(frame)
+        robot_position = robot_detector.detect(frame)
         center = robot_position['robot_center']
 
         world_position = camera_model.compute_image_to_world_coordinates(center[0], center[1], 5)

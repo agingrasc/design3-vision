@@ -3,7 +3,9 @@ import glob
 import math
 import numpy as np
 
+from detector.shape.circledetector import NoMatchingCirclesFound, CircleDetector
 from infrastructure.camera import JSONCameraModelRepository
+from world.robot import Robot
 
 NUMBER_OF_MARKERS = 3
 TARGET_MIN_DISTANCE = 12
@@ -16,31 +18,8 @@ def euc_distance(p1, p2):
     return distance
 
 
-class NoMatchingCirclesFound(Exception):
-    pass
-
-
-class CircleDetector:
-    def __init__(self, min_distance, min_radius, max_radius):
-        self._min_distance = min_distance
-        self._min_radius = min_radius
-        self._max_radius = max_radius
-
+class RobotDetector:
     def detect(self, image):
-        circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, 1.7, self._min_distance, param1=50, param2=30,
-                                   minRadius=self._min_radius,
-                                   maxRadius=self._max_radius)
-
-        if circles is not None:
-            circles = np.round(circles[0, :]).astype("int")
-            circles = np.array([position[0:2] for position in circles])
-            return circles
-        else:
-            raise NoMatchingCirclesFound
-
-
-class RobotPositionDetector:
-    def detect_position(self, image):
         image = self._preprocess(image)
         threshold = self._threshold_robot_makers(image)
 
@@ -58,10 +37,7 @@ class RobotPositionDetector:
         leading_marker = self._get_leading_marker(robot_markers)
         direction_vector = [robot_position, leading_marker]
 
-        return {
-            "robot_center": robot_position,
-            "direction": direction_vector
-        }
+        return Robot(robot_position, direction_vector)
 
     def _preprocess(self, image):
         image = cv2.medianBlur(image, ksize=5)
@@ -140,21 +116,12 @@ def find_mean_distance(point, points):
     return mean_distance
 
 
-def get_robot_angle(robot_position):
-    u = [1, 0]
-    v = robot_position['direction'][1] - robot_position['direction'][0]
-
-    angle = math.acos(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
-
-    return np.rad2deg(angle)
-
-
 if __name__ == '__main__':
-    robot_detector = RobotPositionDetector()
-    camera_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
+    robot_detector = RobotDetector()
+    camera_repository = JSONCameraModelRepository('../../../data/camera_models/camera_models.json')
     camera_model = camera_repository.get_camera_model_by_id(0)
 
-    images = glob.glob('../../data/images/robot_images/*.jpg')
+    images = glob.glob('../../../data/images/robot_images/*.jpg')
 
     for filename in images:
         image = cv2.imread(filename)
@@ -162,17 +129,10 @@ if __name__ == '__main__':
         image = camera_model.undistort_image(image)
 
         try:
-            robot_position = robot_detector.detect_position(image)
+            robot = robot_detector.detect(image)
 
-            degrees = get_robot_angle(robot_position)
-
-            cv2.circle(image, robot_position['robot_center'], 1, (0, 0, 0), 2)
-            cv2.line(image, tuple(robot_position['direction'][0]), tuple(robot_position['direction'][1]), (0, 255, 0),
-                     2)
-            cv2.arrowedLine(image, (0, 0), (50, 0), (0, 255, 0), 3)
-            cv2.putText(image, str(degrees), tuple(robot_position['direction'][1]), fontFace=cv2.FONT_HERSHEY_PLAIN,
-                        fontScale=1.0, color=(255, 255, 255))
-        except NoRobotMarkersFound:
+            robot.draw_in(image)
+        except NoMatchingCirclesFound:
             pass
 
         cv2.imshow("Position", image)

@@ -7,7 +7,7 @@ import requests
 import tornado
 from tornado import websocket
 
-from detector.worldelement.robotpositiondetector import get_robot_angle
+from detector.worldelement.robotdetector import get_robot_angle
 
 cap = cv2.VideoCapture(0)
 
@@ -26,7 +26,7 @@ ret, frame = cap.read()
 def process_image(frame):
     frame = camera_model.undistort_image(frame)
     try:
-        robot_position = robot_detector.detect_position(frame)
+        robot_position = robot_detector.detect(frame)
         center = robot_position['robot_center']
 
         # world_position = camera_model.compute_image_to_world_coordinates(center[0], center[1], 10)

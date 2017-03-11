@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from detector.worldelement.robotpositiondetector import CircleDetector
+from detector.worldelement.robotdetector import CircleDetector
 
 if __name__ == '__main__':
     img = cv2.imread('../../data/images/robot_images/image4.jpg', 0)
