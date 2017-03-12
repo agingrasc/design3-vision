@@ -2,9 +2,9 @@ import os
 
 from api.restapi import FlaskRESTAPI
 from camera.camera import CameraFactory
-from service.calibrationservice import CalibrationService
-from infrastructure.imagerepository import ImageRepository
 from infrastructure.camera import JSONCameraModelRepository
+from infrastructure.imagerepository import ImageRepository
+from service.camera.calibrationservice import CalibrationService
 
 if __name__ == "__main__":
     camera_model_repository = JSONCameraModelRepository('../data/camera_models/camera_models.json')

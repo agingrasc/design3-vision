@@ -8,7 +8,7 @@ from src.detector.worldelement.shapefactory import ShapeFactory
 from src.detector.worldelement.tabledetector import TableDetector
 
 
-class DetectionService:
+class ImageDetectionService:
     def __init__(self, drawing_area_detector, table_detector, robot_detector):
         self._detectors = [drawing_area_detector, table_detector, robot_detector]
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     drawing_area_detector = DrawingAreaDetector(shape_factory)
     robot_detector = RobotDetector(shape_factory)
 
-    detection_service = DetectionService(drawing_area_detector, table_detector, robot_detector)
+    detection_service = ImageDetectionService(drawing_area_detector, table_detector, robot_detector)
     camera_model_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
     camera_model = camera_model_repository.get_camera_model_by_id(0)
 
