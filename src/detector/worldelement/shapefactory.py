@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from scipy.spatial import distance as dist
 
 from shape.rectangle import Rectangle
 from shape.square import Square
@@ -16,13 +17,13 @@ class NotARectangleError(Exception):
 class ShapeFactory:
     def create_square(self, points):
         if self._form_a_valid_square(points):
-            return Square(points)
+            return Square(self._order_points(points))
         else:
             raise NotASquareError
 
     def create_rectangle(self, points):
         if self._form_a_valid_rectangle(points):
-            return Rectangle(points)
+            return Rectangle(self._order_points(points))
         else:
             raise NotARectangleError
 
@@ -59,3 +60,19 @@ class ShapeFactory:
     def _angle_cos(self, p0, p1, p2):
         d1, d2 = (p0 - p1).astype('float'), (p2 - p1).astype('float')
         return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
+
+    # adapted from http://www.pyimagesearch.com/2016/03/21/ordering-coordinates-clockwise-with-python-and-opencv
+    def _order_points(self, points):
+        points = points[:, 0, :]
+        x_sorted = points[np.argsort(points[:, 0]), :]
+
+        left_most = x_sorted[:2, :]
+        right_most = x_sorted[2:, :]
+
+        left_most = left_most[np.argsort(left_most[:, 1]), :]
+        (top_left, bottom_left) = left_most
+
+        distance = dist.cdist(top_left[np.newaxis], right_most, "euclidean")[0]
+        (bottom_right, top_right) = right_most[np.argsort(distance)[::-1], :]
+
+        return np.array([top_left, top_right, bottom_right, bottom_left], dtype="int")
