@@ -27,8 +27,8 @@ class TableDetector(WorldElementDetector):
         lower_table_color = np.array([20, 10, 10])
         upper_table_color = np.array([40, 120, 240])
         mask = cv2.inRange(image, lower_table_color, upper_table_color)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(5, 5))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=3)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=5)
         return mask
 
     def _find_table(self, image):
