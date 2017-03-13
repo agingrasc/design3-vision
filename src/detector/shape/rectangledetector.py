@@ -1,7 +1,7 @@
 import cv2
 
 from src.detector.shape.shapedetector import ShapeDetector
-from src.detector.worldelement.shapefactory import NotARectangleError
+from detector.worldelement.shapefactory import NotARectangleError
 
 
 class RectangleDetector(ShapeDetector):

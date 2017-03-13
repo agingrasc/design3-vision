@@ -12,10 +12,14 @@ from src.world.table import Table
 
 
 class World:
-    def __init__(self, width, length):
+    def __init__(self, width, length, origin_x, origin_y):
         self._width = width
         self._length = length
         self._unit = "cm"
+        self._origin = {
+            "x": origin_x,
+            "y": origin_y
+        }
 
 
 class ImageToWorldTranslator:
@@ -25,7 +29,8 @@ class ImageToWorldTranslator:
     def create_world(self, table):
         table_corners = self._convert_table_image_points_to_world_coordinates(table)
         table_dimensions = self._get_table_dimension(table_corners)
-        return World(table_dimensions['width'], table_dimensions['length'])
+        world_origin = table._rectangle.as_contour_points().tolist()[3]
+        return World(table_dimensions['width'], table_dimensions['length'], world_origin[0], world_origin[1])
 
     def _convert_table_image_points_to_world_coordinates(self, table):
         table_corners = [self._camera_model.compute_image_to_world_coordinates(corner[0], corner[1], 0)
@@ -74,7 +79,8 @@ class ImageDetectionService:
                 world_element = detector.detect(image)
                 world_elements.append(world_element)
             except Exception as e:
-                print("World initialisation failure: {}".format(type(e).__name__))
+                pass
+                # print("World initialisation failure: {}".format(type(e).__name__))
 
         return world_elements
 
