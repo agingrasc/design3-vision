@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 from sklearn.cluster import KMeans
 
-from detector.shape.squaredetector import SquareDetector
-from detector.worldelement.worldelementdetector import WorldElementDetector
+from src.detector.shape.squaredetector import SquareDetector
+from detector.worldelement.iworldelementdetector import IWorldElementDetector
 from src.world.drawingarea import DrawingArea
 
 
@@ -17,9 +17,9 @@ def closest_node(node, nodes):
     return np.argmin(dist_2)
 
 
-class DrawingAreaDetector(WorldElementDetector):
+class DrawingAreaDetector(IWorldElementDetector):
     def __init__(self, shape_factory):
-        super().__init__(shape_factory)
+        self._shape_factory = shape_factory
 
     def detect(self, image):
         image = self._preprocess(image)

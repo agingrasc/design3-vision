@@ -2,20 +2,16 @@ import glob
 import cv2
 import numpy as np
 
-from detector.worldelement.robotdetector import RobotDetector
-from geometry.coordinate import Coordinate
+from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
+from service.image.detectonceproxy import DetectOnceProxy
+from src.detector.worldelement.robotdetector import RobotDetector
+from src.geometry.coordinate import Coordinate
 from src.infrastructure.camera import JSONCameraModelRepository
 from src.detector.worldelement.drawingareadetector import DrawingAreaDetector
 from src.detector.worldelement.shapefactory import ShapeFactory
 from src.detector.worldelement.tabledetector import TableDetector
 from src.world.table import Table
-
-
-class World:
-    def __init__(self, width, length):
-        self._width = width
-        self._length = length
-        self._unit = "cm"
+from src.world.world import World
 
 
 class ImageToWorldTranslator:
@@ -35,12 +31,6 @@ class ImageToWorldTranslator:
     def _to_coordinates(self, points):
         return [Coordinate(point[0], point[1]) for point in points]
 
-    def _get_table_sides_length(self, table_corners):
-        return sorted([table_corners[0].distance_from(table_corners[1]) * 4.7,
-                       table_corners[1].distance_from(table_corners[2]) * 4.7,
-                       table_corners[2].distance_from(table_corners[3]) * 4.7,
-                       table_corners[3].distance_from(table_corners[0]) * 4.7])
-
     def _get_table_dimension(self, table_corners):
         sides = self._get_table_sides_length(table_corners)
         return {
@@ -48,10 +38,16 @@ class ImageToWorldTranslator:
             "width": sides[3]
         }
 
+    def _get_table_sides_length(self, table_corners):
+        return sorted([table_corners[0].distance_from(table_corners[1]) * 4.7,
+                       table_corners[1].distance_from(table_corners[2]) * 4.7,
+                       table_corners[2].distance_from(table_corners[3]) * 4.7,
+                       table_corners[3].distance_from(table_corners[0]) * 4.7])
+
 
 class ImageDetectionService:
-    def __init__(self, drawing_area_detector, table_detector, robot_detector, image_to_world_translator):
-        self._detectors = [drawing_area_detector, table_detector, robot_detector]
+    def __init__(self, image_to_world_translator):
+        self._detectors = []
         self._image_to_world_translator = image_to_world_translator
 
     def translate_image_to_world(self, image):
@@ -78,6 +74,10 @@ class ImageDetectionService:
 
         return world_elements
 
+    def register_detector(self, detector):
+        if isinstance(detector, IWorldElementDetector):
+            self._detectors.append(detector)
+
     def draw_world_elements_into(self, image, world_elements):
         for element in world_elements:
             element.draw_in(image)
@@ -92,10 +92,16 @@ if __name__ == '__main__':
 
     table_detector = TableDetector(shape_factory)
     drawing_area_detector = DrawingAreaDetector(shape_factory)
+
+    table_detector_proxy = DetectOnceProxy(table_detector)
+    drawing_area_detector_proxy = DetectOnceProxy(drawing_area_detector)
+
     robot_detector = RobotDetector(shape_factory)
 
-    detection_service = ImageDetectionService(drawing_area_detector, table_detector, robot_detector,
-                                              image_to_world_translator)
+    detection_service = ImageDetectionService(image_to_world_translator)
+    detection_service.register_detector(drawing_area_detector_proxy)
+    detection_service.register_detector(table_detector_proxy)
+    detection_service.register_detector(robot_detector)
 
     for filename in glob.glob('../../data/images/full_scene/*.jpg'):
         image = cv2.imread(filename)

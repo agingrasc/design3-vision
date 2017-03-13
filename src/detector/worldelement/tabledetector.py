@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 from operator import methodcaller
 
-from src.detector.shape.rectangledetector import RectangleDetector
-from src.detector.worldelement.worldelementdetector import WorldElementDetector
+from detector.shape.rectangledetector import RectangleDetector
+from detector.worldelement.iworldelementdetector import IWorldElementDetector
 from src.world.table import Table
 
 MIN_TABLE_AREA = 70000
@@ -13,9 +13,9 @@ class NoTableFoundError(Exception):
     pass
 
 
-class TableDetector(WorldElementDetector):
+class TableDetector(IWorldElementDetector):
     def __init__(self, shape_factory):
-        super().__init__(shape_factory)
+        self._shape_factory = shape_factory
 
     def detect(self, image):
         mask = self._threshold_table_color(image)
