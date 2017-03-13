@@ -1,2 +1,0 @@
-class WorldService:
-    pass

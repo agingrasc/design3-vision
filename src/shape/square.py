@@ -7,10 +7,10 @@ class Square:
         self._contour_points = points.tolist()
 
     def area(self):
-        return cv2.contourArea(self.has_contour_points())
+        return cv2.contourArea(self.as_contour_points())
 
-    def has_contour_points(self):
+    def as_contour_points(self):
         return np.array(self._contour_points)
 
     def draw_in(self, image):
-        cv2.drawContours(image, [self.has_contour_points()], 0, (0, 0, 255), 2)
+        cv2.drawContours(image, [self.as_contour_points()], 0, (0, 0, 255), 2)

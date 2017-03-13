@@ -113,7 +113,7 @@ class CameraModel:
         return self._id
 
     def get_origin(self):
-        return self._origin
+        return np.round(self._origin)[0].astype('int').tolist()
 
     def compute_image_to_world_coordinates(self, u, v, d):
         m = self._camera_matrix
