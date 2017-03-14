@@ -67,7 +67,7 @@ if __name__ == "__main__":
             cv2.imshow('World Image', image)
             cv2.waitKey(1)
             # image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_CUBIC)
-g
+
             # cnt = cv2.imencode('.png', image)[1]
 
             # image_data = base64.b64encode(cnt)

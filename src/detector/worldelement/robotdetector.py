@@ -5,6 +5,7 @@ import numpy as np
 
 from detector.shape.circledetector import NoMatchingCirclesFound, CircleDetector
 from detector.shape.squaredetector import SquareDetector
+from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from detector.worldelement.shapefactory import ShapeFactory
 
 from infrastructure.camera import JSONCameraModelRepository
@@ -21,7 +22,7 @@ def euc_distance(p1, p2):
     return distance
 
 
-class RobotDetector:
+class RobotDetector(IWorldElementDetector):
     def __init__(self, shape_factory):
         self._shape_factory = shape_factory
 
