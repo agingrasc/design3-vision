@@ -18,14 +18,6 @@ video.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
 video.set(cv2.CAP_PROP_FPS, 15)
 
 
-def process_frame():
-    ret, image = video.read()
-
-    world = detection_service.translate_image_to_world(image)
-
-    return world, image
-
-
 def get_world_dimension(world):
     if world is not None:
         return {
@@ -66,47 +58,47 @@ if __name__ == "__main__":
     detection_service = ImageDetectionService(drawing_area_detector, table_detector, robot_detector,
                                               image_to_world_translator)
 
-    connection = create_connection("ws://localhost:3000")
+    # connection = create_connection("ws://localhost:3000")
 
-    APP_OPEN = True
-    while APP_OPEN:
-        world, image = process_frame()
-        image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_CUBIC)
+    while video.isOpened():
+        ret, image = video.read()
+        if ret:
+            world = detection_service.translate_image_to_world(image)
+            cv2.imshow('World Image', image)
+            cv2.waitKey(1)
+            # image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_CUBIC)
+g
+            # cnt = cv2.imencode('.png', image)[1]
 
-        cnt = cv2.imencode('.png', image)[1]
+            # image_data = base64.b64encode(cnt)
+            #
+            # response = {
+            #     "headers": "push_vision_data",
+            #     "data": {
+            #         "image": {
+            #             "ratio": "2.58",
+            #             "origin": get_world_origin(world),
+            #
+            #             "data": image_data.decode('utf-8'),
+            #             "original_dimension": {
+            #                 "width": "1280",
+            #                 "height": "800"
+            #             },
+            #             "sent_dimension": {
+            #                 "width": "1280",
+            #                 "height": "800"
+            #             }
+            #         },
+            #         "world": {
+            #             "unit": "cm",
+            #             "base_table": {
+            #                 "dimension": get_world_dimension(world)
+            #             }
+            #         }
+            #     }
+            # }
 
-        image_data = base64.b64encode(cnt)
+            # print(json.dumps(response))
+            # print("")
 
-        response = {
-            "headers": "push_vision_data",
-            "data": {
-                "image": {
-                    "ratio": "2.58",
-                    "origin": get_world_origin(world),
-
-                    "data": image_data.decode('utf-8'),
-                    "original_dimension": {
-                        "width": "1280",
-                        "height": "800"
-                    },
-                    "sent_dimension": {
-                        "width": "1280",
-                        "height": "800"
-                    }
-                },
-                "world": {
-                    "unit": "cm",
-                    "base_table": {
-                        "dimension": get_world_dimension(world)
-                    }
-                }
-            }
-        }
-
-        # print(json.dumps(response))
-        # print("")
-
-        connection.send(json.dumps(response))
-
-        # cv2.imshow('World Image', image)
-        # cv2.waitKey(1)
+            # connection.send(json.dumps(response))

@@ -80,7 +80,7 @@ class ImageDetectionService:
                 world_elements.append(world_element)
             except Exception as e:
                 pass
-                # print("World initialisation failure: {}".format(type(e).__name__))
+                print("World initialisation failure: {}".format(type(e).__name__))
 
         return world_elements
 

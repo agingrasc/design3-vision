@@ -5,11 +5,8 @@ import cv2
 import numpy as np
 import requests
 import tornado
-from tornado import websocket
 
-from detector.worldelement.robotdetector import get_robot_angle
-
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
