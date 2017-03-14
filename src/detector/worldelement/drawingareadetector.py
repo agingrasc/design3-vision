@@ -3,8 +3,9 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 from src.detector.shape.squaredetector import SquareDetector
-from detector.worldelement.iworldelementdetector import IWorldElementDetector
+from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from src.world.drawingarea import DrawingArea
+from src.config import *
 
 
 class NoDrawingAreaFoundError(Exception):
@@ -33,9 +34,7 @@ class DrawingAreaDetector(IWorldElementDetector):
 
     def _threshold_green(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_green_hsv = np.array([45, 40, 40])
-        upper_green_hsv = np.array([80, 255, 255])
-        mask = cv2.inRange(image, lower_green_hsv, upper_green_hsv)
+        mask = cv2.inRange(image, LOWER_GREEN_HSV, UPPER_GREEN_HSV)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=3)

@@ -1,28 +1,11 @@
-import glob
 import cv2
 import numpy as np
 
 from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
-from service.image.detectonceproxy import DetectOnceProxy
-from src.detector.worldelement.robotdetector import RobotDetector
 from src.geometry.coordinate import Coordinate
-from src.infrastructure.camera import JSONCameraModelRepository
-from src.detector.worldelement.drawingareadetector import DrawingAreaDetector
-from src.detector.worldelement.shapefactory import ShapeFactory
-from src.detector.worldelement.tabledetector import TableDetector
 from src.world.table import Table
 from src.world.world import World
-
-
-class World:
-    def __init__(self, width, length, origin_x, origin_y):
-        self._width = width
-        self._length = length
-        self._unit = "cm"
-        self._origin = {
-            "x": origin_x,
-            "y": origin_y
-        }
+from world.robot import Robot
 
 
 class ImageToWorldTranslator:
@@ -34,6 +17,13 @@ class ImageToWorldTranslator:
         table_dimensions = self._get_table_dimension(table_corners)
         world_origin = table._rectangle.as_contour_points().tolist()[3]
         return World(table_dimensions['width'], table_dimensions['length'], world_origin[0], world_origin[1])
+
+    def create_robot(self, robot):
+        world_position = self._camera_model.compute_image_to_world_coordinates(robot._position[0],
+                                                                               robot._position[1], 5.1)
+        adjusted_position = self._camera_model.compute_world_to_image_coordinates(world_position[0],
+                                                                                  world_position[1], 0)
+        return adjusted_position
 
     def _convert_table_image_points_to_world_coordinates(self, table):
         table_corners = [self._camera_model.compute_image_to_world_coordinates(corner[0], corner[1], 0)
@@ -69,9 +59,11 @@ class ImageDetectionService:
             element.draw_in(image)
 
         for image_element in world_elements:
-
             if isinstance(image_element, Table):
                 world = self._image_to_world_translator.create_world(image_element)
+            elif isinstance(image_element, Robot):
+                robot = self._image_to_world_translator.create_robot(image_element)
+                cv2.circle(image, tuple(robot), 2, (255, 0, 0), 2)
         return world
 
     def detect_all_world_elements(self, image):
@@ -94,33 +86,3 @@ class ImageDetectionService:
     def draw_world_elements_into(self, image, world_elements):
         for element in world_elements:
             element.draw_in(image)
-
-
-if __name__ == '__main__':
-    camera_model_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
-    camera_model = camera_model_repository.get_camera_model_by_id(0)
-    image_to_world_translator = ImageToWorldTranslator(camera_model)
-
-    shape_factory = ShapeFactory()
-
-    table_detector = TableDetector(shape_factory)
-    drawing_area_detector = DrawingAreaDetector(shape_factory)
-
-    table_detector_proxy = DetectOnceProxy(table_detector)
-    drawing_area_detector_proxy = DetectOnceProxy(drawing_area_detector)
-
-    robot_detector = RobotDetector(shape_factory)
-
-    detection_service = ImageDetectionService(image_to_world_translator)
-    detection_service.register_detector(drawing_area_detector_proxy)
-    detection_service.register_detector(table_detector_proxy)
-    detection_service.register_detector(robot_detector)
-
-    for filename in glob.glob('../../data/images/full_scene/*.jpg'):
-        image = cv2.imread(filename)
-        image = camera_model.undistort_image(image)
-
-        world = detection_service.translate_image_to_world(image)
-
-        cv2.imshow('World Image', image)
-        cv2.waitKey()

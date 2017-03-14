@@ -7,14 +7,10 @@ from detector.shape.circledetector import NoMatchingCirclesFound, CircleDetector
 from detector.shape.squaredetector import SquareDetector
 from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from detector.worldelement.shapefactory import ShapeFactory
+from src.config import *
 
 from infrastructure.camera import JSONCameraModelRepository
 from world.robot import Robot
-
-NUMBER_OF_MARKERS = 3
-TARGET_MIN_DISTANCE = 12
-TARGET_MIN_RADIUS = 5
-TARGET_MAX_RADIUS = 30
 
 
 def euc_distance(p1, p2):
@@ -59,9 +55,7 @@ class RobotDetector(IWorldElementDetector):
 
     def _threshold_robot_makers(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_fuchia_hsv = np.array([120, 100, 100])
-        higher_fuchia_hsv = np.array([176, 255, 255])
-        mask = cv2.inRange(image, lower_fuchia_hsv, higher_fuchia_hsv)
+        mask = cv2.inRange(image, LOWER_FUCHSIA_HSV, HIGHER_FUCHSIA_HSV)
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
         return mask
