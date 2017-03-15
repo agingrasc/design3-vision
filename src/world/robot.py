@@ -10,6 +10,7 @@ class Robot:
         self._direction = direction
         self._angle = self._get_angle_from(self._direction)
         self._frame = frame
+        self._world_position = None
 
     def draw_in(self, image):
         cv2.circle(image, self._position, 1, (0, 0, 0), 2)
@@ -21,6 +22,12 @@ class Robot:
 
         if self._frame is not None:
             self._frame.draw_in(image)
+
+    def set_world_position(self, position):
+        self._world_position = position
+
+    def set_position(self, position):
+        self._position = position
 
     def _get_angle_from(self, direction):
         u = [1, 0]

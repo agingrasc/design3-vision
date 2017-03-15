@@ -18,12 +18,15 @@ class ImageToWorldTranslator:
         world_origin = table._rectangle.as_contour_points().tolist()[3]
         return World(table_dimensions['width'], table_dimensions['length'], world_origin[0], world_origin[1])
 
-    def create_robot(self, robot):
+    def adjust_robot_position(self, robot):
         world_position = self._camera_model.compute_image_to_world_coordinates(robot._position[0],
                                                                                robot._position[1], 5.1)
+        robot.set_world_position(world_position)
+
         adjusted_position = self._camera_model.compute_world_to_image_coordinates(world_position[0],
                                                                                   world_position[1], 0)
-        return adjusted_position
+        robot.set_position(adjusted_position)
+        return robot
 
     def _convert_table_image_points_to_world_coordinates(self, table):
         table_corners = [self._camera_model.compute_image_to_world_coordinates(corner[0], corner[1], 0)
@@ -54,6 +57,7 @@ class ImageDetectionService:
 
     def translate_image_to_world(self, image):
         world = None
+        robot = None
         world_elements = self.detect_all_world_elements(image)
         for element in world_elements:
             element.draw_in(image)
@@ -62,9 +66,9 @@ class ImageDetectionService:
             if isinstance(image_element, Table):
                 world = self._image_to_world_translator.create_world(image_element)
             elif isinstance(image_element, Robot):
-                robot = self._image_to_world_translator.create_robot(image_element)
-                cv2.circle(image, tuple(robot), 2, (255, 0, 0), 2)
-        return world
+                robot = self._image_to_world_translator.adjust_robot_position(image_element)
+                cv2.circle(image, tuple(robot._position), 2, (255, 0, 0), 2)
+        return world, robot
 
     def detect_all_world_elements(self, image):
         world_elements = []
