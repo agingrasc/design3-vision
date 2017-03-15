@@ -1,8 +1,12 @@
 import base64
 import json
+from time import sleep
+
 import cv2
 
 from enum import Enum
+
+import numpy as np
 from websocket import create_connection
 
 from detector.worldelement.drawingareadetector import DrawingAreaDetector
@@ -50,8 +54,8 @@ def get_world_origin(world):
 def get_robot_position(robot):
     if robot is not None:
         return {
-            "x": str((robot._world_position[0] * 47)),
-            "y": str(-(robot._world_position[1] * 47))
+            "x": str((robot._world_position[0] * 4.4)),
+            "y": str((robot._world_position[1] * 4.4))
         }
     else:
         return {
@@ -101,8 +105,8 @@ def format_message(world, robot, image):
 
 
 if __name__ == "__main__":
-    APP_ENVIRONMENT = AppEnvironment.TESTING_VISION
-    WEBSOCKET = True
+    APP_ENVIRONMENT = AppEnvironment.COMPETITION
+    WEBSOCKET = False
     VIDEO_DEBUG = not WEBSOCKET
 
     camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
@@ -115,8 +119,8 @@ if __name__ == "__main__":
     image_source = None
 
     if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
-        table_detector = DetectOnceProxy(table_detector)
-        drawing_area_detector = DetectOnceProxy(drawing_area_detector)
+        # table_detector = DetectOnceProxy(table_detector)
+        # drawing_area_detector = DetectOnceProxy(drawing_area_detector)
         image_source = VideoStreamImageSource(config.CAMERA_ID)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
         image_source = DirectoryImageSource(config.TEST_IMAGE_DIRECTORY_PATH)
@@ -139,17 +143,28 @@ if __name__ == "__main__":
 
     while image_source.has_next_image():
         image = image_source.next_image()
-        image = camera_model.undistort_image(image)
-        world, robot = detection_service.translate_image_to_world(image)
+        if image is not None:
+            image = camera_model.undistort_image(image)
+            world, robot = detection_service.translate_image_to_world(image)
 
-        message = format_message(world, robot, image)
+            if world:
+                if robot:
+                    robot_target_position = np.array([
+                        robot._world_position[0],
+                        robot._world_position[1],
+                        1
+                    ])
 
-        if WEBSOCKET:
-            try:
-                connection.send(json.dumps(message))
-            except NameError:
-                print("No connection to websocket")
+                    robot.set_world_position(np.dot(world._target_to_world, robot_target_position))
 
-        if VIDEO_DEBUG:
-            cv2.imshow("Image debug", image)
-            cv2.waitKey(1)
+            message = format_message(world, robot, image)
+
+            if WEBSOCKET:
+                try:
+                    connection.send(json.dumps(message))
+                except NameError:
+                    print("No connection to websocket")
+
+            if VIDEO_DEBUG:
+                cv2.imshow("Image debug", image)
+                cv2.waitKey(1)

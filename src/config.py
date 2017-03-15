@@ -4,7 +4,7 @@ BASESTATION_WEBSOCKET_URL = 'ws://localhost:3000'
 CAMERA_MODELS_FILE_PATH = '../data/camera_models/camera_models.json'
 TEST_IMAGE_DIRECTORY_PATH = '../data/images/full_scene/*.jpg'
 TABLE_CAMERA_MODEL_ID = 0
-CAMERA_ID = 0
+CAMERA_ID = 1
 
 # HSV COLOR
 LOWER_GREEN_HSV = np.array([45, 50, 40])

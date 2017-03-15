@@ -115,6 +115,16 @@ class CameraModel:
     def get_origin(self):
         return np.round(self._origin)[0].astype('int').tolist()
 
+    def get_origin_orthogonal(self):
+        x_axis = self.compute_world_to_image_coordinates(5, 0, 0)
+        y_axis = self.compute_world_to_image_coordinates(0, 5, 0)
+
+        return [
+            tuple(x_axis),
+            tuple(self.get_origin()),
+            tuple(y_axis)
+        ]
+
     def compute_world_to_image_coordinates(self, u, v, d):
         homogeneous_coordinates = np.dot(self._camera_matrix, np.array([u, v, d, 1]))
         return np.array([

@@ -1,3 +1,6 @@
+from math import acos
+from time import sleep
+
 import cv2
 import numpy as np
 
@@ -8,6 +11,10 @@ from src.world.world import World
 from world.robot import Robot
 
 
+def vector_angle(v1, v2):
+    return abs(np.dot(v1, v2) / np.sqrt(np.dot(v1, v2) * np.dot(v1, v2)))
+
+
 class ImageToWorldTranslator:
     def __init__(self, camera_model):
         self._camera_model = camera_model
@@ -15,8 +22,29 @@ class ImageToWorldTranslator:
     def create_world(self, table):
         table_corners = self._convert_table_image_points_to_world_coordinates(table)
         table_dimensions = self._get_table_dimension(table_corners)
-        world_origin = table._rectangle.as_contour_points().tolist()[3]
-        return World(table_dimensions['width'], table_dimensions['length'], world_origin[0], world_origin[1])
+        world_origin = table._rectangle.as_contour_points().tolist()[0]
+
+        x_axis = np.array([world_origin, table._rectangle.as_contour_points().tolist()[1]])
+
+        x_axis = [np.array(self._camera_model.compute_image_to_world_coordinates(point[0], point[1], 0)) for point in
+                  x_axis]
+
+        v1 = x_axis[0]
+        v2 = x_axis[1]
+
+        x_axis = v2 - v1
+
+        x_axis = x_axis[0:2]
+
+        origin_x_axis = np.array([5, 0])
+
+        angle = acos(np.dot(origin_x_axis, x_axis) / (np.linalg.norm(origin_x_axis) * np.linalg.norm(x_axis)))
+
+        v1[2] = 0.
+        target_to_world = self._camera_model.compute_transform_matrix(np.rad2deg(angle), v1)
+
+        return World(table_dimensions['width'], table_dimensions['length'], world_origin[0], world_origin[1],
+                     target_to_world)
 
     def adjust_robot_position(self, robot):
         world_position = self._camera_model.compute_image_to_world_coordinates(robot._position[0],
@@ -44,10 +72,10 @@ class ImageToWorldTranslator:
         }
 
     def _get_table_sides_length(self, table_corners):
-        return sorted([table_corners[0].distance_from(table_corners[1]) * 4.7,
-                       table_corners[1].distance_from(table_corners[2]) * 4.7,
-                       table_corners[2].distance_from(table_corners[3]) * 4.7,
-                       table_corners[3].distance_from(table_corners[0]) * 4.7])
+        return sorted([table_corners[0].distance_from(table_corners[1]) * 4.4,
+                       table_corners[1].distance_from(table_corners[2]) * 4.4,
+                       table_corners[2].distance_from(table_corners[3]) * 4.4,
+                       table_corners[3].distance_from(table_corners[0]) * 4.4])
 
 
 class ImageDetectionService:
