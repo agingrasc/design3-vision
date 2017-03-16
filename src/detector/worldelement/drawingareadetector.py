@@ -2,11 +2,13 @@ import cv2
 import numpy as np
 from sklearn.cluster import KMeans
 
-from src.detector.shapedetector import SquareDetector
+from src.detector.shape.squaredetector import SquareDetector
+from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from src.world.drawingarea import DrawingArea
+from src.config import *
 
 
-class NoDrawingAreaFound(Exception):
+class NoDrawingAreaFoundError(Exception):
     pass
 
 
@@ -16,25 +18,18 @@ def closest_node(node, nodes):
     return np.argmin(dist_2)
 
 
-class DrawingAreaDetector:
+class DrawingAreaDetector(IWorldElementDetector):
     def __init__(self, shape_factory):
         self._shape_factory = shape_factory
 
     def detect(self, image):
-        image = self._preprocess(image)
         mask = self._threshold_green(image)
         drawing_area = self._find_drawing_area(mask)
         return drawing_area
 
-    def _preprocess(self, image):
-        image = cv2.medianBlur(image, ksize=3)
-        return image
-
     def _threshold_green(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_green_hsv = np.array([45, 100, 100])
-        upper_green_hsv = np.array([80, 255, 255])
-        mask = cv2.inRange(image, lower_green_hsv, upper_green_hsv)
+        mask = cv2.inRange(image, LOWER_GREEN_HSV, UPPER_GREEN_HSV)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=3)
@@ -46,7 +41,7 @@ class DrawingAreaDetector:
             inner, outer = self._get_inner_and_outer_edges(squares)
             return DrawingArea(inner, outer)
         else:
-            raise NoDrawingAreaFound
+            raise NoDrawingAreaFoundError
 
     def _get_inner_and_outer_edges(self, squares):
         sq = np.array([[2, square.area()] for square in squares])

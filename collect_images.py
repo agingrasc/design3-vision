@@ -1,21 +1,12 @@
-import os
-import gzip
-from datetime import datetime
-
 import base64
-import tornado
-from tornado import websocket
+import gzip
+
 import cv2
-import requests
-import json
 import numpy as np
+import requests
+import tornado
 
-from detector.robotpositiondetector import RobotPositionDetector
-from detector.robotpositiondetector import NoRobotMarkersFound
-from detector.robotpositiondetector import get_robot_angle
-from src.infrastructure.camera import JSONCameraModelRepository
-
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
@@ -32,7 +23,7 @@ ret, frame = cap.read()
 def process_image(frame):
     frame = camera_model.undistort_image(frame)
     try:
-        robot_position = robot_detector.detect_position(frame)
+        robot_position = robot_detector.detect(frame)
         center = robot_position['robot_center']
 
         # world_position = camera_model.compute_image_to_world_coordinates(center[0], center[1], 10)
