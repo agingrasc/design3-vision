@@ -59,7 +59,7 @@ def order_points(pts):
 
 if __name__ == '__main__':
 
-    for image in glob.glob('./data/images/raw/*.jpg')[30::]:
+    for image in glob.glob('./data/images/figures/*.jpg'):
         raw = cv2.imread(image)
         image = raw
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
         mask = cv2.inRange(image, lower_green_hsv, upper_green_hsv)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=3)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=2)
 
         ret, contours, hierachy = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
         for contour in contours:
             peri = cv2.arcLength(contour, True)
-            approx = cv2.approxPolyDP(contour, 0.1 * peri, True)
+            approx = cv2.approxPolyDP(contour, 0.05 * peri, True)
 
             if len(approx) == 4 and cv2.contourArea(approx) > 1000 and cv2.isContourConvex(approx):
                 src_pts = np.array([x[0] for x in approx])
@@ -102,7 +102,7 @@ if __name__ == '__main__':
                     peri_2 = cv2.arcLength(contour_2, True)
                     approx_2 = cv2.approxPolyDP(contour_2, 0.01 * peri_2, True)
 
-                    if cv2.contourArea(approx_2) > 1000:
+                    if cv2.contourArea(approx_2) > 1000 and len(approx_2) > 4:
                         cv2.drawContours(inner_figure, [approx_2], -1, (10, 255, 255), 2)
 
                 inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_HSV2BGR)
