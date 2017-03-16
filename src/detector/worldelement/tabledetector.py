@@ -1,12 +1,10 @@
 import cv2
-import numpy as np
 from operator import methodcaller
 
+import config
 from detector.shape.rectangledetector import RectangleDetector
 from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from src.world.table import Table
-from src.config import *
-
 
 
 class NoTableFoundError(Exception):
@@ -24,16 +22,14 @@ class TableDetector(IWorldElementDetector):
 
     def _threshold_table_color(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_table_color = np.array([20, 10, 10])
-        upper_table_color = np.array([40, 120, 240])
-        mask = cv2.inRange(image, lower_table_color, upper_table_color)
+        mask = cv2.inRange(image, config.LOWER_TABLE_COLOR, config.UPPER_TABLE_COLOR)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
         return mask
 
     def _find_table(self, image):
         rectangles = RectangleDetector(self._shape_factory).detect(image)
-        rectangles = [rectangle for rectangle in rectangles if rectangle.area() > MIN_TABLE_AREA]
+        rectangles = [rectangle for rectangle in rectangles if rectangle.area() > config.MIN_TABLE_AREA]
         rectangles = sorted(rectangles, key=methodcaller('area'), reverse=True)
 
         if len(rectangles) > 0:

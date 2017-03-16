@@ -1,8 +1,7 @@
-from math import acos
-from time import sleep
-
 import cv2
 import numpy as np
+
+from math import acos
 
 from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from src.geometry.coordinate import Coordinate
@@ -92,6 +91,9 @@ class ImageDetectionService:
             elif isinstance(image_element, Robot):
                 robot = self._image_to_world_translator.adjust_robot_position(image_element)
                 cv2.circle(image, tuple(robot._position), 2, (255, 0, 0), 2)
+
+        if robot and world is not None:
+            robot.set_world_position(self.convert_target_to_world(world, robot))
         return world, robot
 
     def detect_all_world_elements(self, image):
@@ -103,7 +105,7 @@ class ImageDetectionService:
                 world_elements.append(world_element)
             except Exception as e:
                 pass
-                # print("World initialisation failure: {}".format(type(e).__name__))
+                print("World initialisation failure: {}".format(type(e).__name__))
 
         return world_elements
 
@@ -114,3 +116,17 @@ class ImageDetectionService:
     def draw_world_elements_into(self, image, world_elements):
         for element in world_elements:
             element.draw_in(image)
+
+    def convert_target_to_world(self, world, robot):
+        robot_target_position = np.array([
+            robot._world_position[0],
+            robot._world_position[1],
+            1
+        ])
+        return self.homogeneous_to_cart(np.dot(world._target_to_world, robot_target_position))
+
+    def homogeneous_to_cart(self, coordinate):
+        return [
+            coordinate[0] / coordinate[2],
+            coordinate[1] / coordinate[2]
+        ]

@@ -1,15 +1,11 @@
 import cv2
-import glob
 import math
-import numpy as np
 
 from detector.shape.circledetector import NoMatchingCirclesFound, CircleDetector
 from detector.shape.squaredetector import SquareDetector
 from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
-from detector.worldelement.shapefactory import ShapeFactory
 from src.config import *
 
-from infrastructure.camera import JSONCameraModelRepository
 from world.robot import Robot
 
 
@@ -23,15 +19,10 @@ class RobotDetector(IWorldElementDetector):
         self._shape_factory = shape_factory
 
     def detect(self, image):
-        image = self._preprocess(image)
         threshold = self._threshold_robot_makers(image)
 
-        robot_frame = None
-
-        squares = SquareDetector(self._shape_factory).detect(image)
-        squares = [square for square in squares if 14000 <= square.area() <= 18000]
-        if len(squares) > 0:
-            robot_frame = squares[0]
+        ##### Commented out for performance reason for now ####
+        # robot_frame = self._detect_robot_frame(image)
 
         robot_markers = CircleDetector(TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS, TARGET_MAX_RADIUS).detect(threshold)
         robot_position = self._get_robot_position(robot_markers)
@@ -47,45 +38,41 @@ class RobotDetector(IWorldElementDetector):
         leading_marker = self._get_leading_marker(robot_markers)
         direction_vector = [robot_position, leading_marker]
 
-        return Robot(robot_position, direction_vector, robot_frame)
-
-    def _preprocess(self, image):
-        image = cv2.medianBlur(image, ksize=5)
-        return image
+        return Robot(robot_position, direction_vector, None)
 
     def _threshold_robot_makers(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(image, LOWER_FUCHSIA_HSV, HIGHER_FUCHSIA_HSV)
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel, iterations=3)
         return mask
 
-    def _detect_markers_from_center_of_mass(self, threshold, approx_center, contours):
+    def _detect_markers_from_center_of_mass(self, threshold, approx_center, robot_markers):
         center_of_masses = []
         cnts = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        for contour in cnts[1]:
+        for marker in cnts[1]:
             try:
-                center_of_masses.append(self._find_center_of_mass(contour))
+                center_of_masses.append(self._find_center_of_mass(marker))
             except ZeroDivisionError:
                 continue
 
         new_points = order_by_neighbours(approx_center, center_of_masses)
 
-        contours = contours.tolist()
+        robot_markers = robot_markers.tolist()
 
         to_add = []
         for new in new_points:
             duplicate = False
-            for contour in contours:
-                if euc_distance(new, contour) < 10 or euc_distance(new, contour) > 125:
+            for marker in robot_markers:
+                if euc_distance(new, marker) < 15 or euc_distance(new, marker) > 125:
                     duplicate = True
             if duplicate is False:
                 to_add.append(new)
 
         for add in to_add:
-            contours.append(add)
+            robot_markers.append(add)
 
-        return np.array(contours)
+        return np.array(robot_markers)
 
     def _get_leading_marker(self, markers):
         tip = markers[0]
@@ -110,6 +97,14 @@ class RobotDetector(IWorldElementDetector):
     def _missing_markers(self, markers):
         return len(markers) < NUMBER_OF_MARKERS
 
+    def _detect_robot_frame(self, image):
+        squares = SquareDetector(self._shape_factory).detect(image)
+        squares = [square for square in squares if 14000 <= square.area() <= 18000]
+        if len(squares) > 0:
+            return squares[0]
+        else:
+            return None
+
 
 def order_by_neighbours(point, points):
     return sorted(points, key=lambda p: euc_distance(point, p))
@@ -122,27 +117,3 @@ def find_mean_distance(point, points):
             sum += euc_distance(point, p)
     mean_distance = sum / len(points) - 1
     return mean_distance
-
-
-if __name__ == '__main__':
-    shape_factory = ShapeFactory()
-    robot_detector = RobotDetector(shape_factory)
-    camera_repository = JSONCameraModelRepository('../../../data/camera_models/camera_models.json')
-    camera_model = camera_repository.get_camera_model_by_id(0)
-
-    images = glob.glob('../../../data/images/robot_images/*.jpg')
-
-    for filename in images:
-        image = cv2.imread(filename)
-
-        image = camera_model.undistort_image(image)
-
-        try:
-            robot = robot_detector.detect(image)
-
-            robot.draw_in(image)
-        except NoMatchingCirclesFound:
-            pass
-
-        cv2.imshow("Position", image)
-        cv2.waitKey(3000)

@@ -23,14 +23,9 @@ class DrawingAreaDetector(IWorldElementDetector):
         self._shape_factory = shape_factory
 
     def detect(self, image):
-        image = self._preprocess(image)
         mask = self._threshold_green(image)
         drawing_area = self._find_drawing_area(mask)
         return drawing_area
-
-    def _preprocess(self, image):
-        image = cv2.medianBlur(image, ksize=3)
-        return image
 
     def _threshold_green(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
