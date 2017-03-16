@@ -11,10 +11,6 @@ from src.world.world import World
 from world.robot import Robot
 
 
-def vector_angle(v1, v2):
-    return abs(np.dot(v1, v2) / np.sqrt(np.dot(v1, v2) * np.dot(v1, v2)))
-
-
 class ImageToWorldTranslator:
     def __init__(self, camera_model):
         self._camera_model = camera_model
@@ -107,7 +103,7 @@ class ImageDetectionService:
                 world_elements.append(world_element)
             except Exception as e:
                 pass
-                print("World initialisation failure: {}".format(type(e).__name__))
+                # print("World initialisation failure: {}".format(type(e).__name__))
 
         return world_elements
 

@@ -1,13 +1,12 @@
 import base64
 import json
-from time import sleep
-
 import cv2
+import numpy as np
 
 from enum import Enum
-
-import numpy as np
 from websocket import create_connection
+
+import config
 
 from detector.worldelement.drawingareadetector import DrawingAreaDetector
 from detector.worldelement.robotdetector import RobotDetector
@@ -20,7 +19,8 @@ from service.image.detectonceproxy import DetectOnceProxy
 from service.image.imagedetectionservice import ImageToWorldTranslator
 from service.image.imagedetectionservice import ImageDetectionService
 
-import config
+IMAGE_DIMINUTION_RATIO = 2
+TARGET_SIDE_LENGTH = 44 # in mm
 
 AppEnvironment = Enum('AppEnvironment', 'TESTING_VISION, COMPETITION, DEBUG')
 
@@ -41,8 +41,8 @@ def get_world_dimension(world):
 def get_world_origin(world):
     if world is not None:
         return {
-            "x": str(world._image_origin._x / 2),
-            "y": str(world._image_origin._y / 2)
+            "x": str(world._image_origin._x / IMAGE_DIMINUTION_RATIO),
+            "y": str(world._image_origin._y / IMAGE_DIMINUTION_RATIO)
         }
     else:
         return {
@@ -53,10 +53,12 @@ def get_world_origin(world):
 
 def get_robot_position(robot):
     if robot is not None:
-        return {
-            "x": str((robot._world_position[0] * 4.4)),
-            "y": str((robot._world_position[1] * 4.4))
+        robot_position = {
+            "x": str((robot._world_position[0] * TARGET_SIDE_LENGTH)),
+            "y": str((robot._world_position[1] * TARGET_SIDE_LENGTH))
         }
+        print(robot_position)
+        return robot_position
     else:
         return {
             "x": "",
@@ -104,10 +106,19 @@ def format_message(world, robot, image):
     }
 
 
+def homogeneous_to_cart(coordinate):
+    return [
+        coordinate[0] / coordinate[2],
+        coordinate[1] / coordinate[2]
+    ]
+
+
 if __name__ == "__main__":
     APP_ENVIRONMENT = AppEnvironment.COMPETITION
-    WEBSOCKET = False
+
+    WEBSOCKET = True
     VIDEO_DEBUG = not WEBSOCKET
+    VIDEO_WRITE = True
 
     camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
     camera_model = camera_model_repository.get_camera_model_by_id(config.TABLE_CAMERA_MODEL_ID)
@@ -119,9 +130,11 @@ if __name__ == "__main__":
     image_source = None
 
     if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
-        # table_detector = DetectOnceProxy(table_detector)
-        # drawing_area_detector = DetectOnceProxy(drawing_area_detector)
-        image_source = VideoStreamImageSource(config.CAMERA_ID)
+        table_detector = DetectOnceProxy(table_detector)
+        drawing_area_detector = DetectOnceProxy(drawing_area_detector)
+        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+    elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
+        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
         image_source = DirectoryImageSource(config.TEST_IMAGE_DIRECTORY_PATH)
 
@@ -134,7 +147,7 @@ if __name__ == "__main__":
 
     if WEBSOCKET:
         try:
-            connection = create_connection(config.BASESTATION_WEBSOCKET_URL)
+            connection = create_connecgtion(config.BASESTATION_WEBSOCKET_URL)
             print("Connection to BaseStation established at " + config.BASESTATION_WEBSOCKET_URL + '\n')
         except ConnectionRefusedError:
             print("Could not establish connection to BaseStation url: " + config.BASESTATION_WEBSOCKET_URL)
@@ -155,7 +168,8 @@ if __name__ == "__main__":
                         1
                     ])
 
-                    robot.set_world_position(np.dot(world._target_to_world, robot_target_position))
+                    robot_world_position = homogeneous_to_cart(np.dot(world._target_to_world, robot_target_position))
+                    robot.set_world_position(robot_world_position)
 
             message = format_message(world, robot, image)
 

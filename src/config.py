@@ -5,6 +5,8 @@ CAMERA_MODELS_FILE_PATH = '../data/camera_models/camera_models.json'
 TEST_IMAGE_DIRECTORY_PATH = '../data/images/full_scene/*.jpg'
 TABLE_CAMERA_MODEL_ID = 0
 CAMERA_ID = 1
+CAP_WIDTH = 1280
+CAP_HEIGHT = 800
 
 # HSV COLOR
 LOWER_GREEN_HSV = np.array([45, 50, 40])
@@ -21,3 +23,4 @@ TARGET_MAX_RADIUS = 30
 
 # TABLE SPECIFICATIONS
 MIN_TABLE_AREA = 70000
+
