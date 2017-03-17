@@ -3,8 +3,8 @@ import math
 
 from detector.shape.circledetector import NoMatchingCirclesFound, CircleDetector
 from detector.shape.squaredetector import SquareDetector
-from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
-from src.config import *
+from detector.worldelement.iworldelementdetector import IWorldElementDetector
+from config import *
 
 from world.robot import Robot
 

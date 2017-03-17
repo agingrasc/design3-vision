@@ -1,6 +1,6 @@
 import cv2
 
-from src.detector.shape.shapedetector import ShapeDetector
+from detector.shape.shapedetector import ShapeDetector
 from detector.worldelement.shapefactory import NotASquareError
 
 
