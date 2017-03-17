@@ -2,6 +2,8 @@ import json
 import cv2
 
 from enum import Enum
+
+import time
 from websocket import create_connection
 
 import config
@@ -38,8 +40,8 @@ robot_positions = []
 
 def log_robot_position(robot):
     robot_positions.append((
-        robot._position[0],
-        robot._position[1]
+        int(robot._position[0]),
+        int(robot._position[1])
     ))
 
     print({
@@ -69,7 +71,8 @@ if __name__ == "__main__":
     if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
-        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video4.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
@@ -97,7 +100,11 @@ if __name__ == "__main__":
             image = camera_model.undistort_image(image)
             image = preprocess_image(image)
 
+            detection_start = time.clock()
             world, robot = detection_service.translate_image_to_world(image)
+            detection_end = time.clock()
+            detection_elapsed = detection_end - detection_start
+            print("Detection: {}ms".format(round(detection_elapsed * 1000, 1)))
 
             if robot:
                 log_robot_position(robot)

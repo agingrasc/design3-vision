@@ -1,7 +1,7 @@
 import cv2
 import math
 
-from detector.shape.circledetector import NoMatchingCirclesFound, CircleDetector
+from detector.shape.circledetector import NoMatchingCirclesFound
 from detector.shape.squaredetector import SquareDetector
 from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from src.config import *
@@ -24,19 +24,12 @@ class RobotDetector(IWorldElementDetector):
         ##### Commented out for performance reason for now ####
         # robot_frame = self._detect_robot_frame(image)
 
-        robot_markers = CircleDetector(TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS, TARGET_MAX_RADIUS).detect(threshold)
-        robot_position = self._get_robot_position(robot_markers)
-
+        robot_markers = self._detect_markers_from_center_of_mass(threshold)
         if self._missing_markers(robot_markers):
-            robot_markers = self._detect_markers_from_center_of_mass(threshold, robot_position, robot_markers)
+            raise NoMatchingCirclesFound
 
-            if self._missing_markers(robot_markers):
-                raise NoMatchingCirclesFound
-
-            robot_position = self._get_robot_position(robot_markers)
-
-        leading_marker = self._get_leading_marker(robot_markers)
-        direction_vector = [robot_position, leading_marker]
+        robot_position = self._get_robot_position(robot_markers)
+        direction_vector = self._get_direction_vector(robot_position, robot_markers)
 
         return Robot(robot_position, direction_vector, None)
 
@@ -47,32 +40,19 @@ class RobotDetector(IWorldElementDetector):
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel, iterations=3)
         return mask
 
-    def _detect_markers_from_center_of_mass(self, threshold, approx_center, robot_markers):
-        center_of_masses = []
-        cnts = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        for marker in cnts[1]:
-            try:
-                center_of_masses.append(self._find_center_of_mass(marker))
-            except ZeroDivisionError:
-                continue
-
-        new_points = order_by_neighbours(approx_center, center_of_masses)
-
-        robot_markers = robot_markers.tolist()
-
-        to_add = []
-        for new in new_points:
-            duplicate = False
-            for marker in robot_markers:
-                if euc_distance(new, marker) < 15 or euc_distance(new, marker) > 125:
-                    duplicate = True
-            if duplicate is False:
-                to_add.append(new)
-
-        for add in to_add:
-            robot_markers.append(add)
-
+    def _detect_markers_from_center_of_mass(self, threshold):
+        contours = np.array(cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1])
+        robot_markers = np.array([self._find_center_of_mass(contour) for contour in contours])
         return np.array(robot_markers)
+
+    def _get_robot_position(self, contours):
+        (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
+        return (int(r_x), int(r_y))
+
+    def _get_direction_vector(self, robot_position, robot_markers):
+        leading_marker = self._get_leading_marker(robot_markers)
+        direction_vector = [robot_position, leading_marker]
+        return direction_vector
 
     def _get_leading_marker(self, markers):
         tip = markers[0]
@@ -83,10 +63,6 @@ class RobotDetector(IWorldElementDetector):
                 max_mean = mean
                 tip = marker
         return tip
-
-    def _get_robot_position(self, contours):
-        (r_x, r_y), r_r = cv2.minEnclosingCircle(contours)
-        return (int(r_x), int(r_y))
 
     def _find_center_of_mass(self, contour):
         contour_moments = cv2.moments(contour)
