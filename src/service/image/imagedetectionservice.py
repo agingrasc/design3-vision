@@ -3,10 +3,10 @@ import numpy as np
 
 from math import acos
 
-from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
-from src.geometry.coordinate import Coordinate
-from src.world.table import Table
-from src.world.world import World
+from detector.worldelement.iworldelementdetector import IWorldElementDetector
+from geometry.coordinate import Coordinate
+from world.table import Table
+from world.world import World
 from world.robot import Robot
 
 

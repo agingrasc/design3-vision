@@ -3,8 +3,8 @@ from operator import methodcaller
 
 import config
 from detector.shape.rectangledetector import RectangleDetector
-from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
-from src.world.table import Table
+from detector.worldelement.iworldelementdetector import IWorldElementDetector
+from world.table import Table
 
 
 class NoTableFoundError(Exception):

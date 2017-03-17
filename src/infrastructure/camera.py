@@ -1,6 +1,6 @@
 import json
 
-from src.camera.camera import CameraModel
+from camera.camera import CameraModel
 
 
 class JSONCameraModelRepository:
