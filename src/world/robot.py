@@ -5,17 +5,17 @@ import numpy as np
 
 
 class Robot:
-    def __init__(self, position, direction, frame):
+    def __init__(self, position, orientation_vector, frame):
         self._position = position
-        self._direction = direction
-        self._angle = self._get_angle_from(self._direction)
+        self._orientation_vector = orientation_vector
+        self._angle = self._get_angle_from(self._orientation_vector)
         self._frame = frame
         self._world_position = None
 
     def draw_in(self, image):
         cv2.circle(image, self._position, 1, (0, 0, 0), 2)
-        cv2.line(image, tuple(self._direction[0]), tuple(self._direction[1]), (0, 255, 0), 2)
-        cv2.putText(image, str(round(self._angle, 2)), tuple(self._direction[1]),
+        cv2.line(image, tuple(self._orientation_vector[0]), tuple(self._orientation_vector[1]), (0, 255, 0), 2)
+        cv2.putText(image, str(round(self._angle, 2)), tuple(self._orientation_vector[1]),
                     fontFace=cv2.FONT_HERSHEY_PLAIN,
                     fontScale=1.2,
                     color=(0, 0, 0))
