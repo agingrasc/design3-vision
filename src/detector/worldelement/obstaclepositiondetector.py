@@ -6,17 +6,19 @@ import numpy as np
 from infrastructure.camera import JSONCameraModelRepository
 from detector.robotpositiondetector import CircleDetector
 
-
 RATIO = 1
 TARGET_MIN_DISTANCE = 20
 TARGET_MIN_RADIUS = 30
 TARGET_MAX_RADIUS = 42
 
+
 class ShapeNotFound(Exception):
     pass
 
+
 class OrientationNotFound(Exception):
     pass
+
 
 class ShapeDetector:
     def __init__(self):
@@ -37,7 +39,7 @@ class ShapeDetector:
                 orientation = self._get_orientation(approx)
                 contours_list.append(approx)
                 break
-        if(shape == 'Undefined'):
+        if (shape == 'Undefined'):
             for contour2 in cnts:
                 approx2 = cv2.approxPolyDP(contour2, 0.01 * cv2.arcLength(contour2, True), True)
                 area = cv2.contourArea(contour2)
@@ -45,7 +47,7 @@ class ShapeDetector:
                     shape = 'Circle'
                     contours_list.append(approx2)
                     break
-        if(shape == 'Undefined'):
+        if (shape == 'Undefined'):
             raise ShapeNotFound
         return shape, contours_list, cimage, orientation
 
@@ -74,7 +76,7 @@ class ShapeDetector:
             tip = point1
             base1 = point2
             base2 = point3
-        if(tip[1] - base1[1]) < 0 and (tip[1] - base2[1]) < 0:
+        if (tip[1] - base1[1]) < 0 and (tip[1] - base2[1]) < 0:
             orientation = 'Left'
         elif (tip[1] - base1[1]) > 0 and (tip[1] - base2[1]) > 0:
             orientation = 'Right'
@@ -82,12 +84,15 @@ class ShapeDetector:
             raise OrientationNotFound
         return orientation
 
+
 class Image:
     def __init__(self):
         pass
+
     def select_region(self, image, points):
         image = image[points[0]:points[1], points[2]:points[3]]
         return image
+
 
 class ObstacleDetector:
     def __init__(self):
@@ -97,7 +102,7 @@ class ObstacleDetector:
         img = self._median_blur(img)
         cimg = self._convert_color_image(img)
         obstacles = CircleDetector(RATIO, TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS,
-                TARGET_MAX_RADIUS).detect_obstacles_markers(img)
+                                   TARGET_MAX_RADIUS).detect_obstacles_markers(img)
         for i in obstacles[0, :]:
             # draw the outer circle
             cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
@@ -113,7 +118,7 @@ class ObstacleDetector:
             min_y = obstacles[0][i][1] - obstacles[0][i][2]
             height = obstacles[0][i][2]
             width = obstacles[0][i][2]
-            cv2.rectangle(cimg, (min_x, min_y), (min_x + 2*width, min_y + 2*height), (0, 255, 0), 2)
+            cv2.rectangle(cimg, (min_x, min_y), (min_x + 2 * width, min_y + 2 * height), (0, 255, 0), 2)
             i += 1
 
     def _create_obstacles_coord(self, obstacles):
@@ -155,13 +160,14 @@ class ObstacleDetector:
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
         return mask
 
-
     def _median_blur(self, img):
         img = cv2.medianBlur(img, 5)
         return img
+
     def _convert_color_image(self, img):
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         return img
+
 
 if __name__ == '__main__':
     obstacle_detector = ObstacleDetector()
@@ -171,7 +177,6 @@ if __name__ == '__main__':
     camera_model = camera_repository.get_camera_model_by_id(0)
 
     images = glob.glob('../../../data/images/full_scene/*.jpg')
-
 
     for filename in images:
         image = cv2.imread(filename, 0)
@@ -193,6 +198,3 @@ if __name__ == '__main__':
                 cv2.waitKey(0)
         except ShapeNotFound:
             pass
-
-
-
