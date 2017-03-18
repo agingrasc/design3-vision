@@ -13,7 +13,7 @@ class Robot:
         self._world_position = None
 
     def draw_in(self, image):
-        cv2.circle(image, self._position, 1, (0, 0, 0), 2)
+        cv2.circle(image, tuple(self._position), 1, (255, 0, 0), 2)
         cv2.line(image, tuple(self._direction[0]), tuple(self._direction[1]), (0, 255, 0), 2)
         cv2.putText(image, str(round(self._angle, 2)), tuple(self._direction[1]),
                     fontFace=cv2.FONT_HERSHEY_PLAIN,
