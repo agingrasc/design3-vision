@@ -1,6 +1,6 @@
-import cv2
 import glob
-import math
+
+import cv2
 import numpy as np
 
 from infrastructure.camera import JSONCameraModelRepository
@@ -59,9 +59,9 @@ class ShapeDetector:
         point1 = (array[0][0][0], array[0][0][1])
         point2 = (array[1][0][0], array[1][0][1])
         point3 = (array[2][0][0], array[2][0][1])
-        distanceP1P2 = math.hypot(point2[0] - point1[0], point2[1] - point1[1])
-        distanceP1P3 = math.hypot(point3[0] - point1[0], point3[1] - point1[1])
-        distanceP2P3 = math.hypot(point3[0] - point2[0], point3[1] - point2[1])
+        distanceP1P2 = np.math.hypot(point2[0] - point1[0], point2[1] - point1[1])
+        distanceP1P3 = np.math.hypot(point3[0] - point1[0], point3[1] - point1[1])
+        distanceP2P3 = np.math.hypot(point3[0] - point2[0], point3[1] - point2[1])
         if min(distanceP1P2, distanceP1P3, distanceP2P3) == distanceP1P2:
             tip = point3
             base1 = point1
@@ -167,10 +167,10 @@ if __name__ == '__main__':
     obstacle_detector = ObstacleDetector()
     sd = ShapeDetector()
     traitement = Image()
-    camera_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
+    camera_repository = JSONCameraModelRepository('../../../data/camera_models/camera_models.json')
     camera_model = camera_repository.get_camera_model_by_id(0)
 
-    images = glob.glob('../../data/images/full_scene/*.jpg')
+    images = glob.glob('../../../data/images/full_scene/*.jpg')
 
 
     for filename in images:
