@@ -34,9 +34,12 @@ class Obstacle:
     def set_orientation(self, orientation):
         self._orienation = orientation
 
+    def set_position(self, position):
+        self._position = position
+
     def draw_in(self, image):
-        cv2.circle(image, (self._position[0], self._position[1]), self._radius, (0, 255, 0), 2)
-        cv2.circle(image, (self._position[0], self._position[1]), 1, (0, 255, 0), 2)
+        cv2.circle(image, (self._position[0], self._position[1]), self._radius, (255, 0, 0), 2)
+        cv2.circle(image, (self._position[0], self._position[1]), 1, (255, 0, 0), 2)
         cv2.drawContours(image, [self._shape], -1, (0, 255, 0), 2)
 
 

@@ -3,6 +3,7 @@ import numpy as np
 
 from math import acos
 
+from config import ROBOT_HEIGHT_IN_TARGET_UNIT
 from detector.worldelement.iworldelementdetector import IWorldElementDetector
 from geometry.coordinate import Coordinate
 from world.table import Table
@@ -41,9 +42,20 @@ class ImageToWorldTranslator:
         return World(table_dimensions['width'], table_dimensions['length'], world_origin[0], world_origin[1],
                      target_to_world)
 
+    def adjust_obstacle_position(self, obstacle):
+        world_position = self._camera_model.compute_image_to_world_coordinates(obstacle._position[0],
+                                                                               obstacle._position[1],
+                                                                               10)
+
+        adjusted_position = self._camera_model.compute_world_to_image_coordinates(world_position[0],
+                                                                                  world_position[1], 0)
+        obstacle.set_position(adjusted_position)
+        return obstacle
+
     def adjust_robot_position(self, robot):
         world_position = self._camera_model.compute_image_to_world_coordinates(robot._position[0],
-                                                                               robot._position[1], 5.1)
+                                                                               robot._position[1],
+                                                                               ROBOT_HEIGHT_IN_TARGET_UNIT)
         robot.set_world_position(world_position)
 
         adjusted_position = self._camera_model.compute_world_to_image_coordinates(world_position[0],
@@ -82,19 +94,22 @@ class ImageDetectionService:
         world = None
         robot = None
         world_elements = self.detect_all_world_elements(image)
-        for element in world_elements:
-            if isinstance(element, list):
-                for obstacle in element:
-                    obstacle.draw_in(image)
-            else:
-                element.draw_in(image)
 
         for image_element in world_elements:
             if isinstance(image_element, Table):
                 world = self._image_to_world_translator.create_world(image_element)
             elif isinstance(image_element, Robot):
                 robot = self._image_to_world_translator.adjust_robot_position(image_element)
-                cv2.circle(image, tuple(robot._position), 2, (255, 0, 0), 2)
+            elif isinstance(image_element, list):
+                for obstacle in image_element:
+                    obstacle = self._image_to_world_translator.adjust_obstacle_position(obstacle)
+
+        for element in world_elements:
+            if isinstance(element, list):
+                for obstacle in element:
+                    obstacle.draw_in(image)
+            else:
+                element.draw_in(image)
 
         if robot and world is not None:
             robot.set_world_position(self.convert_target_to_world(world, robot))
