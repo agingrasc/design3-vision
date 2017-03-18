@@ -7,6 +7,8 @@ from websocket import create_connection
 import config
 
 from detector.worldelement.drawingareadetector import DrawingAreaDetector
+from detector.worldelement.obstaclepositiondetector import ObstacleDetector
+from detector.worldelement.obstaclepositiondetector import ShapeDetector
 from detector.worldelement.robotdetector import RobotDetector
 from detector.worldelement.shapefactory import ShapeFactory
 from detector.worldelement.tabledetector import TableDetector
@@ -61,14 +63,18 @@ if __name__ == "__main__":
     message_assembler = MessageAssembler()
 
     shape_factory = ShapeFactory()
+    shape_detector = ShapeDetector()
     robot_detector = RobotDetector(shape_factory)
     table_detector = TableDetector(shape_factory)
     drawing_area_detector = DrawingAreaDetector(shape_factory)
+    obstacles_detector = ObstacleDetector(shape_detector)
+
     image_source = None
 
     if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
+        obstacles_detector = DetectOnceProxy(obstacles_detector)
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
@@ -81,6 +87,7 @@ if __name__ == "__main__":
     detection_service.register_detector(robot_detector)
     detection_service.register_detector(drawing_area_detector)
     detection_service.register_detector(table_detector)
+    detection_service.register_detector(obstacles_detector)
 
     if WEBSOCKET:
         try:

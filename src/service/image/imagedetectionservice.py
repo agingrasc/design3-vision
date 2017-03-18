@@ -83,7 +83,11 @@ class ImageDetectionService:
         robot = None
         world_elements = self.detect_all_world_elements(image)
         for element in world_elements:
-            element.draw_in(image)
+            if isinstance(element, list):
+                for obstacle in element:
+                    obstacle.draw_in(image)
+            else:
+                element.draw_in(image)
 
         for image_element in world_elements:
             if isinstance(image_element, Table):
@@ -104,7 +108,6 @@ class ImageDetectionService:
                 world_element = detector.detect(image)
                 world_elements.append(world_element)
             except Exception as e:
-                pass
                 print("World initialisation failure: {}".format(type(e).__name__))
 
         return world_elements

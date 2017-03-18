@@ -3,8 +3,9 @@ import glob
 import cv2
 import numpy as np
 
+from detector.worldelement.iworldelementdetector import IWorldElementDetector
 from infrastructure.camera import JSONCameraModelRepository
-from detector.robotpositiondetector import CircleDetector
+from detector.robotpositiondetector import CircleDetector, NoMatchingCirclesFound
 
 RATIO = 1
 TARGET_MIN_DISTANCE = 20
@@ -20,42 +21,61 @@ class OrientationNotFound(Exception):
     pass
 
 
+class Obstacle:
+    def __init__(self, position, radius):
+        self._position = position
+        self._radius = radius
+        self._shape = None
+        self._orienation = None
+
+    def set_shape(self, shape):
+        self._shape = np.array(shape)
+
+    def set_orientation(self, orientation):
+        self._orienation = orientation
+
+    def draw_in(self, image):
+        cv2.circle(image, (self._position[0], self._position[1]), self._radius, (0, 255, 0), 2)
+        cv2.circle(image, (self._position[0], self._position[1]), 1, (0, 255, 0), 2)
+        cv2.drawContours(image, [self._shape], -1, (0, 255, 0), 2)
+
+
 class ShapeDetector:
     def __init__(self):
         pass
 
-    def detect_shape(self, image):
+    def detect(self, image):
         contours_list = []
-        shape = 'Undefined'
-        orientation = 'Undefined'
-        cimage = self._preProcess(image)
+
+        shape = None
+        orientation = None
+
+        cimage = cv2.Canny(image, 180, 180)
         (_, cnts, _) = cv2.findContours(cimage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
         for contour in cnts:
             approx = cv2.approxPolyDP(contour, 0.1 * cv2.arcLength(contour, True), True)
             area = cv2.contourArea(approx)
 
-            if (len(approx) == 3 and (area > 600) and (area < 800)):
+            if len(approx) == 3 and (area > 600) and (area < 800):
                 shape = 'Triangle'
                 orientation = self._get_orientation(approx)
                 contours_list.append(approx)
                 break
-        if (shape == 'Undefined'):
+
+        if shape is None:
             for contour2 in cnts:
                 approx2 = cv2.approxPolyDP(contour2, 0.01 * cv2.arcLength(contour2, True), True)
                 area = cv2.contourArea(contour2)
-                if ((len(approx2) > 8) and (area > 880) and (area < 980)):
+                if (len(approx2) > 8) and (area > 880) and (area < 980):
                     shape = 'Circle'
                     contours_list.append(approx2)
                     break
-        if (shape == 'Undefined'):
-            raise ShapeNotFound
-        return shape, contours_list, cimage, orientation
 
-    def _preProcess(self, image):
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (5, 5), 0)
-        edged = cv2.Canny(gray, 180, 180)
-        return edged
+        if shape is None:
+            raise ShapeNotFound
+
+        return shape, contours_list, cimage, orientation
 
     def _get_orientation(self, array):
         point1 = (array[0][0][0], array[0][0][1])
@@ -85,31 +105,49 @@ class ShapeDetector:
         return orientation
 
 
-class Image:
-    def __init__(self):
-        pass
-
-    def select_region(self, image, points):
-        image = image[points[0]:points[1], points[2]:points[3]]
-        return image
+class NoObstaclesFound(Exception):
+    pass
 
 
-class ObstacleDetector:
-    def __init__(self):
-        pass
+class ObstacleDetector(IWorldElementDetector):
+    def __init__(self, shape_detector):
+        self._shape_detector = shape_detector
 
-    def detect_obstacle(self, img):
-        img = self._median_blur(img)
-        cimg = self._convert_color_image(img)
-        obstacles = CircleDetector(RATIO, TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS,
-                                   TARGET_MAX_RADIUS).detect_obstacles_markers(img)
-        for i in obstacles[0, :]:
-            # draw the outer circle
-            cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
-            # draw the center of the circle
-            cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
-        self.square_bounding(obstacles, cimg)
-        return cimg, obstacles
+    def detect(self, image):
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        try:
+            obstacles_circle = CircleDetector(RATIO, TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS,
+                                              TARGET_MAX_RADIUS).detect_obstacles_markers(gray)
+        except NoMatchingCirclesFound:
+            raise NoObstaclesFound
+
+        obstacles = []
+
+        for obstacle_circle in obstacles_circle[0, :]:
+            region_of_interest = self._create_obstacles_coord(obstacle_circle)
+
+            obstacle = Obstacle((obstacle_circle[0], obstacle_circle[1]), obstacle_circle[2])
+            obstacle_region = self.select_region(image, region_of_interest)
+
+            cv2.imshow('Shape', obstacle_region)
+
+            try:
+                shape, contour_list, cimage, orientation = self._shape_detector.detect(obstacle_region)
+                shape_contour = contour_list[0][:, 0]
+                top_left = [region_of_interest[0], region_of_interest[2]]
+                contour_list = [[point[0] + top_left[1], point[1] + top_left[0]] for point in shape_contour]
+
+                obstacle.set_shape(contour_list)
+                obstacle.set_orientation(orientation)
+            except ShapeNotFound:
+                pass
+
+            obstacles.append(obstacle)
+
+        if len(obstacles) == 0:
+            raise NoObstaclesFound
+
+        return obstacles
 
     def square_bounding(self, obstacles, cimg):
         i = 0
@@ -133,25 +171,11 @@ class ObstacleDetector:
         lst.append(max_x)
         return lst
 
-    def list_generator(self, obstacles):
-        if obstacles.shape[1] == 0:
-            return
-        elif obstacles.shape[1] == 1:
-            lst1 = self._create_obstacles_coord(obstacles[0][0])
-            return lst1
-        elif obstacles.shape[1] == 2:
-            lst1 = self._create_obstacles_coord(obstacles[0][0])
-            lst2 = self._create_obstacles_coord(obstacles[0][1])
-            return lst1, lst2
-        elif obstacles.shape[1] == 3:
-            lst1 = self._create_obstacles_coord(obstacles[0][0])
-            lst2 = self._create_obstacles_coord(obstacles[0][1])
-            lst3 = self._create_obstacles_coord(obstacles[0][2])
-            return lst1, lst2, lst3
-        return
+    def select_region(self, image, points):
+        image = image[points[0]:points[1], points[2]:points[3]]
+        return image
 
     def threshold_obstacles(self, image):
-        image = self._median_blur(image)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         lower_white_hsv = np.array([22, 22, 22])
         higher_white_hsv = np.array([255, 255, 255])
@@ -160,41 +184,26 @@ class ObstacleDetector:
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
         return mask
 
-    def _median_blur(self, img):
-        img = cv2.medianBlur(img, 5)
-        return img
-
-    def _convert_color_image(self, img):
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        return img
-
 
 if __name__ == '__main__':
-    obstacle_detector = ObstacleDetector()
-    sd = ShapeDetector()
-    traitement = Image()
     camera_repository = JSONCameraModelRepository('../../../data/camera_models/camera_models.json')
     camera_model = camera_repository.get_camera_model_by_id(0)
+    shape_detector = ShapeDetector()
+    obstacle_detector = ObstacleDetector(shape_detector)
 
     images = glob.glob('../../../data/images/full_scene/*.jpg')
 
     for filename in images:
-        image = cv2.imread(filename, 0)
-        imageColor = cv2.imread(filename)
-
+        image = cv2.imread(filename)
         image = camera_model.undistort_image(image)
-        imageColor = camera_model.undistort_image(imageColor)
 
         try:
-            cimg = obstacle_detector.detect_obstacle(image)[0]
-            obstacle_coord = obstacle_detector.detect_obstacle(image)[1]
-            region_of_interest = obstacle_detector.list_generator(obstacle_coord)
-            for points in region_of_interest:
-                imageCut = traitement.select_region(imageColor, points)
-                shape, contour_list, cimage, orientation = sd.detect_shape(imageCut)
-                print(region_of_interest, ' : ', filename, ' : ', shape, orientation)
-                cv2.drawContours(imageCut, contour_list, 0, (0, 255, 0), 2)
-                cv2.imshow('detected circles', imageCut)
-                cv2.waitKey(0)
+            obstacles = obstacle_detector.detect(image)
+
+            for obstacle in obstacles:
+                obstacle.draw_in(image)
+
+            cv2.imshow('imageColor', image)
+            cv2.waitKey()
         except ShapeNotFound:
             pass
