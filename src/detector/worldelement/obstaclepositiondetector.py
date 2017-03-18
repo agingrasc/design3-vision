@@ -53,7 +53,7 @@ class ShapeDetector:
         shape = None
         orientation = None
 
-        cimage = cv2.Canny(image, 180, 180)
+        cimage = cv2.Canny(image.copy(), 180, 180)
         (_, cnts, _) = cv2.findContours(cimage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
         for contour in cnts:
@@ -118,6 +118,7 @@ class ObstacleDetector(IWorldElementDetector):
 
     def detect(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
         try:
             obstacles_circle = CircleDetector(RATIO, TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS,
                                               TARGET_MAX_RADIUS).detect_obstacles_markers(gray)
@@ -131,8 +132,6 @@ class ObstacleDetector(IWorldElementDetector):
 
             obstacle = Obstacle((obstacle_circle[0], obstacle_circle[1]), obstacle_circle[2])
             obstacle_region = self.select_region(image, region_of_interest)
-
-            cv2.imshow('Shape', obstacle_region)
 
             try:
                 shape, contour_list, cimage, orientation = self._shape_detector.detect(obstacle_region)

@@ -13,7 +13,7 @@ class MessageAssembler:
             "headers": "push_vision_data",
             "data": {
                 "image": {
-                    "ratio": "2.58",
+                    "ratio": "0.38",
                     "origin": self.get_world_origin(world),
 
                     "data": self.prepare_image(image),
@@ -42,8 +42,8 @@ class MessageAssembler:
     def get_world_dimension(self, world):
         if world is not None:
             return {
-                "width": str(world._width),
-                "height": str(world._length)
+                "width": str(world._width * 10),
+                "height": str(world._length * 10)
             }
         else:
             return {

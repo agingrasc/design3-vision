@@ -51,12 +51,12 @@ def log_robot_position(robot):
 
 
 if __name__ == "__main__":
-    APP_ENVIRONMENT = AppEnvironment.TESTING_VISION
+    APP_ENVIRONMENT = AppEnvironment.COMPETITION
 
-    WEBSOCKET = False
+    WEBSOCKET = True
     VIDEO_DEBUG = not WEBSOCKET
     VIDEO_WRITE = False
-    DRAW_PATH = False
+    DRAW_PATH = True
 
     camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
     camera_model = camera_model_repository.get_camera_model_by_id(config.TABLE_CAMERA_MODEL_ID)
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
-        obstacles_detector = DetectOnceProxy(obstacles_detector)
+        # obstacles_detector = DetectOnceProxy(obstacles_detector)
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)

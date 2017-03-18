@@ -64,8 +64,9 @@ class ImageToWorldTranslator:
         return robot
 
     def _convert_table_image_points_to_world_coordinates(self, table):
-        table_corners = [self._camera_model.compute_image_to_world_coordinates(corner[0], corner[1], 0)
-                         for corner in np.round(table._rectangle.as_contour_points()).astype('int').tolist()]
+        image_corners = np.round(table._rectangle.as_contour_points()).astype('int')
+        table_corners = [self._camera_model.compute_image_to_world_coordinates(corner[0], corner[1], 0) for corner in
+                         image_corners.tolist()]
         return self._to_coordinates(table_corners)
 
     def _to_coordinates(self, points):
