@@ -1,4 +1,4 @@
-from src.detector.worldelement.iworldelementdetector import IWorldElementDetector
+from detector.worldelement.iworldelementdetector import IWorldElementDetector
 
 
 class DetectOnceProxy(IWorldElementDetector):
