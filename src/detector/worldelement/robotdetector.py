@@ -24,13 +24,15 @@ class RobotDetector(IWorldElementDetector):
         ##### Commented out for performance reason for now ####
         # robot_frame = self._detect_robot_frame(image)
 
-        robot_markers = self._detect_robot_markers(threshold)
+        contours = self._detect_robot_markers_contours(threshold)
+
+        robot_markers = np.array([self._find_center_of_mass(contour) for contour in contours])
 
         if self._ensure_has_all_markers(robot_markers):
             raise NoMatchingCirclesFound
 
         robot_position = self._get_robot_position(robot_markers)
-        orientation_vector = self._get_direction_vector(robot_position, robot_markers)
+        orientation_vector = self._get_orientation_vector(robot_position, robot_markers)
 
         return Robot(robot_position, orientation_vector, None)
 
@@ -41,16 +43,16 @@ class RobotDetector(IWorldElementDetector):
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel, iterations=3)
         return mask
 
-    def _detect_robot_markers(self, threshold):
-        contours = np.array(cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1])
-        robot_markers = np.array([self._find_center_of_mass(contour) for contour in contours])
-        return np.array(robot_markers)
+    def _detect_robot_markers_contours(self, threshold):
+        contours = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
+        contours = [contour for contour in contours if cv2.contourArea(contour) > 400]
+        return np.array(contours)
 
     def _get_robot_position(self, targets_center):
         (r_x, r_y), r_r = cv2.minEnclosingCircle(targets_center)
         return (int(r_x), int(r_y))
 
-    def _get_direction_vector(self, robot_position, robot_markers):
+    def _get_orientation_vector(self, robot_position, robot_markers):
         leading_marker = self._get_leading_marker(robot_markers)
         direction_vector = [robot_position, leading_marker]
         return direction_vector
