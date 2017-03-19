@@ -1,7 +1,4 @@
 import json
-from collections import deque
-from multiprocessing.pool import ThreadPool
-
 import cv2
 
 from enum import Enum
@@ -30,7 +27,6 @@ AppEnvironment = Enum('AppEnvironment', 'TESTING_VISION, COMPETITION, DEBUG')
 def draw_robot_path(image, robot_positions):
     for pos in robot_positions:
         cv2.circle(image, pos, 2, (0, 0, 255), 2)
-    return image
 
 
 def preprocess_image(image):
@@ -40,10 +36,6 @@ def preprocess_image(image):
 
 
 robot_positions = []
-
-threadn = cv2.getNumberOfCPUs()
-pool = ThreadPool(processes=threadn)
-pending = deque()
 
 
 def log_robot_position(robot):
@@ -59,25 +51,16 @@ def log_robot_position(robot):
 
 
 if __name__ == "__main__":
-    APP_ENVIRONMENT = AppEnvironment.COMPETITION
+    APP_ENVIRONMENT = AppEnvironment.TESTING_VISION
 
     WEBSOCKET = False
-    VIDEO_DEBUG = True
+    VIDEO_DEBUG = not WEBSOCKET
     VIDEO_WRITE = False
-    DRAW_PATH = True
+    DRAW_PATH = False
 
     camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
     camera_model = camera_model_repository.get_camera_model_by_id(config.TABLE_CAMERA_MODEL_ID)
     message_assembler = MessageAssembler()
-
-
-    def process_frame(image, count):
-        image = camera_model.undistort_image(image)
-        image = preprocess_image(image)
-        world, robot = detection_service.translate_image_to_world(image)
-        message = message_assembler.format_message(world, robot, image)
-        return world, robot, message, image
-
 
     shape_factory = ShapeFactory()
     robot_detector = RobotDetector(shape_factory)
@@ -89,7 +72,7 @@ if __name__ == "__main__":
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
         # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video11.avi')
+        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video4.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
@@ -112,16 +95,25 @@ if __name__ == "__main__":
             exit(0)
 
     while image_source.has_next_image():
-        while len(pending) > 0 and pending[0].ready():
-            world, robot, message, image = pending.popleft().get()
+        image = image_source.next_image()
+        if image is not None:
+            image = camera_model.undistort_image(image)
+            image = preprocess_image(image)
+
+            detection_start = time.clock()
+            world, robot = detection_service.translate_image_to_world(image)
+            detection_end = time.clock()
+            detection_elapsed = detection_end - detection_start
+            print("Detection: {}ms".format(round(detection_elapsed * 1000, 1)))
 
             if robot:
                 log_robot_position(robot)
 
             if DRAW_PATH:
-                image = draw_robot_path(image, robot_positions)
+                draw_robot_path(image, robot_positions)
 
             if WEBSOCKET:
+                message = message_assembler.format_message(world, robot, image)
                 try:
                     connection.send(json.dumps(message))
                 except NameError:
@@ -129,10 +121,4 @@ if __name__ == "__main__":
 
             if VIDEO_DEBUG:
                 cv2.imshow("Image debug", image)
-
-        if len(pending) < threadn:
-            image = image_source.next_image()
-            task = pool.apply_async(process_frame, (image, 0))
-            pending.append(task)
-
-        cv2.waitKey(1)
+                cv2.waitKey(1)
