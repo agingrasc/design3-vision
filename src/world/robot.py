@@ -30,9 +30,9 @@ class Robot:
         self._image_position = position
 
     def _get_angle_from(self, direction):
-        u = [1, 0]
-        v = direction[1] - direction[0]
+        dy = direction[1][1] - direction[0][1]
+        dx = direction[1][0] - direction[0][0]
 
-        angle = math.acos(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
+        angle = math.atan2(-dy, dx)
 
         return np.rad2deg(angle)
