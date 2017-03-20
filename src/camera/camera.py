@@ -149,6 +149,20 @@ class CameraModel:
 
         return np.array(P, dtype=float).tolist()
 
+    def transform_coordinate(self, transform_matrix, coordinate):
+        homogeneous_coordinate = np.array([
+            coordinate[0],
+            coordinate[1],
+            1
+        ])
+        return self._homogeneous_to_cart(np.dot(transform_matrix, homogeneous_coordinate))
+
+    def _homogeneous_to_cart(self, coordinate):
+        return [
+            coordinate[0] / coordinate[2],
+            coordinate[1] / coordinate[2]
+        ]
+
     def compute_transform_matrix(self, angle, position):
         rad = np.deg2rad(angle)
 

@@ -6,14 +6,14 @@ import numpy as np
 
 class Robot:
     def __init__(self, position, orientation_vector, frame):
-        self._position = position
+        self._image_position = position
         self._orientation_vector = orientation_vector
         self._angle = self._get_angle_from(self._orientation_vector)
         self._frame = frame
         self._world_position = None
 
     def draw_in(self, image):
-        cv2.circle(image, tuple(self._position), 1, (255, 0, 0), 2)
+        cv2.circle(image, tuple(self._image_position), 1, (255, 0, 0), 2)
         cv2.line(image, tuple(self._orientation_vector[0]), tuple(self._orientation_vector[1]), (0, 255, 0), 2)
         cv2.putText(image, str(round(self._angle, 2)), tuple(self._orientation_vector[1]),
                     fontFace=cv2.FONT_HERSHEY_PLAIN,
@@ -26,8 +26,8 @@ class Robot:
     def set_world_position(self, position):
         self._world_position = position
 
-    def set_position(self, position):
-        self._position = position
+    def set_image_position(self, position):
+        self._image_position = position
 
     def _get_angle_from(self, direction):
         u = [1, 0]

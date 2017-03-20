@@ -1,8 +1,7 @@
 import base64
 
 import cv2
-
-from config import TARGET_SIDE_LENGTH
+import numpy as np
 
 IMAGE_DIMINUTION_RATIO = 2
 
@@ -32,7 +31,8 @@ class MessageAssembler:
                         "dimension": self.get_world_dimension(world)
                     },
                     "robot": {
-                        "position": self.get_robot_position(robot)
+                        "position": self.get_robot_position(robot),
+                        "orientation": self.get_robot_orientation(robot)
                     }
                 },
 
@@ -66,8 +66,8 @@ class MessageAssembler:
     def get_robot_position(self, robot):
         if robot is not None:
             robot_position = {
-                "x": str((robot._world_position[0] * TARGET_SIDE_LENGTH)),
-                "y": str((robot._world_position[1] * TARGET_SIDE_LENGTH))
+                "x": str((robot._world_position[0])),
+                "y": str((robot._world_position[1]))
             }
             return robot_position
         else:
@@ -75,6 +75,12 @@ class MessageAssembler:
                 "x": "",
                 "y": ""
             }
+
+    def get_robot_orientation(self, robot):
+        if robot is not None:
+            return str(np.deg2rad(robot._angle))
+        else:
+            return ""
 
     def prepare_image(self, image):
         image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_CUBIC)
