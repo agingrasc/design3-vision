@@ -2,6 +2,8 @@ import json
 import cv2
 
 from enum import Enum
+
+import time
 from websocket import create_connection
 
 import config
@@ -18,15 +20,10 @@ from infrastructure.imagesource.savevideoimagesource import SaveVideoImageSource
 from infrastructure.imagesource.videostreamimagesource import VideoStreamImageSource
 from infrastructure.messageassembler import MessageAssembler
 from service.image.detectonceproxy import DetectOnceProxy
-from service.image.imagedetectionservice import ImageToWorldTranslator
+from service.image.imagestranslationservice import ImageToWorldTranslator
 from service.image.imagedetectionservice import ImageDetectionService
 
 AppEnvironment = Enum('AppEnvironment', 'TESTING_VISION, COMPETITION, DEBUG')
-
-
-def draw_robot_path(image, robot_positions):
-    for pos in robot_positions:
-        cv2.circle(image, pos, 2, (0, 0, 255), 2)
 
 
 def preprocess_image(image):
@@ -38,22 +35,38 @@ def preprocess_image(image):
 robot_positions = []
 
 
+def draw_robot_path(image, robot_positions):
+    for pos in robot_positions:
+        cv2.circle(image, pos, 2, (0, 0, 255), 2)
+
+
 def log_robot_position(robot):
+    image_x, image_y = robot._image_position
+    world_x, world_y = robot._world_position
+
     robot_positions.append((
-        robot._position[0],
-        robot._position[1]
+        int(image_x), int(image_y)
     ))
 
-    print({
-        "x": (robot._world_position[0] * config.TARGET_SIDE_LENGTH),
-        "y": (robot._world_position[1] * config.TARGET_SIDE_LENGTH)
-    })
+    print("Robot at --> ({}, {})".format(
+        int(world_x),
+        int(world_y)
+    ))
+
+
+def render_all_elements(image, world_elements):
+    for element in world_elements:
+        if isinstance(element, list):
+            for obstacle in element:
+                obstacle.draw_in(image)
+        else:
+            element.draw_in(image)
 
 
 if __name__ == "__main__":
     APP_ENVIRONMENT = AppEnvironment.COMPETITION
 
-    WEBSOCKET = True
+    WEBSOCKET = False
     VIDEO_DEBUG = not WEBSOCKET
     VIDEO_WRITE = False
     DRAW_PATH = True
@@ -75,19 +88,20 @@ if __name__ == "__main__":
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
         # obstacles_detector = DetectOnceProxy(obstacles_detector)
-        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video15.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
         image_source = DirectoryImageSource(config.TEST_IMAGE_DIRECTORY_PATH)
 
-    image_to_world_translator = ImageToWorldTranslator(camera_model)
-    detection_service = ImageDetectionService(image_to_world_translator)
-
+    detection_service = ImageDetectionService()
     detection_service.register_detector(robot_detector)
     detection_service.register_detector(drawing_area_detector)
     detection_service.register_detector(table_detector)
     detection_service.register_detector(obstacles_detector)
+
+    image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
 
     if WEBSOCKET:
         try:
@@ -104,7 +118,13 @@ if __name__ == "__main__":
             image = camera_model.undistort_image(image)
             image = preprocess_image(image)
 
-            world, robot = detection_service.translate_image_to_world(image)
+            detection_start = time.clock()
+            world, robot, world_elements = image_to_world_translator.translate_image_to_world(image)
+            detection_end = time.clock()
+            detection_elapsed = detection_end - detection_start
+            print("Detection: {}ms".format(round(detection_elapsed * 1000, 1)))
+
+            render_all_elements(image, world_elements)
 
             if robot:
                 log_robot_position(robot)
@@ -113,11 +133,11 @@ if __name__ == "__main__":
                 draw_robot_path(image, robot_positions)
 
             if WEBSOCKET:
-                message = message_assembler.format_message(world, robot, image)
                 try:
+                    message = message_assembler.format_message(world, robot, image)
                     connection.send(json.dumps(message))
-                except NameError:
-                    print("No connection to websocket")
+                except NameError as e:
+                    print(e)
 
             if VIDEO_DEBUG:
                 cv2.imshow("Image debug", image)
