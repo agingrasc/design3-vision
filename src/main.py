@@ -20,7 +20,7 @@ from infrastructure.imagesource.savevideoimagesource import SaveVideoImageSource
 from infrastructure.imagesource.videostreamimagesource import VideoStreamImageSource
 from infrastructure.messageassembler import MessageAssembler
 from service.image.detectonceproxy import DetectOnceProxy
-from service.image.imagedetectionservice import ImageToWorldTranslator
+from service.image.imagestranslationservice import ImageToWorldTranslator
 from service.image.imagedetectionservice import ImageDetectionService
 
 AppEnvironment = Enum('AppEnvironment', 'TESTING_VISION, COMPETITION, DEBUG')
@@ -78,19 +78,19 @@ if __name__ == "__main__":
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
         # obstacles_detector = DetectOnceProxy(obstacles_detector)
         # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video4.avi')
+        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video15.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
         image_source = DirectoryImageSource(config.TEST_IMAGE_DIRECTORY_PATH)
 
-    image_to_world_translator = ImageToWorldTranslator(camera_model)
-    detection_service = ImageDetectionService(image_to_world_translator)
-
+    detection_service = ImageDetectionService()
     detection_service.register_detector(robot_detector)
     detection_service.register_detector(drawing_area_detector)
     detection_service.register_detector(table_detector)
     detection_service.register_detector(obstacles_detector)
+
+    image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
 
     if WEBSOCKET:
         try:
@@ -108,7 +108,7 @@ if __name__ == "__main__":
             image = preprocess_image(image)
 
             detection_start = time.clock()
-            world, robot = detection_service.translate_image_to_world(image)
+            world, robot = image_to_world_translator.translate_image_to_world(image)
             detection_end = time.clock()
             detection_elapsed = detection_end - detection_start
             print("Detection: {}ms".format(round(detection_elapsed * 1000, 1)))
