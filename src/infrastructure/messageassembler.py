@@ -26,7 +26,7 @@ class MessageAssembler:
                     }
                 },
                 "world": {
-                    "unit": "cm",
+                    "unit": "mm",
                     "base_table": {
                         "dimension": self.get_world_dimension(world)
                     },
