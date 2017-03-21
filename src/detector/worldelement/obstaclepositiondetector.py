@@ -58,7 +58,6 @@ class ShapeDetector:
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         cimage = cv2.dilate(cimage, kernel)
         (_, cnts, _) = cv2.findContours(cimage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.imshow('cimage', cimage)
 
         for contour in cnts:
             approx = cv2.approxPolyDP(contour, 0.1 * cv2.arcLength(contour, True), True)
