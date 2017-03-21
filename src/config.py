@@ -10,7 +10,7 @@ CAP_HEIGHT = 800
 
 # HSV COLOR
 LOWER_GREEN_HSV = np.array([45, 50, 40])
-UPPER_GREEN_HSV = np.array([80, 255, 255])
+UPPER_GREEN_HSV = np.array([80, 255, 145])
 
 LOWER_FUCHSIA_HSV = np.array([150, 80, 120])
 HIGHER_FUCHSIA_HSV = np.array([180, 255, 255])

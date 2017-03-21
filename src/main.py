@@ -87,9 +87,9 @@ if __name__ == "__main__":
     if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
-        # obstacles_detector = DetectOnceProxy(obstacles_detector)
+        obstacles_detector = DetectOnceProxy(obstacles_detector)
         # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video15.avi')
+        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
             render_all_elements(image, world_elements)
 
-            if robot:
+            if robot and world:
                 log_robot_position(robot)
 
             if DRAW_PATH:

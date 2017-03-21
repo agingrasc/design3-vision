@@ -1,6 +1,8 @@
 import cv2
 from operator import methodcaller
 
+import numpy as np
+
 import config
 from detector.shape.rectangledetector import RectangleDetector
 from detector.worldelement.iworldelementdetector import IWorldElementDetector
