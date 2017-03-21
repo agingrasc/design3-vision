@@ -54,6 +54,14 @@ def log_robot_position(robot):
     ))
 
 
+def extract_obstacles(world_elements):
+    obstacles = []
+    for element in world_elements:
+        if isinstance(element, list):
+            obstacles = element
+    return obstacles
+
+
 def render_all_elements(image, world_elements):
     for element in world_elements:
         if isinstance(element, list):
@@ -63,10 +71,23 @@ def render_all_elements(image, world_elements):
             element.draw_in(image)
 
 
+def render_path(image, path):
+    if path:
+        prev = None
+        for coord in path:
+            if prev is None:
+                prev = (int(coord['x']), int(coord['y']))
+                print(prev)
+            else:
+                next = (int(coord['x']), int(coord['y']))
+                cv2.line(image, prev, next, (0, 255, 0), 3)
+                prev = next
+
+
 if __name__ == "__main__":
     APP_ENVIRONMENT = AppEnvironment.COMPETITION
 
-    WEBSOCKET = False
+    WEBSOCKET = True
     VIDEO_DEBUG = not WEBSOCKET
     VIDEO_WRITE = False
     DRAW_PATH = True
@@ -97,8 +118,8 @@ if __name__ == "__main__":
 
     detection_service = ImageDetectionService()
     detection_service.register_detector(robot_detector)
-    detection_service.register_detector(drawing_area_detector)
     detection_service.register_detector(table_detector)
+    detection_service.register_detector(drawing_area_detector)
     detection_service.register_detector(obstacles_detector)
 
     image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
@@ -124,6 +145,8 @@ if __name__ == "__main__":
             detection_elapsed = detection_end - detection_start
             print("Detection: {}ms".format(round(detection_elapsed * 1000, 1)))
 
+            obstacles = extract_obstacles(world_elements)
+
             render_all_elements(image, world_elements)
 
             if robot and world:
@@ -134,8 +157,12 @@ if __name__ == "__main__":
 
             if WEBSOCKET:
                 try:
-                    message = message_assembler.format_message(world, robot, image)
+                    connection.send(json.dumps({"headers": "pull_path"}))
+                    path = json.loads(connection.recv())
+                    render_path(image, path)
+                    message = message_assembler.format_message(world, robot, image, obstacles)
                     connection.send(json.dumps(message))
+                    ok = connection.recv()
                 except NameError as e:
                     print(e)
 

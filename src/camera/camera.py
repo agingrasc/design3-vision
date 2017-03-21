@@ -23,15 +23,13 @@ class Calibration:
 
     def collect_target_image(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        has_target, corners = cv2.findChessboardCorners(image, (9, 6), None)
+        has_target, corners = cv2.findChessboardCorners(image, (5, 3), None)
         if has_target:
             self._target_object_points.append(self._target_points)
             self._calibration_images.append(image)
 
             corners = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), stop_criteria)
             self._target_image_points.append(corners)
-        else:
-            raise CalibrationTargetNotFoundError
 
     def do_calibration(self):
         (
@@ -82,8 +80,8 @@ class CameraFactory:
         return calibration
 
     def create_calibration_target_points(self):
-        object_points = np.zeros((6 * 9, 3), np.float32)
-        object_points[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
+        object_points = np.zeros((3 * 5, 3), np.float32)
+        object_points[:, :2] = np.mgrid[0:5, 0:3].T.reshape(-1, 2)
         return object_points
 
     def _get_rotation_matrix_from(self, rotation_vector):

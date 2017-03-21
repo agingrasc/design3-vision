@@ -7,12 +7,12 @@ IMAGE_DIMINUTION_RATIO = 2
 
 
 class MessageAssembler:
-    def format_message(self, world, robot, image):
+    def format_message(self, world, robot, image, obstacles):
         return {
             "headers": "push_vision_data",
             "data": {
                 "image": {
-                    "ratio": "0.38",
+                    "ratio": "0.3",
                     "origin": self.get_world_origin(world),
 
                     "data": self.prepare_image(image),
@@ -33,7 +33,8 @@ class MessageAssembler:
                     "robot": {
                         "position": self.get_robot_position(robot),
                         "orientation": self.get_robot_orientation(robot)
-                    }
+                    },
+                    "obstacles": self.get_obstacles(obstacles)
                 },
 
             }
@@ -81,6 +82,15 @@ class MessageAssembler:
             return str(np.deg2rad(robot._angle))
         else:
             return ""
+
+    def get_obstacles(self, obstacles):
+        if obstacles is not None:
+            return [{"position": {"x": obstacle._world_position[0], "y": obstacle._world_position[1]},
+                     "tag": obstacle._orienation,
+                     "dimension": {"width": "140", "length": "140"}}
+                    for obstacle in obstacles]
+        else:
+            return []
 
     def prepare_image(self, image):
         image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_CUBIC)

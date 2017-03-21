@@ -12,8 +12,6 @@ class Robot:
         self._frame = frame
         self._world_position = None
 
-        print(self._angle)
-
     def draw_in(self, image):
         cv2.circle(image, tuple(self._image_position), 1, (255, 0, 0), 2)
         cv2.line(image, tuple(self._orientation_vector[0]), tuple(self._orientation_vector[1]), (0, 255, 0), 2)
