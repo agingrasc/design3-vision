@@ -85,14 +85,14 @@ if __name__ == '__main__':
             if len(approx) == 4 and cv2.contourArea(approx) > 1000 and cv2.isContourConvex(approx):
                 src_pts = np.array([x[0] for x in approx])
                 inner_figure = straigthen_figure(image, src_pts)
-                inner_figure = cv2.medianBlur(inner_figure, ksize=3)
+                # inner_figure = cv2.medianBlur(inner_figure, ksize=3)
 
                 inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_BGR2HSV)
                 lower_background = np.array([10, 20, 10])
                 upper_background = np.array([50, 100, 255])
                 figure_mask = cv2.inRange(inner_figure, lower_background, upper_background)
                 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
-                figure_mask = cv2.morphologyEx(figure_mask, cv2.MORPH_CLOSE, kernel, iterations=3)
+                figure_mask = cv2.morphologyEx(figure_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
                 figure_mask = (255 - figure_mask)
 
                 ret_2, contours_2, hierachy_2 = cv2.findContours(figure_mask.copy(), cv2.RETR_LIST,
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
                 for contour_2 in contours_2:
                     peri_2 = cv2.arcLength(contour_2, True)
-                    approx_2 = cv2.approxPolyDP(contour_2, 0.01 * peri_2, True)
+                    approx_2 = cv2.approxPolyDP(contour_2, 0.02 * peri_2, True)
 
                     if cv2.contourArea(approx_2) > 1000 and len(approx_2) > 4:
                         cv2.drawContours(inner_figure, [approx_2], -1, (10, 255, 255), 2)
