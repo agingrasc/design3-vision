@@ -87,7 +87,7 @@ def render_path(image, path):
 if __name__ == "__main__":
     APP_ENVIRONMENT = AppEnvironment.COMPETITION
 
-    WEBSOCKET = True
+    WEBSOCKET = False
     VIDEO_DEBUG = not WEBSOCKET
     VIDEO_WRITE = False
     DRAW_PATH = True
