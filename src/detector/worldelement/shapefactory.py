@@ -52,7 +52,7 @@ class ShapeFactory:
         points = points.reshape(-1, 2)
         max_cos = np.max(
             [self._angle_cos(points[i], points[(i + 1) % 4], points[(i + 2) % 4]) for i in range(0, 4)])
-        if max_cos < 0.1:
+        if max_cos < 0.04:
             return True
         else:
             return False

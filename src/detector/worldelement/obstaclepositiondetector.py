@@ -27,6 +27,7 @@ class Obstacle:
         self._radius = radius
         self._shape = None
         self._orienation = None
+        self._world_position = None
 
     def set_shape(self, shape):
         self._shape = np.array(shape)
@@ -35,11 +36,11 @@ class Obstacle:
         self._orienation = orientation
 
     def set_position(self, position):
-        self._position = position
+        self._world_position = position
 
     def draw_in(self, image):
-        cv2.circle(image, (self._position[0], self._position[1]), self._radius, (255, 0, 0), 2)
-        cv2.circle(image, (self._position[0], self._position[1]), 1, (255, 0, 0), 2)
+        cv2.circle(image, (self._world_position[0], self._world_position[1]), self._radius, (255, 0, 0), 2)
+        cv2.circle(image, (self._world_position[0], self._world_position[1]), 1, (255, 0, 0), 2)
         cv2.drawContours(image, [self._shape], -1, (0, 255, 0), 2)
 
 
@@ -53,14 +54,17 @@ class ShapeDetector:
         shape = None
         orientation = None
 
-        cimage = cv2.Canny(image.copy(), 180, 180)
+        cimage = cv2.Canny(image.copy(), 150, 150)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        cimage = cv2.dilate(cimage, kernel)
         (_, cnts, _) = cv2.findContours(cimage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.imshow('cimage', cimage)
 
         for contour in cnts:
             approx = cv2.approxPolyDP(contour, 0.1 * cv2.arcLength(contour, True), True)
             area = cv2.contourArea(approx)
 
-            if len(approx) == 3 and (area > 600) and (area < 800):
+            if len(approx) == 3 and (area > 400) and (area < 800):
                 shape = 'Triangle'
                 orientation = self._get_orientation(approx)
                 contours_list.append(approx)
@@ -70,7 +74,7 @@ class ShapeDetector:
             for contour2 in cnts:
                 approx2 = cv2.approxPolyDP(contour2, 0.01 * cv2.arcLength(contour2, True), True)
                 area = cv2.contourArea(contour2)
-                if (len(approx2) > 8) and (area > 880) and (area < 980):
+                if (len(approx2) > 3) and (area > 500) and (area < 980):
                     shape = 'Circle'
                     contours_list.append(approx2)
                     break

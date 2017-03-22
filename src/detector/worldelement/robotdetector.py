@@ -58,14 +58,18 @@ class RobotDetector(IWorldElementDetector):
         return direction_vector
 
     def _get_leading_marker(self, markers):
-        tip = markers[0]
-        max_mean = 0
-        for marker in markers:
-            mean = self._find_mean_distance(marker, markers)
-            if mean > max_mean:
-                max_mean = mean
-                tip = marker
-        return tip
+        distance_1 = euc_distance(markers[0], markers[1])
+
+        distance_2 = euc_distance(markers[0], markers[2])
+
+        distance_3 = euc_distance(markers[1], markers[2])
+
+        if distance_1 > distance_2 and distance_3 > distance_2:
+            return markers[1]
+        if distance_1 > distance_3 and distance_2 > distance_3:
+            return markers[0]
+        else:
+            return markers[2]
 
     def _find_center_of_mass(self, contour):
         contour_moments = cv2.moments(contour)
@@ -83,11 +87,3 @@ class RobotDetector(IWorldElementDetector):
             return squares[0]
         else:
             return None
-
-    def _find_mean_distance(self, point, points):
-        sum = 0
-        for p in points:
-            if point[0] != p[0] and point[1] != p[1]:
-                sum += euc_distance(point, p)
-        mean_distance = sum / len(points) - 1
-        return mean_distance
