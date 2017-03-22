@@ -6,6 +6,9 @@ class CalibrationService:
     def __init__(self, camera_factory):
         self._camera_factory = camera_factory
 
+    def create_calibration(self):
+        return self._camera_factory.create_calibration()
+
     def calibrate_from_images(self, images):
         calibration = self._camera_factory.create_calibration()
 
