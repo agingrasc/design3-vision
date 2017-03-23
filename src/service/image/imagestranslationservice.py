@@ -4,6 +4,7 @@ import numpy as np
 
 import config
 from geometry.coordinate import Coordinate
+from world.drawingarea import DrawingArea
 from world.robot import Robot
 from world.table import Table
 from world.world import World
@@ -23,10 +24,12 @@ class ImageToWorldTranslator:
             if isinstance(image_element, Table):
                 self._world = self._translate_table_to_world(image_element)
 
+            elif isinstance(image_element, DrawingArea):
+                inner_square_dimension = self._get_world_inner_square_dimension(image_element)
+                image_element.set_inner_square_dimension(inner_square_dimension)
+
             elif isinstance(image_element, Robot):
                 if self._robot is None:
-                    self._robot = self._compute_and_set_projected_coordinates(image_element)
-                else:
                     self._robot = self._compute_and_set_projected_coordinates(image_element)
 
             elif isinstance(image_element, list):
@@ -37,16 +40,6 @@ class ImageToWorldTranslator:
             self._transform_target_to_world(self._world._target_to_world, self._robot._world_position)
 
         return self._world, self._robot, image_elements
-
-    def _translate_table_to_world(self, table):
-        table_corners = self._convert_table_image_points_to_world_coordinates(table)
-        table_dimensions = self._get_table_dimension(table_corners)
-        world_origin = table._rectangle.as_contour_points().tolist()[0]
-        target_to_world = self._compute_world_transform_matrix(table, world_origin)
-
-        return World(table_dimensions['width'], table_dimensions['length'],
-                     world_origin[0], world_origin[1],
-                     target_to_world)
 
     def _compute_world_transform_matrix(self, table, world_origin):
         x_axis = np.array([world_origin, table._rectangle.as_contour_points().tolist()[1]])
@@ -77,6 +70,23 @@ class ImageToWorldTranslator:
         robot.set_image_position(adjusted_image_coordinates)
         return robot
 
+    def _translate_table_to_world(self, table):
+        image_corners = np.round(table._rectangle.as_contour_points()).astype('int')
+        table_corners = self._convert_image_points_to_world_coordinates(image_corners)
+        table_dimensions = self._get_element_dimension(table_corners)
+        world_origin = table._rectangle.as_contour_points().tolist()[0]
+        target_to_world = self._compute_world_transform_matrix(table, world_origin)
+
+        return World(table_dimensions['width'], table_dimensions['length'],
+                     world_origin[0], world_origin[1],
+                     target_to_world)
+
+    def _get_world_inner_square_dimension(self, drawing_area):
+        image_corners = np.round(drawing_area._inner_square.as_contour_points()).astype('int')
+        inner_square_corners = self._convert_image_points_to_world_coordinates(image_corners)
+        inner_dimension = self._get_element_dimension(inner_square_corners)
+        return inner_dimension
+
     def _transform_image_to_target(self, robot):
         image_x, image_y = robot._image_position
         taget_coordinates = self._camera_model.compute_image_to_world_coordinates(image_x,
@@ -102,11 +112,11 @@ class ImageToWorldTranslator:
 
         adjusted_position = self._camera_model.compute_world_to_image_coordinates(world_position[0],
                                                                                   world_position[1], 0)
+
         obstacle.set_position(adjusted_position)
         return obstacle
 
-    def _convert_table_image_points_to_world_coordinates(self, table):
-        image_corners = np.round(table._rectangle.as_contour_points()).astype('int')
+    def _convert_image_points_to_world_coordinates(self, image_corners):
         table_corners = [self._camera_model.compute_image_to_world_coordinates(corner[0], corner[1], 0) for corner in
                          image_corners.tolist()]
         return self._to_coordinates(table_corners)
@@ -114,7 +124,7 @@ class ImageToWorldTranslator:
     def _to_coordinates(self, points):
         return [Coordinate(point[0], point[1]) for point in points]
 
-    def _get_table_dimension(self, table_corners):
+    def _get_element_dimension(self, table_corners):
         sides = self._get_table_sides_length(table_corners)
         return {
             "length": sides[0],

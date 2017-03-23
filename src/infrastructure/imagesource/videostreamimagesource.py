@@ -24,7 +24,7 @@ class VideoStreamImageSource:
         self._has_next_image, self._next_image = self._cap.read()
         self._capture_thread = Thread(target=self._update_image).start()
 
-        sleep(2)
+        sleep(3)
 
     def has_next_image(self):
         return self._cap.isOpened()
