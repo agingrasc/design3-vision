@@ -26,14 +26,14 @@ class Obstacle:
         self._position = position
         self._radius = radius
         self._shape = None
-        self._orienation = None
+        self._orientation = ""
         self._world_position = None
 
     def set_shape(self, shape):
         self._shape = np.array(shape)
 
     def set_orientation(self, orientation):
-        self._orienation = orientation
+        self._orientation = orientation
 
     def set_position(self, position):
         self._world_position = position
@@ -52,7 +52,7 @@ class ShapeDetector:
         contours_list = []
 
         shape = None
-        orientation = None
+        orientation = ""
 
         cimage = cv2.Canny(image.copy(), 150, 150)
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))

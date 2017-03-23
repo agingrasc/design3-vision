@@ -31,8 +31,6 @@ class ImageToWorldTranslator:
             elif isinstance(image_element, Robot):
                 if self._robot is None:
                     self._robot = self._compute_and_set_projected_coordinates(image_element)
-                else:
-                    self._robot = self._compute_and_set_projected_coordinates(image_element)
 
             elif isinstance(image_element, list):
                 for obstacle in image_element:
@@ -114,6 +112,7 @@ class ImageToWorldTranslator:
 
         adjusted_position = self._camera_model.compute_world_to_image_coordinates(world_position[0],
                                                                                   world_position[1], 0)
+
         obstacle.set_position(adjusted_position)
         return obstacle
 

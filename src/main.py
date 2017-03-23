@@ -71,23 +71,22 @@ def render_all_elements(image, world_elements):
             element.draw_in(image)
 
 
-def render_path(image, path):
+start_position = None
+
+
+def render_path(image, current_robot, path):
     if path:
-        prev = None
+        prev = tuple(current_robot)
         for coord in path:
-            if prev is None:
-                prev = (int(coord['x']), int(coord['y']))
-                print(prev)
-            else:
-                next = (int(coord['x']), int(coord['y']))
-                cv2.line(image, prev, next, (0, 255, 0), 3)
-                prev = next
+            next = coord
+            cv2.line(image, prev, next, (0, 255, 0), 3)
+            prev = next
 
 
 if __name__ == "__main__":
     APP_ENVIRONMENT = AppEnvironment.COMPETITION
 
-    WEBSOCKET = False
+    WEBSOCKET = True
     VIDEO_DEBUG = not WEBSOCKET
     VIDEO_WRITE = False
     DRAW_PATH = True
@@ -108,9 +107,9 @@ if __name__ == "__main__":
     if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
-        obstacles_detector = DetectOnceProxy(obstacles_detector)
-        # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+        # obstacles_detector = DetectOnceProxy(obstacles_detector)
+        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
@@ -119,8 +118,8 @@ if __name__ == "__main__":
     detection_service = ImageDetectionService()
     detection_service.register_detector(robot_detector)
     detection_service.register_detector(table_detector)
-    detection_service.register_detector(drawing_area_detector)
-    detection_service.register_detector(obstacles_detector)
+    # detection_service.register_detector(drawing_area_detector)
+    # detection_service.register_detector(obstacles_detector)
 
     image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
 
@@ -139,11 +138,7 @@ if __name__ == "__main__":
             image = camera_model.undistort_image(image)
             image = preprocess_image(image)
 
-            detection_start = time.clock()
             world, robot, world_elements = image_to_world_translator.translate_image_to_world(image)
-            detection_end = time.clock()
-            detection_elapsed = detection_end - detection_start
-            print("Detection: {}ms".format(round(detection_elapsed * 1000, 1)))
 
             obstacles = extract_obstacles(world_elements)
 
@@ -158,8 +153,24 @@ if __name__ == "__main__":
             if WEBSOCKET:
                 try:
                     connection.send(json.dumps({"headers": "pull_path"}))
-                    path = json.loads(connection.recv())
-                    render_path(image, path)
+
+                    try:
+                        path_data = json.loads(connection.recv())['data']
+                        path_data = [(int(seg['x']), int(seg['y'])) for seg in path_data]
+                        path_data = [camera_model.compute_world_to_image_coordinates(seg[0] / 44, seg[1] / 44, 0) for
+                                     seg in
+                                     path_data]
+
+                        path_data = [(int(seg[0] * 0.6), int(seg[1] * 0.6)) for seg in path_data]
+
+                        if start_position is None:
+                            start_position = robot._image_position
+
+                        render_path(image, start_position, path_data)
+
+                    except KeyError:
+                        pass
+
                     message = message_assembler.format_message(world, robot, image, obstacles)
                     connection.send(json.dumps(message))
                     ok = connection.recv()

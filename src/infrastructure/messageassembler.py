@@ -12,7 +12,7 @@ class MessageAssembler:
             "headers": "push_vision_data",
             "data": {
                 "image": {
-                    "ratio": "0.3",
+                    "ratio": "0.37",
                     "origin": self.get_world_origin(world),
 
                     "data": self.prepare_image(image),
@@ -86,7 +86,7 @@ class MessageAssembler:
     def get_obstacles(self, obstacles):
         if obstacles is not None:
             return [{"position": {"x": obstacle._world_position[0], "y": obstacle._world_position[1]},
-                     "tag": obstacle._orienation,
+                     "tag": obstacle._orientation.upper(),
                      "dimension": {"width": "140", "length": "140"}}
                     for obstacle in obstacles]
         else:
