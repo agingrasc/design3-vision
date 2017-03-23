@@ -155,16 +155,6 @@ class ObstacleDetector(IWorldElementDetector):
 
         return obstacles
 
-    def square_bounding(self, obstacles, cimg):
-        i = 0
-        while i < obstacles.shape[1]:
-            min_x = obstacles[0][i][0] - obstacles[0][i][2]
-            min_y = obstacles[0][i][1] - obstacles[0][i][2]
-            height = obstacles[0][i][2]
-            width = obstacles[0][i][2]
-            cv2.rectangle(cimg, (min_x, min_y), (min_x + 2 * width, min_y + 2 * height), (0, 255, 0), 2)
-            i += 1
-
     def _create_obstacles_coord(self, obstacles):
         lst = []
         min_x = obstacles[0] - obstacles[2]
