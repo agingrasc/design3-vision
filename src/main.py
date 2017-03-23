@@ -1,9 +1,16 @@
+import base64
 import json
+from threading import Thread
+
 import cv2
 
 from enum import Enum
 
-import time
+from PIL import Image
+from flask import Flask, jsonify
+from flask import make_response
+from flask import request
+from io import BytesIO
 from websocket import create_connection
 
 import config
@@ -11,7 +18,7 @@ import config
 from detector.worldelement.drawingareadetector import DrawingAreaDetector
 from detector.worldelement.obstaclepositiondetector import ObstacleDetector
 from detector.worldelement.obstaclepositiondetector import ShapeDetector
-from detector.worldelement.robotdetector import RobotDetector
+from detector.worldelement.robotdetector import RobotDetector, np
 from detector.worldelement.shapefactory import ShapeFactory
 from detector.worldelement.tabledetector import TableDetector
 from infrastructure.camera import JSONCameraModelRepository
@@ -33,6 +40,42 @@ def preprocess_image(image):
 
 
 robot_positions = []
+
+
+def init_api():
+    api = Flask(__name__)
+
+    def save_image(image):
+        print(type(image))
+        with open('image.png', 'wb') as f:
+            f.write(image)
+
+    @api.route('/vision/reset-rendering', methods=['POST'])
+    def reset_rendering():
+        _reset_rendering()
+        response = make_response(jsonify({"message": "ok"}))
+        return response
+
+    @api.route('/image/segmentation', methods=["POST"])
+    def receive_image():
+        data = json.loads(request.json)
+
+        try:
+            image = base64.b64decode(data['image'])
+            img = Image.open(BytesIO(image)).convert('RGB')
+            opencv_image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+            cv2.imwrite('robot_image.jpg', opencv_image)
+
+        except KeyError:
+            print("No image in request")
+
+        return make_response(jsonify({"message": "ok"}))
+
+    return api
+
+
+def _reset_rendering():
+    robot_positions.clear()
 
 
 def draw_robot_path(image, robot_positions):
@@ -86,7 +129,7 @@ def render_path(image, current_robot, path):
 if __name__ == "__main__":
     APP_ENVIRONMENT = AppEnvironment.COMPETITION
 
-    WEBSOCKET = True
+    WEBSOCKET = False
     VIDEO_DEBUG = not WEBSOCKET
     VIDEO_WRITE = False
     DRAW_PATH = True
@@ -107,9 +150,9 @@ if __name__ == "__main__":
     if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
-        # obstacles_detector = DetectOnceProxy(obstacles_detector)
-        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+        obstacles_detector = DetectOnceProxy(obstacles_detector)
+        # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
@@ -131,6 +174,9 @@ if __name__ == "__main__":
             print("Could not establish connection to BaseStation url: " + config.BASESTATION_WEBSOCKET_URL)
             print("Terminating...")
             exit(0)
+
+    api = init_api()
+    api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'}).start()
 
     while image_source.has_next_image():
         image = image_source.next_image()
@@ -166,7 +212,7 @@ if __name__ == "__main__":
                         if start_position is None:
                             start_position = robot._image_position
 
-                        render_path(image, start_position, path_data)
+                            # render_path(image, start_position, path_data)
 
                     except KeyError:
                         pass

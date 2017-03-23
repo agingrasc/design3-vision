@@ -11,8 +11,6 @@ from flask import request
 
 app = Flask(__name__)
 
-receive_image_data = None
-
 
 def save_image(image):
     print(type(image))
@@ -33,8 +31,6 @@ def receive_image():
 
         print(opencv_image.shape)
         cv2.imwrite('robot_image.png', opencv_image)
-
-
 
     except KeyError:
         print("No image in request")

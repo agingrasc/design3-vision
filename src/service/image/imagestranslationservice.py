@@ -31,6 +31,8 @@ class ImageToWorldTranslator:
             elif isinstance(image_element, Robot):
                 if self._robot is None:
                     self._robot = self._compute_and_set_projected_coordinates(image_element)
+                else:
+                    self._robot = self._compute_and_set_projected_coordinates(image_element)
 
             elif isinstance(image_element, list):
                 for obstacle in image_element:
