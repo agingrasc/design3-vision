@@ -1,9 +1,10 @@
 import numpy as np
 
 BASESTATION_WEBSOCKET_URL = 'ws://localhost:3000'
-CAMERA_MODELS_FILE_PATH = '../data/camera_models/camera_models.json'
+# CAMERA_MODELS_FILE_PATH = '../data/camera_models/camera_models.json'
+CAMERA_MODELS_FILE_PATH = '../camera_models.json'
+TABLE_CAMERA_MODEL_ID = 1
 TEST_IMAGE_DIRECTORY_PATH = '../data/images/full_scene/*.jpg'
-TABLE_CAMERA_MODEL_ID = 0
 CAMERA_ID = 1
 CAP_WIDTH = 1280
 CAP_HEIGHT = 800
@@ -23,8 +24,8 @@ TARGET_MAX_RADIUS = 30
 
 # TABLE SPECIFICATIONS
 MIN_TABLE_AREA = 70000
-LOWER_TABLE_COLOR = np.array([10, 10, 10])
-UPPER_TABLE_COLOR = np.array([180, 160, 255])
+LOWER_TABLE_COLOR = np.array([5, 10, 40])
+UPPER_TABLE_COLOR = np.array([180, 150, 255])
 
 TARGET_SIDE_LENGTH = 44  # in mm
 
