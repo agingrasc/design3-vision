@@ -34,7 +34,7 @@ from world.drawingarea import DrawingArea
 AppEnvironment = Enum('AppEnvironment', 'TESTING_VISION, COMPETITION, DEBUG')
 
 
-def create_rest_api(data_logger):
+def create_rest_api(data_logger, detection_service):
     api = Flask(__name__)
 
     @api.route('/vision/reset-rendering', methods=['POST'])
@@ -42,6 +42,11 @@ def create_rest_api(data_logger):
         data_logger.reset_robot_positions()
         response = make_response(jsonify({"message": "ok"}))
         return response
+
+    @api.route('/vision/reset-detection', methods=['POST'])
+    def reset_detection():
+        detection_service.reset_detection()
+        return make_response(jsonify({"message": "ok"}))
 
     @api.route('/image/segmentation', methods=["POST"])
     def receive_image():
@@ -128,7 +133,7 @@ if __name__ == "__main__":
 
     image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
 
-    api = create_rest_api(data_logger)
+    api = create_rest_api(data_logger, detection_service)
     api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'}).start()
 
     if WEB_SOCKET:
