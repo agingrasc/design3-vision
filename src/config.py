@@ -1,9 +1,8 @@
 import numpy as np
 
 BASESTATION_WEBSOCKET_URL = 'ws://localhost:3000'
-# CAMERA_MODELS_FILE_PATH = '../data/camera_models/camera_models.json'
-CAMERA_MODELS_FILE_PATH = '../camera_models.json'
-TABLE_CAMERA_MODEL_ID = 1
+CAMERA_MODELS_FILE_PATH = '../data/camera_models/camera_models.json'
+TABLE_CAMERA_MODEL_ID = 2
 TEST_IMAGE_DIRECTORY_PATH = '../data/images/full_scene/*.jpg'
 CAMERA_ID = 1
 CAP_WIDTH = 1280

@@ -20,9 +20,6 @@ class Robot:
                     fontScale=1.2,
                     color=(0, 0, 0))
 
-        if self._frame is not None:
-            self._frame.draw_in(image)
-
     def set_world_position(self, position):
         self._world_position = position
 
