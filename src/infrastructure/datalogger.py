@@ -1,10 +1,12 @@
 import math
+from collections import deque
 
 
 class DataLogger:
     def __init__(self, verbose=False):
-        self._robot_positions = []
+        self._robot_positions = deque()
         self._verbose = verbose
+        self._current_destination = None
 
     def log_robot_position(self, robot):
         image_x, image_y = robot._image_position
@@ -25,3 +27,9 @@ class DataLogger:
 
     def get_robot_positions(self):
         return self._robot_positions
+
+    def set_current_destination(self, destination):
+        self._current_destination = destination
+
+    def get_current_state(self):
+        return self._current_destination

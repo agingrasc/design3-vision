@@ -3,6 +3,7 @@ from math import acos
 import numpy as np
 
 import config
+from detector.worldelement.obstaclepositiondetector import Obstacle
 from geometry.coordinate import Coordinate
 from world.drawingarea import DrawingArea
 from world.robot import Robot
@@ -16,6 +17,7 @@ class ImageToWorldTranslator:
         self._image_detection_service = image_detection_service
         self._world = None
         self._robot = None
+        self._obstacles = None
 
     def translate_image_to_world(self, image):
         image_elements = self._image_detection_service.detect_all_world_elements(image)
@@ -35,11 +37,23 @@ class ImageToWorldTranslator:
                     self._robot = self._compute_and_set_projected_coordinates(image_element)
 
             elif isinstance(image_element, list):
-                for obstacle in image_element:
-                    obstacle = self._adjust_obstacle_position(obstacle)
+                self._obstacles = [self._adjust_obstacle_position(obstacle) for obstacle in image_element]
 
         if self._robot and self._world is not None:
-            self._transform_target_to_world(self._world._target_to_world, self._robot._world_position)
+            robot_target_to_world_in_mm = self._transform_target_to_world(self._world._target_to_world,
+                                                                          self._robot._world_position)
+            self._robot.set_world_position(robot_target_to_world_in_mm)
+
+        if self._obstacles and self._world is not None:
+            world_obstacles = []
+
+            for obstacle in self._obstacles:
+                obstacle_target_to_world_in_mm = self._transform_target_to_world(self._world._target_to_world,
+                                                                                 obstacle._world_position)
+                obstacle.set_world_position(obstacle_target_to_world_in_mm)
+                world_obstacles.append(obstacle)
+
+            self._obstacles = world_obstacles
 
         return self._world, self._robot, image_elements
 
@@ -105,16 +119,16 @@ class ImageToWorldTranslator:
             world_position[1] * config.TARGET_SIDE_LENGTH
         ]
 
-        self._robot.set_world_position(world_position_in_mm)
+        return world_position_in_mm
 
     def _adjust_obstacle_position(self, obstacle):
-        world_position = self._camera_model.compute_image_to_world_coordinates(obstacle._position[0],
-                                                                               obstacle._position[1],
-                                                                               10)
+        target_coordinates = self._camera_model.compute_image_to_world_coordinates(obstacle._position[0],
+                                                                                   obstacle._position[1],
+                                                                                   10)
+        obstacle.set_world_position(target_coordinates)
 
-        adjusted_position = self._camera_model.compute_world_to_image_coordinates(world_position[0],
-                                                                                  world_position[1], 0)
-
+        adjusted_position = self._camera_model.compute_world_to_image_coordinates(target_coordinates[0],
+                                                                                  target_coordinates[1], 0)
         obstacle.set_position(adjusted_position)
         return obstacle
 

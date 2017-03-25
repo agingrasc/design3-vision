@@ -97,7 +97,7 @@ if __name__ == "__main__":
     VIDEO_DEBUG = not WEB_SOCKET
     VIDEO_WRITE = False
     RENDER_PATH = True
-    VERBOSE = False
+    VERBOSE = True
 
     camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
     camera_model = camera_model_repository.get_camera_model_by_id(config.TABLE_CAMERA_MODEL_ID)
@@ -118,8 +118,8 @@ if __name__ == "__main__":
         table_detector = DetectOnceProxy(table_detector)
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
         obstacles_detector = DetectOnceProxy(obstacles_detector)
-        # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video23.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
@@ -162,13 +162,6 @@ if __name__ == "__main__":
 
             if WEB_SOCKET:
                 try:
-                    connection.send(json.dumps({"headers": "pull_path"}))
-
-                    try:
-                        path_data = json.loads(connection.recv())['data']
-                    except KeyError:
-                        pass
-
                     obstacles = extract_obstacles(world_elements)
                     drawing_area = extract_drawing_area(world_elements)
                     message = message_assembler.format_message(world, robot, image, obstacles, drawing_area)
