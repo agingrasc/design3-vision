@@ -34,7 +34,7 @@ from world.drawingarea import DrawingArea
 AppEnvironment = Enum('AppEnvironment', 'TESTING_VISION, COMPETITION, DEBUG')
 
 
-def create_rest_api(data_logger, detection_service):
+def create_rest_api(data_logger, detection_service, image_to_world_translation, message_assembler):
     api = Flask(__name__)
 
     @api.route('/vision/reset-rendering', methods=['POST'])
@@ -47,6 +47,20 @@ def create_rest_api(data_logger, detection_service):
     def reset_detection():
         detection_service.reset_detection()
         return make_response(jsonify({"message": "ok"}))
+
+    @api.route('/world-dimensions')
+    def get_world_dimension():
+        world = image_to_world_translator.get_world()
+        world_dimension_body = message_assembler.get_world_dimension(world)
+        response_body = {"world_dimensions": world_dimension_body}
+        return make_response(jsonify(response_body))
+
+    @api.route('/obstacles', methods=["GET"])
+    def get_obstacles():
+        obstacles = image_to_world_translator.get_obstacles()
+        obstacles_body = message_assembler.get_obstacles(obstacles)
+        response_body = {"data": {"obstacles": obstacles_body}}
+        return make_response(jsonify(response_body))
 
     @api.route('/image/segmentation', methods=["POST"])
     def receive_image():
@@ -119,7 +133,6 @@ if __name__ == "__main__":
         drawing_area_detector = DetectOnceProxy(drawing_area_detector)
         obstacles_detector = DetectOnceProxy(obstacles_detector)
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video23.avi')
     elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
         image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
@@ -133,7 +146,7 @@ if __name__ == "__main__":
 
     image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
 
-    api = create_rest_api(data_logger, detection_service)
+    api = create_rest_api(data_logger, detection_service, image_to_world_translator, message_assembler)
     api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'}).start()
 
     if WEB_SOCKET:

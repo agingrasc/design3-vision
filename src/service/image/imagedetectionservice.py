@@ -18,6 +18,7 @@ class ImageDetectionService:
 
         return world_elements
 
+
     def register_detector(self, detector):
         if isinstance(detector, IWorldElementDetector):
             self._detectors.append(detector)

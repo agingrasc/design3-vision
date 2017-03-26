@@ -85,7 +85,6 @@ def segment_image(image):
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
             figure_mask = cv2.morphologyEx(figure_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
             figure_mask = (255 - figure_mask)
-            cv2.imwrite('robot_segments.jpg', figure_mask)
 
             ret_2, contours_2, hierachy_2 = cv2.findContours(figure_mask.copy(), cv2.RETR_LIST,
                                                              cv2.CHAIN_APPROX_SIMPLE)
@@ -96,6 +95,8 @@ def segment_image(image):
 
                 if cv2.contourArea(approx_2) > 1000 and len(approx_2) > 4:
                     cv2.drawContours(inner_figure, [approx_2], -1, (10, 255, 255), 2)
+
+            cv2.imwrite('robot_segments.jpg', cv2.cvtColor(inner_figure, cv2.COLOR_HSV2BGR))
 
             inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_HSV2BGR)
             return inner_figure

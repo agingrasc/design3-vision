@@ -19,7 +19,6 @@ class TableDetector(IWorldElementDetector):
 
     def detect(self, image):
         mask = self._threshold_table_color(image)
-        cv2.imshow('image', mask)
         table = self._find_table(mask)
         return table
 

@@ -57,6 +57,12 @@ class ImageToWorldTranslator:
 
         return self._world, self._robot, image_elements
 
+    def get_obstacles(self):
+        return self._obstacles
+
+    def get_world(self):
+        return self._world
+
     def _compute_world_transform_matrix(self, table, world_origin):
         x_axis = np.array([world_origin, table._rectangle.as_contour_points().tolist()[1]])
         x_axis = [np.array(self._camera_model.compute_image_to_world_coordinates(point[0], point[1], 0)) for point in

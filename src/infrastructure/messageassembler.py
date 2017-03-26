@@ -84,7 +84,7 @@ class MessageAssembler:
             return ""
 
     def get_obstacles(self, obstacles):
-        if len(obstacles) > 0:
+        if obstacles is not None:
             return [{"position": {"x": obstacle._world_position[0], "y": obstacle._world_position[1]},
                      "tag": obstacle._orientation.upper(),
                      "dimension": {"width": "140", "length": "140"}}
