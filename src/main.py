@@ -40,6 +40,7 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
     @api.route('/vision/reset-rendering', methods=['POST'])
     def reset_rendering():
         data_logger.reset_robot_positions()
+        data_logger.reset_path()
         response = make_response(jsonify({"message": "ok"}))
         return response
 
@@ -54,6 +55,13 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
         world_dimension_body = message_assembler.get_world_dimension(world)
         response_body = {"world_dimensions": world_dimension_body}
         return make_response(jsonify(response_body))
+
+    @api.route('/path', methods=["POST"])
+    def create_path():
+        data = request.json
+        data_logger.set_path(data['data']['path'])
+        print(data_logger.get_path())
+        return make_response(jsonify({"message": "ok"}))
 
     @api.route('/obstacles', methods=["GET"])
     def get_obstacles():
@@ -172,6 +180,7 @@ if __name__ == "__main__":
 
             if RENDER_PATH:
                 rendering_engine.render_robot_path(image, data_logger.get_robot_positions())
+                rendering_engine.render_path(image, robot._world_position, data_logger.get_path())
 
             if WEB_SOCKET:
                 try:

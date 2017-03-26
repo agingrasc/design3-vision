@@ -7,6 +7,7 @@ class DataLogger:
         self._robot_positions = deque()
         self._verbose = verbose
         self._current_destination = None
+        self._path = []
 
     def log_robot_position(self, robot):
         image_x, image_y = robot._image_position
@@ -25,6 +26,9 @@ class DataLogger:
     def reset_robot_positions(self):
         self._robot_positions.clear()
 
+    def reset_path(self):
+        self._path.clear()
+
     def get_robot_positions(self):
         return self._robot_positions
 
@@ -33,3 +37,9 @@ class DataLogger:
 
     def get_current_state(self):
         return self._current_destination
+
+    def set_path(self, path):
+        self._path = path
+
+    def get_path(self):
+        return self._path

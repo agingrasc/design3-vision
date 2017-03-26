@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 
 class RenderingEngine:
@@ -15,9 +16,11 @@ class RenderingEngine:
             cv2.circle(image, pos, 2, (0, 0, 255), 2)
 
     def render_path(self, image, current_robot, path):
+        start = (np.array(current_robot) / 2).astype('int').tolist()
+
         if path:
-            prev = tuple(current_robot)
+            prev = tuple(start)
             for coord in path:
-                next = coord
+                next = tuple(np.array([coord[0] / 2, coord[1] / 2]).astype('int').tolist())
                 cv2.line(image, prev, next, (0, 255, 0), 3)
                 prev = next

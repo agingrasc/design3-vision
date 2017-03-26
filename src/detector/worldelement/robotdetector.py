@@ -45,7 +45,7 @@ class RobotDetector(IWorldElementDetector):
 
     def _detect_robot_markers_contours(self, threshold):
         contours = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
-        contours = [contour for contour in contours if cv2.contourArea(contour) > 400]
+        contours = [contour for contour in contours if cv2.contourArea(contour) > 200]
         return np.array(contours)
 
     def _get_robot_position(self, targets_center):
