@@ -58,7 +58,7 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
 
     @api.route('/path', methods=["POST"])
     def create_path():
-        data = request.json
+        data = json.loads(request.json)
         data_logger.set_path(data['data']['path'])
         print(data_logger.get_path())
         return make_response(jsonify({"message": "ok"}))
