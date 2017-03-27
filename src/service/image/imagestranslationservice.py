@@ -111,14 +111,12 @@ class ImageToWorldTranslator:
 
     def _transform_image_to_target(self, robot):
         image_x, image_y = robot._image_position
-        taget_coordinates = self._camera_model.compute_image_to_world_coordinates(image_x,
-                                                                                  image_y,
-                                                                                  config.ROBOT_HEIGHT_IN_TARGET_UNIT)
-        return taget_coordinates
+        target_coordinates = self._camera_model.compute_image_to_world_coordinates(image_x, image_y,
+                                                                                   config.ROBOT_HEIGHT_IN_TARGET_UNIT)
+        return target_coordinates
 
-    def _transform_target_to_world(self, target_to_world_matrix, robot_target_coordinates):
-        world_position = self._camera_model.transform_coordinate(target_to_world_matrix,
-                                                                 robot_target_coordinates)
+    def _transform_target_to_world(self, target_to_world_matrix, target_coordinates):
+        world_position = self._camera_model.transform_coordinates(target_to_world_matrix, target_coordinates)
 
         world_position_in_mm = [
             world_position[0] * config.TARGET_SIDE_LENGTH,
@@ -146,14 +144,14 @@ class ImageToWorldTranslator:
     def _to_coordinates(self, points):
         return [Coordinate(point[0], point[1]) for point in points]
 
-    def _get_element_dimension(self, table_corners):
-        sides = self._get_table_sides_length(table_corners)
+    def _get_element_dimension(self, corners):
+        sides = self._get_table_dimensions(corners)
         return {
             "length": sides[0],
             "width": sides[3]
         }
 
-    def _get_table_sides_length(self, table_corners):
+    def _get_table_dimensions(self, table_corners):
         return sorted([table_corners[0].distance_from(table_corners[1]) * 4.4,
                        table_corners[1].distance_from(table_corners[2]) * 4.4,
                        table_corners[2].distance_from(table_corners[3]) * 4.4,

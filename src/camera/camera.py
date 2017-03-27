@@ -151,7 +151,7 @@ class CameraModel:
 
         return np.array(P, dtype=float).tolist()
 
-    def transform_coordinate(self, transform_matrix, coordinate):
+    def transform_coordinates(self, transform_matrix, coordinate):
         homogeneous_coordinate = np.array([
             coordinate[0],
             coordinate[1],
