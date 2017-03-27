@@ -55,7 +55,7 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
     def create_path():
         data = request.json
         path = data['data']['path']
-        data_logger.set_path(path)
+        data_logger.set_path(image_to_world_translator.translate_path(path))
         return make_response(jsonify({"message": "ok"}))
 
     @api.route('/obstacles', methods=["GET"])
@@ -130,8 +130,8 @@ if __name__ == "__main__":
     api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'})
     api_thread.start()
 
-    # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+    image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+    # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
 
     if WEB_SOCKET:
         try:

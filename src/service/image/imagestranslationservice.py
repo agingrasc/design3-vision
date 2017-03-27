@@ -156,3 +156,13 @@ class ImageToWorldTranslator:
                        table_corners[1].distance_from(table_corners[2]) * 4.4,
                        table_corners[2].distance_from(table_corners[3]) * 4.4,
                        table_corners[3].distance_from(table_corners[0]) * 4.4])
+
+    def translate_path(self, path):
+        if self._world:
+            translate_matrix = self._camera_model.compute_transform_matrix(0, [self._world._image_origin._x, self._world._image_origin._y])
+
+            image_path = [self._camera_model.transform_coordinates(translate_matrix, point) for point in path]
+
+            return image_path
+        else:
+            return []
