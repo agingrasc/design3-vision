@@ -2,11 +2,15 @@ import base64
 import cv2
 import numpy as np
 
+from world.drawingarea import DrawingArea
+
 IMAGE_DIMINUTION_RATIO = 2
 
 
 class MessageAssembler:
-    def format_message(self, world, robot, image, obstacles, drawing_area):
+    def format_message(self, world, robot, image, world_elements):
+        drawing_area = self.extract_drawing_area(world_elements)
+        obstacles = self.extract_obstacles(world_elements)
         return {
             "headers": "push_vision_data",
             "data": {
@@ -84,6 +88,7 @@ class MessageAssembler:
             return ""
 
     def get_obstacles(self, obstacles):
+
         if obstacles is not None:
             return [{"position": {"x": obstacle._world_position[0], "y": obstacle._world_position[1]},
                      "tag": obstacle._orientation.upper(),
@@ -110,3 +115,17 @@ class MessageAssembler:
             }
         else:
             return ""
+
+    def extract_obstacles(self, world_elements):
+        obstacles = []
+        for element in world_elements:
+            if isinstance(element, list):
+                obstacles = element
+        return obstacles
+
+    def extract_drawing_area(self, world_elements):
+        drawing_areas = [element for element in world_elements if isinstance(element, DrawingArea)]
+        if len(drawing_areas) > 0:
+            return drawing_areas[0]
+        else:
+            return None

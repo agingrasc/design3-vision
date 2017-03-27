@@ -2,7 +2,6 @@ import base64
 import json
 import cv2
 
-from enum import Enum
 from io import BytesIO
 from threading import Thread
 from PIL import Image
@@ -20,7 +19,6 @@ from detector.worldelement.shapefactory import ShapeFactory
 from detector.worldelement.tabledetector import TableDetector
 from infrastructure.camera import JSONCameraModelRepository
 from infrastructure.datalogger import DataLogger
-from infrastructure.imagesource.directoryimagesource import DirectoryImageSource
 from infrastructure.imagesource.savevideoimagesource import SaveVideoImageSource
 from infrastructure.imagesource.videostreamimagesource import VideoStreamImageSource
 from infrastructure.messageassembler import MessageAssembler
@@ -29,9 +27,6 @@ from service.image.detectonceproxy import DetectOnceProxy
 from service.image.imagesegmentation import segment_image
 from service.image.imagedetectionservice import ImageDetectionService
 from service.image.imagestranslationservice import ImageToWorldTranslator
-from world.drawingarea import DrawingArea
-
-AppEnvironment = Enum('AppEnvironment', 'TESTING_VISION, COMPETITION, DEBUG')
 
 
 def create_rest_api(data_logger, detection_service, image_to_world_translation, message_assembler):
@@ -58,9 +53,9 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
 
     @api.route('/path', methods=["POST"])
     def create_path():
-        data = json.loads(request.json)
-        data_logger.set_path(data['data']['path'])
-        print(data_logger.get_path())
+        data = request.json
+        path = data['data']['path']
+        data_logger.set_path(path)
         return make_response(jsonify({"message": "ok"}))
 
     @api.route('/obstacles', methods=["GET"])
@@ -90,72 +85,51 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
     return api
 
 
-def preprocess_image(image):
-    image = cv2.medianBlur(image, ksize=5)
-    image = cv2.GaussianBlur(image, (5, 5), 1)
-    return image
-
-
-def extract_obstacles(world_elements):
-    obstacles = []
-    for element in world_elements:
-        if isinstance(element, list):
-            obstacles = element
-    return obstacles
-
-
-def extract_drawing_area(world_elements):
-    drawing_areas = [element for element in world_elements if isinstance(element, DrawingArea)]
-    if len(drawing_areas) > 0:
-        return drawing_areas[0]
-    else:
-        return None
-
-
-if __name__ == "__main__":
-    APP_ENVIRONMENT = AppEnvironment.COMPETITION
-
-    WEB_SOCKET = True
-    VIDEO_DEBUG = not WEB_SOCKET
-    VIDEO_WRITE = False
-    RENDER_PATH = True
-    VERBOSE = True
-
-    camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
-    camera_model = camera_model_repository.get_camera_model_by_id(config.TABLE_CAMERA_MODEL_ID)
-    message_assembler = MessageAssembler()
-    rendering_engine = RenderingEngine()
-    data_logger = DataLogger(verbose=VERBOSE)
-
+def create_detection_service():
     shape_factory = ShapeFactory()
     shape_detector = ShapeDetector()
     robot_detector = RobotDetector(shape_factory)
     table_detector = TableDetector(shape_factory)
     drawing_area_detector = DrawingAreaDetector(shape_factory)
     obstacles_detector = ObstacleDetector(shape_detector)
-
-    image_source = None
-
-    if APP_ENVIRONMENT == AppEnvironment.COMPETITION:
-        table_detector = DetectOnceProxy(table_detector)
-        drawing_area_detector = DetectOnceProxy(drawing_area_detector)
-        obstacles_detector = DetectOnceProxy(obstacles_detector)
-        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-    elif APP_ENVIRONMENT == AppEnvironment.DEBUG:
-        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-    elif APP_ENVIRONMENT == AppEnvironment.TESTING_VISION:
-        image_source = DirectoryImageSource(config.TEST_IMAGE_DIRECTORY_PATH)
-
+    table_detector = DetectOnceProxy(table_detector)
+    drawing_area_detector = DetectOnceProxy(drawing_area_detector)
+    obstacles_detector = DetectOnceProxy(obstacles_detector)
     detection_service = ImageDetectionService()
     detection_service.register_detector(robot_detector)
     detection_service.register_detector(table_detector)
     detection_service.register_detector(drawing_area_detector)
     detection_service.register_detector(obstacles_detector)
+    return detection_service
 
+
+def preprocess_image(image):
+    image = cv2.medianBlur(image, ksize=5)
+    image = cv2.GaussianBlur(image, (5, 5), 1)
+    return image
+
+
+if __name__ == "__main__":
+    WEB_SOCKET = True
+    VIDEO_DEBUG = not WEB_SOCKET
+    VIDEO_WRITE = False
+    RENDER_PATH = False
+    VERBOSE = True
+
+    message_assembler = MessageAssembler()
+    rendering_engine = RenderingEngine()
+    data_logger = DataLogger(verbose=VERBOSE)
+
+    detection_service = create_detection_service()
+    camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
+    camera_model = camera_model_repository.get_camera_model_by_id(config.TABLE_CAMERA_MODEL_ID)
     image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
 
     api = create_rest_api(data_logger, detection_service, image_to_world_translator, message_assembler)
     api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'}).start()
+
+    # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
 
     if WEB_SOCKET:
         try:
@@ -184,9 +158,7 @@ if __name__ == "__main__":
 
             if WEB_SOCKET:
                 try:
-                    obstacles = extract_obstacles(world_elements)
-                    drawing_area = extract_drawing_area(world_elements)
-                    message = message_assembler.format_message(world, robot, image, obstacles, drawing_area)
+                    message = message_assembler.format_message(world, robot, image, world_elements)
                     connection.send(json.dumps(message))
                     ok = connection.recv()
                 except NameError as e:

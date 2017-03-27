@@ -39,6 +39,7 @@ class DataLogger:
         return self._current_destination
 
     def set_path(self, path):
+        print(path)
         self._path = path
 
     def get_path(self):
