@@ -14,3 +14,6 @@ class DetectOnceProxy(IWorldElementDetector):
             self._detected_element = self._detector.detect(image)
             self._is_detected = True
             return self._detected_element
+
+    def reset_detection(self):
+        self._is_detected = False

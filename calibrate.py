@@ -21,7 +21,7 @@ if __name__ == '__main__':
     print('New calibration {}'.format(now))
     calibration = calibration_service.create_calibration()
 
-    while images != 10 and cap.isOpened():
+    while images != 20 and cap.isOpened():
         ret, image = cap.read()
 
         if ret:

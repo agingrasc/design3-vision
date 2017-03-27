@@ -1,4 +1,5 @@
 from detector.worldelement.iworldelementdetector import IWorldElementDetector
+from service.image.detectonceproxy import DetectOnceProxy
 
 
 class ImageDetectionService:
@@ -17,6 +18,12 @@ class ImageDetectionService:
 
         return world_elements
 
+
     def register_detector(self, detector):
         if isinstance(detector, IWorldElementDetector):
             self._detectors.append(detector)
+
+    def reset_detection(self):
+        for detector in self._detectors:
+            if isinstance(detector, DetectOnceProxy):
+                detector.reset_detection()
