@@ -1,5 +1,8 @@
 import base64
+import glob
 import json
+import random
+
 import cv2
 
 from io import BytesIO
@@ -53,7 +56,7 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
 
     @api.route('/path', methods=["POST"])
     def create_path():
-        data = request.json
+        data = json.loads(request.json)
         path = data['data']['path']
         data_logger.set_path(image_to_world_translator.translate_path(path))
         return make_response(jsonify({"message": "ok"}))
@@ -67,20 +70,29 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
 
     @api.route('/image/segmentation', methods=["POST"])
     def receive_image():
-        data = request.json
 
-        try:
-            image = base64.b64decode(data['image'])
-            img = Image.open(BytesIO(image)).convert('RGB')
-            opencv_image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-            segments = segment_image(opencv_image)
+        if request.args.get('fake'):
+            images = glob.glob('../data/images/figures/*.jpg')
+            image = cv2.imread(random.choice(images))
+            segments = segment_image(image)
             success, encoded = cv2.imencode('.jpg', segments)
             body = {"image": base64.b64encode(encoded).decode('utf-8')}
             return make_response(jsonify(body))
-        except KeyError:
-            error_message = "No image in request"
-            print(error_message)
-            return make_response(jsonify({"error": error_message}), 404)
+        else:
+            data = request.json
+
+            try:
+                image = base64.b64decode(data['image'])
+                img = Image.open(BytesIO(image)).convert('RGB')
+                opencv_image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                segments = segment_image(opencv_image)
+                success, encoded = cv2.imencode('.jpg', segments)
+                body = {"image": base64.b64encode(encoded).decode('utf-8')}
+                return make_response(jsonify(body))
+            except KeyError:
+                error_message = "No image in request"
+                print(error_message)
+                return make_response(jsonify({"error": error_message}), 404)
 
     return api
 
@@ -130,8 +142,8 @@ if __name__ == "__main__":
     api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'})
     api_thread.start()
 
-    image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-    # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+    # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
 
     if WEB_SOCKET:
         try:

@@ -73,13 +73,12 @@ def segment_image(image):
         peri = cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, 0.05 * peri, True)
 
-        if len(approx) == 4 and cv2.contourArea(approx) > 1000 and cv2.isContourConvex(approx):
+        if len(approx) == 4 and cv2.contourArea(approx) > 10000 and cv2.isContourConvex(approx):
             src_pts = np.array([x[0] for x in approx])
             inner_figure = straigthen_figure(image, src_pts)
-            # inner_figure = cv2.medianBlur(inner_figure, ksize=3)
 
             inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_BGR2HSV)
-            lower_background = np.array([0, 0, 100])
+            lower_background = np.array([0, 0, 150])
             upper_background = np.array([180, 50, 255])
             figure_mask = cv2.inRange(inner_figure, lower_background, upper_background)
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
@@ -93,7 +92,7 @@ def segment_image(image):
                 peri_2 = cv2.arcLength(contour_2, True)
                 approx_2 = cv2.approxPolyDP(contour_2, 0.006 * peri_2, True)
 
-                if cv2.contourArea(approx_2) > 1000 and len(approx_2) > 4:
+                if cv2.contourArea(approx_2) > 15000 and len(approx_2) > 4:
                     cv2.drawContours(inner_figure, [approx_2], -1, (10, 255, 255), 2)
 
             cv2.imwrite('robot_segments.jpg', cv2.cvtColor(inner_figure, cv2.COLOR_HSV2BGR))
