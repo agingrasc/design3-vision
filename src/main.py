@@ -103,7 +103,8 @@ def create_detection_service():
     return detection_service
 
 
-def preprocess_image(image):
+def preprocess_image(image, camera_model):
+    image = camera_model.undistort_image(image)
     image = cv2.medianBlur(image, ksize=5)
     image = cv2.GaussianBlur(image, (5, 5), 1)
     return image
@@ -113,20 +114,21 @@ if __name__ == "__main__":
     WEB_SOCKET = True
     VIDEO_DEBUG = not WEB_SOCKET
     VIDEO_WRITE = False
-    RENDER_PATH = False
+    RENDER_PATH = True
     VERBOSE = True
 
     message_assembler = MessageAssembler()
     rendering_engine = RenderingEngine()
     data_logger = DataLogger(verbose=VERBOSE)
 
-    detection_service = create_detection_service()
     camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
     camera_model = camera_model_repository.get_camera_model_by_id(config.TABLE_CAMERA_MODEL_ID)
+    detection_service = create_detection_service()
     image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
 
     api = create_rest_api(data_logger, detection_service, image_to_world_translator, message_assembler)
-    api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'}).start()
+    api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'})
+    api_thread.start()
 
     # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
     image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
@@ -143,9 +145,9 @@ if __name__ == "__main__":
 
     while image_source.has_next_image():
         image = image_source.next_image()
+
         if image is not None:
-            image = camera_model.undistort_image(image)
-            image = preprocess_image(image)
+            image = preprocess_image(image, camera_model)
             world, robot, world_elements = image_to_world_translator.translate_image_to_world(image)
             rendering_engine.render_all_elements(image, world_elements)
 
@@ -153,8 +155,8 @@ if __name__ == "__main__":
                 data_logger.log_robot_position(robot)
 
             if RENDER_PATH:
-                rendering_engine.render_robot_path(image, data_logger.get_robot_positions())
-                rendering_engine.render_path(image, robot._world_position, data_logger.get_path())
+                rendering_engine.render_actual_trajectory(image, data_logger.get_robot_positions())
+                rendering_engine.render_planned_path(image, robot._world_position, data_logger.get_path())
 
             if WEB_SOCKET:
                 try:

@@ -99,7 +99,7 @@ class MessageAssembler:
 
     def prepare_image(self, image):
         image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_CUBIC)
-        cnt = cv2.imencode('.png', image)[1]
+        cnt = cv2.imencode('.jpeg', image)[1]
         image_data = base64.b64encode(cnt)
         image_data = image_data.decode('utf-8')
         return image_data

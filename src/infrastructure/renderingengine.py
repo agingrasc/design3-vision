@@ -11,12 +11,12 @@ class RenderingEngine:
             else:
                 element.draw_in(image)
 
-    def render_robot_path(self, image, robot_positions):
+    def render_actual_trajectory(self, image, robot_positions):
         for pos in robot_positions:
             cv2.circle(image, pos, 2, (0, 0, 255), 2)
 
-    def render_path(self, image, current_robot, path):
-        if path:
+    def render_planned_path(self, image, current_robot, path):
+        if len(path) > 0:
             start = (np.array(path[0]) / 2).astype('int').tolist()
             prev = tuple(start)
             for coord in path[1::]:
