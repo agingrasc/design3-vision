@@ -17,7 +17,8 @@ class NotARectangleError(Exception):
 class ShapeFactory:
     def create_square(self, points):
         if self._form_a_valid_square(points):
-            return Square(self._order_points(points))
+            center = self._find_center_of_mass(points)
+            return Square(self._order_points(points), center)
         else:
             raise NotASquareError
 
@@ -76,3 +77,9 @@ class ShapeFactory:
         (bottom_right, top_right) = right_most[np.argsort(distance)[::-1], :]
 
         return np.array([top_left, top_right, bottom_right, bottom_left], dtype="int")
+
+    def _find_center_of_mass(self, contour):
+        contour_moments = cv2.moments(contour)
+        center_x = int(contour_moments["m10"] / contour_moments["m00"])
+        center_y = int(contour_moments["m01"] / contour_moments["m00"])
+        return [center_x, center_y]

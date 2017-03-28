@@ -34,27 +34,24 @@ def straigthen_figure(image, contour_pts):
 
 
 def order_points(pts):
-    # initialzie a list of coordinates that will be ordered
-    # such that the first entry in the list is the top-left,
-    # the second entry is the top-right, the third is the
-    # bottom-right, and the fourth is the bottom-left
     rect = np.zeros((4, 2), dtype="float32")
 
-    # the top-left point will have the smallest sum, whereas
-    # the bottom-right point will have the largest sum
     s = pts.sum(axis=1)
     rect[0] = pts[np.argmin(s)]
     rect[2] = pts[np.argmax(s)]
 
-    # now, compute the difference between the points, the
-    # top-right point will have the smallest difference,
-    # whereas the bottom-left will have the largest difference
     diff = np.diff(pts, axis=1)
     rect[1] = pts[np.argmin(diff)]
     rect[3] = pts[np.argmax(diff)]
 
-    # return the ordered coordinates
     return rect
+
+
+def find_center_of_mass(contour):
+    contour_moments = cv2.moments(contour)
+    center_x = int(contour_moments["m10"] / contour_moments["m00"])
+    center_y = int(contour_moments["m01"] / contour_moments["m00"])
+    return [center_x, center_y]
 
 
 def segment_image(image):
@@ -63,7 +60,7 @@ def segment_image(image):
     upper_green_hsv = np.array([80, 200, 255])
     mask = cv2.inRange(image, lower_green_hsv, upper_green_hsv)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel, iterations=2)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=2)
     ret, contours, hierachy = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -71,7 +68,7 @@ def segment_image(image):
 
     for contour in contours:
         peri = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.05 * peri, True)
+        approx = cv2.approxPolyDP(contour, 0.045 * peri, True)
 
         if len(approx) == 4 and cv2.contourArea(approx) > 10000 and cv2.isContourConvex(approx):
             src_pts = np.array([x[0] for x in approx])
@@ -88,21 +85,18 @@ def segment_image(image):
             ret_2, contours_2, hierachy_2 = cv2.findContours(figure_mask.copy(), cv2.RETR_LIST,
                                                              cv2.CHAIN_APPROX_SIMPLE)
 
+            found_segments = []
             for contour_2 in contours_2:
                 peri_2 = cv2.arcLength(contour_2, True)
                 approx_2 = cv2.approxPolyDP(contour_2, 0.006 * peri_2, True)
 
                 if cv2.contourArea(approx_2) > 15000 and len(approx_2) > 4:
+                    found_segments = approx_2
                     cv2.drawContours(inner_figure, [approx_2], -1, (10, 255, 255), 2)
 
-            cv2.imwrite('robot_segments.jpg', cv2.cvtColor(inner_figure, cv2.COLOR_HSV2BGR))
-
             inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_HSV2BGR)
-            return inner_figure
+            center_of_mass = find_center_of_mass(found_segments)
+            cv2.circle(inner_figure, tuple(center_of_mass), 12, (255, 255, 255), 2)
+            cv2.circle(inner_figure, tuple(center_of_mass), 2, (255, 255, 255), 1)
 
-if __name__ == '__main__':
-
-    for filename in glob.glob('./data/images/figures/*.jpg'):
-        image = cv2.imread(filename)
-        cv2.imshow('segment', segment_image(image))
-        cv2.waitKey()
+            return found_segments, inner_figure, center_of_mass, figure_mask

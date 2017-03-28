@@ -1,6 +1,5 @@
-from math import acos
-
 import numpy as np
+from math import acos
 
 import config
 from detector.worldelement.obstaclepositiondetector import Obstacle
@@ -18,6 +17,7 @@ class ImageToWorldTranslator:
         self._world = None
         self._robot = None
         self._obstacles = None
+        self._drawing_area = None
 
     def translate_image_to_world(self, image):
         image_elements = self._image_detection_service.detect_all_world_elements(image)
@@ -29,6 +29,7 @@ class ImageToWorldTranslator:
             elif isinstance(image_element, DrawingArea):
                 inner_square_dimension = self._get_world_inner_square_dimension(image_element)
                 image_element.set_inner_square_dimension(inner_square_dimension)
+                self._drawing_area = image_element
 
             elif isinstance(image_element, Robot):
                 if self._robot is None:
@@ -62,6 +63,36 @@ class ImageToWorldTranslator:
 
     def get_world(self):
         return self._world
+
+    def transform_segments(self, segmented_image, segments, scaling_factor):
+        segmented_image_width = segmented_image.shape[0]
+        drawing_area = self._drawing_area
+
+        drawing_area_center = np.array(drawing_area._inner_square._center)
+        drawing_area_inner = drawing_area._inner_square.as_coordinates()
+
+        drawing_area_inner_width = drawing_area_inner[1].distance_from(drawing_area_inner[0])
+        scaling = drawing_area_inner_width / segmented_image_width * scaling_factor
+
+        segmented_image_center = np.array([segmented_image_width / 2 * scaling, segmented_image_width / 2 * scaling])
+        translation = (drawing_area_center - segmented_image_center).tolist()
+
+        scale_matrix = np.array([
+            [scaling, 0, 0],
+            [0, scaling, 0],
+            [0, 0, 1]
+        ])
+
+        segments = np.array([np.dot(scale_matrix, np.array([p[0], p[1], 1])) for p in segments[:, 0].tolist()])
+        transform_matrix = np.array([
+            [1, 0, translation[0]],
+            [0, 1, translation[1]],
+            [0, 0, 1]
+        ])
+
+        segments = [np.dot(transform_matrix, np.array([p[0], p[1], 1])).astype('int').tolist()[0:2] for p in
+                    segments]
+        return segments
 
     def _compute_world_transform_matrix(self, table, world_origin):
         x_axis = np.array([world_origin, table._rectangle.as_contour_points().tolist()[1]])
@@ -159,7 +190,8 @@ class ImageToWorldTranslator:
 
     def translate_path(self, path):
         if self._world:
-            translate_matrix = self._camera_model.compute_transform_matrix(0, [self._world._image_origin._x, self._world._image_origin._y])
+            translate_matrix = self._camera_model.compute_transform_matrix(0, [self._world._image_origin._x,
+                                                                               self._world._image_origin._y])
 
             image_path = [self._camera_model.transform_coordinates(translate_matrix, point) for point in path]
 
