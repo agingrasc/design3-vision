@@ -92,7 +92,13 @@ class ImageToWorldTranslator:
 
         segments = [np.dot(transform_matrix, np.array([p[0], p[1], 1])).astype('int').tolist()[0:2] for p in
                     segments]
-        return segments
+
+        world_segments = [self._camera_model.compute_image_to_world_coordinates(p[0], p[1], 0) for p in segments]
+        world_segments = [[p[0], p[1]] for p in world_segments]
+
+        world_segments = [self._transform_target_to_world(self._world._target_to_world, np.array(p)) for p in
+                          world_segments]
+        return segments, world_segments
 
     def _compute_world_transform_matrix(self, table, world_origin):
         x_axis = np.array([world_origin, table._rectangle.as_contour_points().tolist()[1]])
