@@ -1,13 +1,14 @@
-from camera.camera import Calibration
-from camera.camera import CalibrationTargetNotFoundError
+from camera.calibration import Calibration
+from camera.calibration import CalibrationTargetNotFoundError
 
 
 class CalibrationService:
     def __init__(self, camera_factory):
         self._camera_factory = camera_factory
 
-    def create_calibration(self):
-        return self._camera_factory.create_calibration()
+    def create_calibration(self, target_shape):
+        calibration = Calibration(target_shape, self._camera_factory)
+        return calibration
 
     def calibrate_from_images(self, images):
         calibration = self._camera_factory.create_calibration()

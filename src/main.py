@@ -70,9 +70,13 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
 
     @api.route('/image/segmentation', methods=["POST"])
     def receive_image():
+        camera_model_repository = JSONCameraModelRepository('../camera_models.json')
+        camera_model = camera_model_repository.get_camera_model_by_id(1)
+
         if request.args.get('fake'):
             images = glob.glob('../data/images/figures/*.jpg')
             image = cv2.imread(random.choice(images))
+            image = camera_model.undistort_image(image)
             data = request.json
             scaling_factor = float(data['scaling'])
             segments, segmented_image, center_of_mass, mask = segment_image(image)
@@ -91,13 +95,21 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
         else:
             data = request.json
 
+            scaling_factor = float(data['scaling'])
+
             try:
                 image = base64.b64decode(data['image'])
                 img = Image.open(BytesIO(image)).convert('RGB')
                 opencv_image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-                segments, segmented_image, center_of_mass = segment_image(opencv_image)
+                segments, segmented_image, center_of_mass, mask = segment_image(opencv_image)
                 success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
-                body = {"image": base64.b64encode(segmented_image_encoded).decode('utf-8')}
+                success, mask_encoded = cv2.imencode('.jpg', opencv_image)
+                segments = image_to_world_translation.transform_segments(segmented_image, segments, scaling_factor)
+                data_logger.set_figure_drawing(segments)
+                body = {
+                    "image": base64.b64encode(segmented_image_encoded).decode('utf-8'),
+                    "thresholded_image": base64.b64encode(mask_encoded).decode('utf-8')
+                }
                 return make_response(jsonify(body))
             except KeyError:
                 error_message = "No image in request"
@@ -151,8 +163,8 @@ if __name__ == "__main__":
     api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'})
     api_thread.start()
 
-    # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+    image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+    # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
 
     if WEB_SOCKET:
         try:
@@ -176,7 +188,7 @@ if __name__ == "__main__":
                 data_logger.log_robot_position(robot)
 
             if RENDER_PATH and robot:
-                if data_logger._figure_drawing:
+                if data_logger._figure_drawing is not None:
                     figure_drawing = np.array(data_logger._figure_drawing).astype('int')
 
                     cv2.drawContours(image, [figure_drawing], -1, (0, 255, 0), 2)

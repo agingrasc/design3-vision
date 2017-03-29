@@ -60,8 +60,8 @@ def segment_image(image):
     upper_green_hsv = np.array([80, 200, 255])
     mask = cv2.inRange(image, lower_green_hsv, upper_green_hsv)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel, iterations=2)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=2)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel, iterations=1)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
     ret, contours, hierachy = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     image = cv2.cvtColor(image, cv2.COLOR_HSV2BGR)
@@ -79,7 +79,7 @@ def segment_image(image):
             upper_background = np.array([180, 50, 255])
             figure_mask = cv2.inRange(inner_figure, lower_background, upper_background)
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
-            figure_mask = cv2.morphologyEx(figure_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+            figure_mask = cv2.morphologyEx(figure_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
             figure_mask = (255 - figure_mask)
 
             ret_2, contours_2, hierachy_2 = cv2.findContours(figure_mask.copy(), cv2.RETR_LIST,
