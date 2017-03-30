@@ -179,8 +179,7 @@ if __name__ == "__main__":
     api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'})
     api_thread.start()
 
-    # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video24.avi')
+    image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
 
     if WEB_SOCKET:
         try:
