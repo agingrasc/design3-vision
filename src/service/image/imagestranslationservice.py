@@ -28,7 +28,18 @@ class ImageToWorldTranslator:
             elif isinstance(image_element, DrawingArea):
                 inner_square_dimension = self._get_rectangle_dimension(image_element._inner_square)
                 image_element.set_inner_square_dimension(inner_square_dimension)
+
+                top_right = image_element._outer_square.as_contour_points()[1]
+
                 self._drawing_area = image_element
+
+                target_point = self._camera_model.compute_image_to_world_coordinates(top_right[0], top_right[1], 0)
+
+                if self._world is not None:
+                    world_point = self._camera_model.transform_coordinates(self._world._target_to_world,
+                                                                           np.array(target_point))
+
+                    self._drawing_area._top_right = world_point
 
             elif isinstance(image_element, Robot):
                 self._robot = self._compute_and_set_projected_coordinates(image_element)
@@ -87,6 +98,12 @@ class ImageToWorldTranslator:
         world_segments = self._target_to_world_list(world_segments)
 
         return segments, world_segments
+
+    def translate_path(self, world_path):
+        if self._world:
+            return self._world_to_image(world_path)
+        else:
+            return []
 
     def _compute_world_transform_matrix(self, table, world_origin):
         x_axis = np.array([world_origin, table._rectangle.as_contour_points().tolist()[1]])
@@ -180,16 +197,17 @@ class ImageToWorldTranslator:
     def _to_coordinates_list(self, points):
         return [Coordinate(point[0], point[1]) for point in points]
 
-    def translate_path(self, path):
-        if self._world:
-            translate_matrix = self._camera_model.compute_transform_matrix(0, [self._world._image_origin._x,
-                                                                               self._world._image_origin._y])
+    def _world_to_image(self, world_path):
+        translate_matrix = np.linalg.inv(self._world._target_to_world)
 
-            image_path = [self._camera_model.transform_coordinates(translate_matrix, point) for point in path]
+        target_path = [
+            self._camera_model.transform_coordinates(translate_matrix, np.array(point) / config.TARGET_SIDE_LENGTH)
+            for point in world_path]
 
-            return image_path
-        else:
-            return []
+        image_path = [self._camera_model.compute_world_to_image_coordinates(point[0], point[1], 0) for point in
+                      target_path]
+
+        return image_path
 
     def get_obstacles(self):
         return self._obstacles

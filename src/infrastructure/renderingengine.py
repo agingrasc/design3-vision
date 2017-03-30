@@ -17,9 +17,12 @@ class RenderingEngine:
 
     def render_planned_path(self, image, current_robot, path):
         if len(path) > 0:
-            start = (np.array(path[0]) / 2).astype('int').tolist()
+            start = (np.array(path[0])).astype('int').tolist()
             prev = tuple(start)
             for coord in path[1::]:
-                next = tuple(np.array([coord[0] / 2, coord[1] / 2]).astype('int').tolist())
-                cv2.line(image, prev, next, (0, 255, 0), 3)
+                next = tuple(np.array([coord[0], coord[1]]).astype('int').tolist())
+                cv2.line(image, prev, next, (25, 200, 25), 2)
                 prev = next
+
+        for point in path:
+            cv2.circle(image, (int(point[0]), int(point[1])), 2, (40, 200, 40), 5)

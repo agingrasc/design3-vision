@@ -56,7 +56,11 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
 
     @api.route('/path', methods=["POST"])
     def create_path():
-        data = json.loads(request.json)
+        if not isinstance(request.json, dict):
+            data = json.loads(request.json)
+        else:
+            data = request.json
+
         path = data['data']['path']
         data_logger.set_path(image_to_world_translator.translate_path(path))
         return make_response(jsonify({"message": "ok"}))
@@ -68,6 +72,18 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
         response_body = {"data": {"obstacles": obstacles_body}}
         return make_response(jsonify(response_body))
 
+    @api.route('/drawzone-corners')
+    def get_drawzone_corners():
+        top_right = image_to_world_translation._drawing_area._top_right
+        return make_response(jsonify({
+            "data": {
+                "top_right": {
+                    "x": str(top_right[0] * config.TARGET_SIDE_LENGTH),
+                    "y": str(top_right[1] * config.TARGET_SIDE_LENGTH)
+                }
+            }
+        }))
+
     @api.route('/image/segmentation', methods=["POST"])
     def receive_image():
         if request.args.get('fake'):
@@ -76,7 +92,8 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
             data = request.json
             scaling_factor = float(data['scaling'])
             segments, segmented_image, center_of_mass, mask = segment_image(image)
-            segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments, scaling_factor)
+            segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
+                                                                                     scaling_factor)
             data_logger.set_figure_drawing(segments)
 
             success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
@@ -101,7 +118,8 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
                 segments, segmented_image, center_of_mass, mask = segment_image(opencv_image)
                 success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
                 success, mask_encoded = cv2.imencode('.jpg', opencv_image)
-                segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments, scaling_factor)
+                segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
+                                                                                         scaling_factor)
                 data_logger.set_figure_drawing(segments)
                 body = {
                     "image": base64.b64encode(segmented_image_encoded).decode('utf-8'),
@@ -162,7 +180,7 @@ if __name__ == "__main__":
     api_thread.start()
 
     # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video24.avi')
 
     if WEB_SOCKET:
         try:
