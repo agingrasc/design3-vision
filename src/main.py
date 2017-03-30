@@ -1,9 +1,12 @@
 import base64
+import glob
 import json
+import random
 import cv2
 
 from io import BytesIO
 from threading import Thread
+
 from PIL import Image
 from flask import Flask, jsonify
 from flask import make_response
@@ -53,9 +56,13 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
 
     @api.route('/path', methods=["POST"])
     def create_path():
-        data = request.json
+        if not isinstance(request.json, dict):
+            data = json.loads(request.json)
+        else:
+            data = request.json
+
         path = data['data']['path']
-        data_logger.set_path(path)
+        data_logger.set_path(image_to_world_translator.translate_path(path))
         return make_response(jsonify({"message": "ok"}))
 
     @api.route('/obstacles', methods=["GET"])
@@ -65,22 +72,64 @@ def create_rest_api(data_logger, detection_service, image_to_world_translation, 
         response_body = {"data": {"obstacles": obstacles_body}}
         return make_response(jsonify(response_body))
 
+    @api.route('/drawzone-corners')
+    def get_drawzone_corners():
+        top_right = image_to_world_translation._drawing_area._top_right
+        return make_response(jsonify({
+            "data": {
+                "top_right": {
+                    "x": str(top_right[0] * config.TARGET_SIDE_LENGTH),
+                    "y": str(top_right[1] * config.TARGET_SIDE_LENGTH)
+                }
+            }
+        }))
+
     @api.route('/image/segmentation', methods=["POST"])
     def receive_image():
-        data = request.json
+        if request.args.get('fake'):
+            images = glob.glob('../data/images/figures/*.jpg')
+            image = cv2.imread(random.choice(images))
+            data = request.json
+            scaling_factor = float(data['scaling'])
+            segments, segmented_image, center_of_mass, mask = segment_image(image)
+            segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
+                                                                                     scaling_factor)
+            data_logger.set_figure_drawing(segments)
 
-        try:
-            image = base64.b64decode(data['image'])
-            img = Image.open(BytesIO(image)).convert('RGB')
-            opencv_image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-            segments = segment_image(opencv_image)
-            success, encoded = cv2.imencode('.jpg', segments)
-            body = {"image": base64.b64encode(encoded).decode('utf-8')}
+            success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
+            ret, mask_encoded = cv2.imencode('.jpg', mask)
+
+            body = {
+                "image": base64.b64encode(segmented_image_encoded).decode('utf-8'),
+                "thresholded_image": base64.b64encode(mask_encoded).decode('utf-8'),
+                "segments": world_segments
+            }
+
             return make_response(jsonify(body))
-        except KeyError:
-            error_message = "No image in request"
-            print(error_message)
-            return make_response(jsonify({"error": error_message}), 404)
+        else:
+            data = request.json
+
+            scaling_factor = float(data['scaling'])
+
+            try:
+                image = base64.b64decode(data['image'])
+                img = Image.open(BytesIO(image)).convert('RGB')
+                opencv_image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                segments, segmented_image, center_of_mass, mask = segment_image(opencv_image)
+                success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
+                success, mask_encoded = cv2.imencode('.jpg', opencv_image)
+                segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
+                                                                                         scaling_factor)
+                data_logger.set_figure_drawing(segments)
+                body = {
+                    "image": base64.b64encode(segmented_image_encoded).decode('utf-8'),
+                    "thresholded_image": base64.b64encode(mask_encoded).decode('utf-8'),
+                    "segments": world_segments
+                }
+                return make_response(jsonify(body))
+            except KeyError:
+                error_message = "No image in request"
+                return make_response(jsonify({"error": error_message}), 404)
 
     return api
 
@@ -131,7 +180,7 @@ if __name__ == "__main__":
     api_thread.start()
 
     # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video24.avi')
 
     if WEB_SOCKET:
         try:
@@ -154,7 +203,12 @@ if __name__ == "__main__":
             if robot and world:
                 data_logger.log_robot_position(robot)
 
-            if RENDER_PATH:
+            if RENDER_PATH and robot:
+                if data_logger._figure_drawing is not None:
+                    figure_drawing = np.array(data_logger._figure_drawing).astype('int')
+
+                    cv2.drawContours(image, [figure_drawing], -1, (0, 255, 0), 2)
+
                 rendering_engine.render_actual_trajectory(image, data_logger.get_robot_positions())
                 rendering_engine.render_planned_path(image, robot._world_position, data_logger.get_path())
 

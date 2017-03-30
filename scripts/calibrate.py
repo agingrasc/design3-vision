@@ -2,11 +2,12 @@ import datetime
 import json
 import cv2
 
+from src.camera.camerafactory import CameraFactory
+from camera.calibration import CalibrationTargetNotFoundError
 from service.camera.calibrationservice import CalibrationService
-from src.camera.camera import CameraFactory, CalibrationTargetNotFoundError
 
 if __name__ == '__main__':
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
@@ -19,7 +20,7 @@ if __name__ == '__main__':
 
     now = datetime.datetime.now()
     print('New calibration {}'.format(now))
-    calibration = calibration_service.create_calibration()
+    calibration = calibration_service.create_calibration((6, 4))
 
     while images != 20 and cap.isOpened():
         ret, image = cap.read()
@@ -30,7 +31,7 @@ if __name__ == '__main__':
 
             if key == ord('s'):
                 try:
-                    print('Adding image')
+                    print('Adding image {}'.format(images))
                     calibration.collect_target_image(image)
                     images += 1
                     print(images)

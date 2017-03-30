@@ -23,7 +23,7 @@ class RobotDetector(IWorldElementDetector):
 
         ##### Commented out for performance reason for now ####
         # robot_frame = self._detect_robot_frame(image)
-
+        cv2.imshow('Threshold', threshold)
         contours = self._detect_robot_markers_contours(threshold)
 
         robot_markers = np.array([self._find_center_of_mass(contour) for contour in contours])

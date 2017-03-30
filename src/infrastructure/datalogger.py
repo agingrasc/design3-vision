@@ -8,6 +8,7 @@ class DataLogger:
         self._verbose = verbose
         self._current_destination = None
         self._path = []
+        self._figure_drawing = None
 
     def log_robot_position(self, robot):
         image_x, image_y = robot._image_position
@@ -43,3 +44,6 @@ class DataLogger:
 
     def get_path(self):
         return self._path
+
+    def set_figure_drawing(self, segments):
+        self._figure_drawing = segments
