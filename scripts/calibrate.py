@@ -44,9 +44,10 @@ if __name__ == '__main__':
                 cv2.destroyAllWindows()
                 exit(0)
 
-    camera_model = calibration.do_calibration().to_dto()
+    camera_model = calibration.do_calibration()
+    camera_model_dto = camera_factory.create_camera_model_dto(camera_model)
 
-    models = [camera_model]
+    models = [camera_model_dto]
 
     with open("./camera_models.json", 'w') as file:
         json.dump(models, file, indent=4)

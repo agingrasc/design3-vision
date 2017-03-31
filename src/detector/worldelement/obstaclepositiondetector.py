@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 from detector.worldelement.iworldelementdetector import IWorldElementDetector
-from infrastructure.camera import JSONCameraModelRepository
+from infrastructure.jsoncameramodelrepository import JSONCameraModelRepository
 from detector.robotpositiondetector import CircleDetector, NoMatchingCirclesFound
 
 RATIO = 1
@@ -182,27 +182,3 @@ class ObstacleDetector(IWorldElementDetector):
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=1)
         return mask
-
-
-if __name__ == '__main__':
-    camera_repository = JSONCameraModelRepository('../../../data/camera_models/camera_models.json')
-    camera_model = camera_repository.get_camera_model_by_id(0)
-    shape_detector = ShapeDetector()
-    obstacle_detector = ObstacleDetector(shape_detector)
-
-    images = glob.glob('../../../data/images/full_scene/*.jpg')
-
-    for filename in images:
-        image = cv2.imread(filename)
-        image = camera_model.undistort_image(image)
-
-        try:
-            obstacles = obstacle_detector.detect(image)
-
-            for obstacle in obstacles:
-                obstacle.draw_in(image)
-
-            cv2.imshow('imageColor', image)
-            cv2.waitKey()
-        except ShapeNotFound:
-            pass

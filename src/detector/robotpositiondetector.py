@@ -3,7 +3,7 @@ import glob
 import math
 import numpy as np
 
-from infrastructure.camera import JSONCameraModelRepository
+from infrastructure.jsoncameramodelrepository import JSONCameraModelRepository
 
 NUMBER_OF_MARKERS = 3
 RATIO = 1.7
@@ -20,6 +20,7 @@ def euc_distance(p1, p2):
 class NoMatchingCirclesFound(Exception):
     pass
 
+
 class CircleDetector:
     def __init__(self, ratio, min_distance, min_radius, max_radius):
         self.ratio = ratio
@@ -29,8 +30,8 @@ class CircleDetector:
 
     def detect_robot_markers(self, image):
         circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, self.ratio, self._min_distance, param1=50, param2=30,
-                                         minRadius=self._min_radius,
-                                         maxRadius=self._max_radius)
+                                   minRadius=self._min_radius,
+                                   maxRadius=self._max_radius)
 
         if circles is not None:
             circles = np.round(circles[0, :]).astype("int")
@@ -41,8 +42,8 @@ class CircleDetector:
 
     def detect_obstacles_markers(self, image):
         circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, self.ratio, self._min_distance, param1=50, param2=60,
-                                         minRadius=self._min_radius,
-                                         maxRadius=self._max_radius)
+                                   minRadius=self._min_radius,
+                                   maxRadius=self._max_radius)
 
         if circles is not None:
             circles = np.uint16(np.around(circles))
@@ -56,7 +57,8 @@ class RobotPositionDetector:
         image = self._preprocess(image)
         threshold = self._threshold_robot_makers(image)
 
-        robot_markers = CircleDetector(RATIO, TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS, TARGET_MAX_RADIUS).detect_robot_markers(threshold)
+        robot_markers = CircleDetector(RATIO, TARGET_MIN_DISTANCE, TARGET_MIN_RADIUS,
+                                       TARGET_MAX_RADIUS).detect_robot_markers(threshold)
         robot_position = self._get_robot_position(robot_markers)
 
         if self._missing_markers(robot_markers):
@@ -159,33 +161,3 @@ def get_robot_angle(robot_position):
     angle = math.acos(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
 
     return np.rad2deg(angle)
-
-
-if __name__ == '__main__':
-    robot_detector = RobotPositionDetector()
-    camera_repository = JSONCameraModelRepository('../../data/camera_models/camera_models.json')
-    camera_model = camera_repository.get_camera_model_by_id(0)
-
-    images = glob.glob('../../data/images/robot_images/*.jpg')
-
-    for filename in images:
-        image = cv2.imread(filename)
-
-        image = camera_model.undistort_image(image)
-
-        try:
-            robot_position = robot_detector.detect_position(image)
-
-            degrees = get_robot_angle(robot_position)
-
-            cv2.circle(image, robot_position['robot_center'], 1, (0, 0, 0), 2)
-            cv2.line(image, tuple(robot_position['direction'][0]), tuple(robot_position['direction'][1]), (0, 255, 0),
-                     2)
-            cv2.arrowedLine(image, (0, 0), (50, 0), (0, 255, 0), 3)
-            cv2.putText(image, str(degrees), tuple(robot_position['direction'][1]), fontFace=cv2.FONT_HERSHEY_PLAIN,
-                        fontScale=1.0, color=(255, 255, 255))
-        except NoMatchingCirclesFound:
-            pass
-
-        cv2.imshow("Position", image)
-        cv2.waitKey(3000)

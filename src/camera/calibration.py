@@ -27,7 +27,6 @@ class Calibration:
             self._calibration_images.append(image)
             corners = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), STOP_CRITERIA)
             self._target_image_points.append(corners)
-
             cv2.drawChessboardCorners(image, self._target_shape, corners, has_target)
             cv2.imshow('Last chessboard', image)
         else:

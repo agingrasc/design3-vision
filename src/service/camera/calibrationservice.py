@@ -21,4 +21,4 @@ class CalibrationService:
                 continue
 
         camera_model = calibration.do_calibration()
-        return camera_model.to_dto()
+        return self._camera_factory.create_camera_model_dto(camera_model)
