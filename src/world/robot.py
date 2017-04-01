@@ -3,8 +3,10 @@ import math
 
 import numpy as np
 
+from world.worldelement import WorldElement
 
-class Robot:
+
+class Robot(WorldElement):
     def __init__(self, position, orientation_vector, frame):
         self._image_position = position
         self._orientation_vector = orientation_vector

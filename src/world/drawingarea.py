@@ -1,4 +1,7 @@
-class DrawingArea:
+from world.worldelement import WorldElement
+
+
+class DrawingArea(WorldElement):
     def __init__(self, inner_square, outer_square):
         self._inner_square = inner_square
         self._outer_square = outer_square
