@@ -3,6 +3,7 @@ import glob
 import json
 import random
 import cv2
+import numpy as np
 
 from io import BytesIO
 from threading import Thread
@@ -14,13 +15,14 @@ from flask import request
 from websocket import create_connection
 
 import config
+from camera.camerafactory import CameraFactory
 from detector.worldelement.drawingareadetector import DrawingAreaDetector
 from detector.worldelement.obstaclepositiondetector import ObstacleDetector
 from detector.worldelement.obstaclepositiondetector import ShapeDetector
-from detector.worldelement.robotdetector import RobotDetector, np
+from detector.worldelement.robotdetector import RobotDetector
 from detector.worldelement.shapefactory import ShapeFactory
 from detector.worldelement.tabledetector import TableDetector
-from infrastructure.camera import JSONCameraModelRepository
+from infrastructure.jsoncameramodelrepository import JSONCameraModelRepository
 from infrastructure.datalogger import DataLogger
 from infrastructure.imagesource.savevideoimagesource import SaveVideoImageSource
 from infrastructure.imagesource.videostreamimagesource import VideoStreamImageSource
@@ -170,8 +172,9 @@ if __name__ == "__main__":
     rendering_engine = RenderingEngine()
     data_logger = DataLogger(verbose=VERBOSE)
 
-    camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH)
-    camera_model = camera_model_repository.get_camera_model_by_id(config.TABLE_CAMERA_MODEL_ID)
+    camera_factory = CameraFactory()
+    camera_model_repository = JSONCameraModelRepository(config.CAMERA_MODELS_FILE_PATH, camera_factory)
+    camera_model = camera_model_repository.find_by_id(config.TABLE_CAMERA_MODEL_ID)
     detection_service = create_detection_service()
     image_to_world_translator = ImageToWorldTranslator(camera_model, detection_service)
 
@@ -179,7 +182,9 @@ if __name__ == "__main__":
     api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'})
     api_thread.start()
 
-    image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+    # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+
+    image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
 
     if WEB_SOCKET:
         try:

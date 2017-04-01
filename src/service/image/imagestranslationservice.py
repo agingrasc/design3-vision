@@ -33,7 +33,7 @@ class ImageToWorldTranslator:
 
                 self._drawing_area = image_element
 
-                target_point = self._camera_model.compute_image_to_world_coordinates(top_right[0], top_right[1], 0)
+                target_point = self._camera_model.image_to_target_coordinates(top_right[0], top_right[1], 0)
 
                 if self._world is not None:
                     world_point = self._camera_model.transform_coordinates(self._world._target_to_world,
@@ -107,7 +107,7 @@ class ImageToWorldTranslator:
 
     def _compute_world_transform_matrix(self, table, world_origin):
         x_axis = np.array([world_origin, table._rectangle.as_contour_points().tolist()[1]])
-        x_axis = [np.array(self._camera_model.compute_image_to_world_coordinates(point[0], point[1], 0)) for point in
+        x_axis = [np.array(self._camera_model.image_to_target_coordinates(point[0], point[1], 0)) for point in
                   x_axis]
 
         v1 = x_axis[0]
@@ -126,24 +126,26 @@ class ImageToWorldTranslator:
         return target_to_world
 
     def _compute_and_set_projected_coordinates(self, robot):
-        target_coordinates = self._camera_model.compute_image_to_world_coordinates(robot._image_position[0],
-                                                                                   robot._image_position[1],
-                                                                                   config.ROBOT_HEIGHT_IN_TARGET_UNIT)
+        target_coordinates = self._camera_model.image_to_target_coordinates(robot._image_position[0],
+                                                                            robot._image_position[1],
+                                                                            config.ROBOT_HEIGHT_IN_TARGET_UNIT)
         robot.set_world_position(target_coordinates)
 
-        adjusted_image_coordinates = self._camera_model.compute_world_to_image_coordinates(target_coordinates[0],
-                                                                                           target_coordinates[1], 0)
+        adjusted_image_coordinates = self._camera_model.target_to_image_coordinates(target_coordinates[0],
+                                                                                    target_coordinates[1],
+                                                                                    0)
         robot.set_image_position(adjusted_image_coordinates)
         return robot
 
     def _adjust_obstacle_position(self, obstacle):
-        target_coordinates = self._camera_model.compute_image_to_world_coordinates(obstacle._position[0],
-                                                                                   obstacle._position[1],
-                                                                                   config.OBSTACLE_HEIGHT_IN_TARGET_UNIT)
+        target_coordinates = self._camera_model.image_to_target_coordinates(obstacle._position[0],
+                                                                            obstacle._position[1],
+                                                                            config.OBSTACLE_HEIGHT_IN_TARGET_UNIT)
         obstacle.set_world_position(target_coordinates)
 
-        adjusted_position = self._camera_model.compute_world_to_image_coordinates(target_coordinates[0],
-                                                                                  target_coordinates[1], 0)
+        adjusted_position = self._camera_model.target_to_image_coordinates(target_coordinates[0],
+                                                                           target_coordinates[1],
+                                                                           0)
         obstacle.set_position(adjusted_position)
         return obstacle
 
@@ -157,7 +159,7 @@ class ImageToWorldTranslator:
                      target_to_world)
 
     def _image_to_target_list(self, coordinates_list, height):
-        return [self._camera_model.compute_image_to_world_coordinates(p[0], p[1], height)[0:2] for p in
+        return [self._camera_model.image_to_target_coordinates(p[0], p[1], height)[0:2] for p in
                 coordinates_list]
 
     def _target_to_world_list(self, coordinates_list):
@@ -204,7 +206,7 @@ class ImageToWorldTranslator:
             self._camera_model.transform_coordinates(translate_matrix, np.array(point) / config.TARGET_SIDE_LENGTH)
             for point in world_path]
 
-        image_path = [self._camera_model.compute_world_to_image_coordinates(point[0], point[1], 0) for point in
+        image_path = [self._camera_model.target_to_image_coordinates(point[0], point[1], 0) for point in
                       target_path]
 
         return image_path
