@@ -16,7 +16,7 @@ class ImageDetectionTest(TestCase):
     def test_given_a_new_image_detection_service_when_registering_a_valid_detector_then_it_is_added(self):
         self.an_image_detection_service.register_detector(self.mock_detector)
 
-        self.assertTrue(self.an_image_detection_service.detector_registered(self.mock_detector))
+        self.assertTrue(self.an_image_detection_service.detector_is_registered(self.mock_detector))
 
     def test_given_a_new_image_detection_service_when_registering_a_non_valid_detector_will_raise_type_error(self):
         self.assertRaises(TypeError, self.an_image_detection_service.register_detector, object())

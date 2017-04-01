@@ -20,7 +20,7 @@ class ImageDetectionService:
 
     def register_detector(self, detector):
         if isinstance(detector, IWorldElementDetector):
-            if not self.detector_registered(detector):
+            if not self.detector_is_registered(detector):
                 self._detectors.append(detector)
             else:
                 raise ValueError
@@ -32,5 +32,5 @@ class ImageDetectionService:
             if isinstance(detector, DetectOnceProxy):
                 detector.reset_detection()
 
-    def detector_registered(self, detector):
+    def detector_is_registered(self, detector):
         return detector in self._detectors
