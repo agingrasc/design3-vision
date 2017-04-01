@@ -1,12 +1,14 @@
 import datetime
+import glob
 import json
 import cv2
 
-from src.camera.camerafactory import CameraFactory
+from camera.camerafactory import CameraFactory
 from camera.calibration import CalibrationTargetNotFoundError
 from service.camera.calibrationservice import CalibrationService
 
-if __name__ == '__main__':
+
+def calibrate_from_video_capture(calibration_service, camera_factory):
     cap = cv2.VideoCapture(0)
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
@@ -15,11 +17,6 @@ if __name__ == '__main__':
 
     images = 0
 
-    camera_factory = CameraFactory()
-    calibration_service = CalibrationService(camera_factory)
-
-    now = datetime.datetime.now()
-    print('New calibration {}'.format(now))
     calibration = calibration_service.create_calibration((6, 4))
 
     while images != 20 and cap.isOpened():
@@ -45,8 +42,21 @@ if __name__ == '__main__':
                 exit(0)
 
     camera_model = calibration.do_calibration()
-    camera_model_dto = camera_factory.create_camera_model_dto(camera_model)
+    return camera_model
 
+
+if __name__ == '__main__':
+    camera_factory = CameraFactory()
+    calibration_service = CalibrationService(camera_factory)
+    now = datetime.datetime.now()
+    print('New calibration {}'.format(now))
+
+    # camera_model = calibrate_from_video_capture()
+
+    images = [cv2.imread(filename) for filename in glob.glob('../data/images/calibrations/2017-02-25-1/*.jpg')]
+    camera_model = calibration_service.calibrate_from_images((9, 6), images)
+
+    camera_model_dto = camera_factory.create_camera_model_dto(camera_model)
     models = [camera_model_dto]
 
     with open("./camera_models.json", 'w') as file:

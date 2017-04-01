@@ -1,17 +1,21 @@
 from camera.calibration import Calibration
 from camera.calibration import CalibrationTargetNotFoundError
+from camera.camerafactory import CameraFactory
 
 
 class CalibrationService:
     def __init__(self, camera_factory):
-        self._camera_factory = camera_factory
+        if isinstance(camera_factory, CameraFactory):
+            self._camera_factory = camera_factory
+        else:
+            raise TypeError("instance is not of type {}".format(CameraFactory.__name__))
 
     def create_calibration(self, target_shape):
         calibration = Calibration(target_shape, self._camera_factory)
         return calibration
 
-    def calibrate_from_images(self, images):
-        calibration = self._camera_factory.create_calibration()
+    def calibrate_from_images(self, target_shape, images):
+        calibration = self.create_calibration(target_shape)
 
         for image in images:
             try:
@@ -21,4 +25,4 @@ class CalibrationService:
                 continue
 
         camera_model = calibration.do_calibration()
-        return self._camera_factory.create_camera_model_dto(camera_model)
+        return camera_model
