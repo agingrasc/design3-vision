@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from geometry.coordinate import Coordinate
+from domain.geometry.coordinate import Coordinate
 
 
 class Square:

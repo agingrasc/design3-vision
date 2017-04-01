@@ -2,8 +2,8 @@ import unittest
 
 import cv2
 
-from detector.worldelement.robotdetector import NoRobotMarkersFound
-from detector.worldelement.robotdetector import RobotDetector
+from domain.detector.worldelement.robotdetector import NoRobotMarkersFound
+from domain.detector.worldelement.robotdetector import RobotDetector
 
 
 class RobotDetectorTest(unittest.TestCase):

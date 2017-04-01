@@ -1,9 +1,9 @@
-import cv2
 import math
 
+import cv2
 import numpy as np
 
-from world.worldelement import WorldElement
+from domain.world.worldelement import WorldElement
 
 
 class Robot(WorldElement):

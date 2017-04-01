@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
 from scipy.spatial import distance as dist
+from domain.shape.square import Square
 
-from shape.rectangle import Rectangle
-from shape.square import Square
+from domain.shape.rectangle import Rectangle
 
 
 class NotASquareError(Exception):

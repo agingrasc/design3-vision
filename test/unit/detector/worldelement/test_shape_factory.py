@@ -1,10 +1,10 @@
-import numpy as np
-
 from unittest import TestCase
 
-from shape.rectangle import Rectangle
-from shape.square import Square
-from detector.worldelement.shapefactory import ShapeFactory, NotASquareError, NotARectangleError
+import numpy as np
+
+from domain.shape.square import Square
+from domain.detector.worldelement.shapefactory import ShapeFactory, NotASquareError, NotARectangleError
+from domain.shape.rectangle import Rectangle
 
 
 class ShapeFactoryTest(TestCase):

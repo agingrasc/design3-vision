@@ -1,8 +1,9 @@
 import base64
+
 import cv2
 import numpy as np
 
-from world.drawingarea import DrawingArea
+from domain.world.drawingarea import DrawingArea
 
 IMAGE_DIMINUTION_RATIO = 2
 

@@ -1,5 +1,5 @@
-from geometry.coordinate import Coordinate
-from world.worldelement import WorldElement
+from domain.geometry.coordinate import Coordinate
+from domain.world.worldelement import WorldElement
 
 
 class World(WorldElement):

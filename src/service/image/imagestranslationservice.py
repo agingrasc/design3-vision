@@ -1,12 +1,13 @@
-import numpy as np
 from math import acos
 
+import numpy as np
+
 import config
-from geometry.coordinate import Coordinate
-from world.drawingarea import DrawingArea
-from world.robot import Robot
-from world.table import Table
-from world.world import World
+from domain.geometry.coordinate import Coordinate
+from domain.world.drawingarea import DrawingArea
+from domain.world.robot import Robot
+from domain.world.table import Table
+from domain.world.world import World
 
 
 class ImageToWorldTranslator:
