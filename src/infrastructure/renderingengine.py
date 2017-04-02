@@ -11,7 +11,7 @@ class RenderingEngine:
             else:
                 element.draw_in(image)
 
-    def render_actual_trajectory(self, image, robot_positions):
+    def render_actual_path(self, image, robot_positions):
         for pos in robot_positions:
             cv2.circle(image, pos, 2, (0, 0, 255), 2)
 

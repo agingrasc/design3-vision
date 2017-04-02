@@ -95,8 +95,8 @@ def start():
 
         if world_state.robot_was_detected():
             rendering_engine.render_figure_drawing(image, data_logger.get_figure_drawing())
-            rendering_engine.render_actual_trajectory(image, data_logger.get_robot_positions())
             rendering_engine.render_planned_path(image, world_state.get_robot()._world_position, data_logger.get_path())
+            rendering_engine.render_actual_path(image, data_logger.get_robot_positions())
 
         rendering_engine.render_all_elements(image, world_state.get_image_elements())
 
