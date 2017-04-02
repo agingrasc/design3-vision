@@ -1,6 +1,5 @@
-from unittest import TestCase
-
 from mock import mock
+from unittest import TestCase
 
 from domain.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from domain.world.worldelement import WorldElement
