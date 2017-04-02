@@ -2,13 +2,13 @@ import mock
 
 from unittest import TestCase
 
-from detector.worldelement.iworldelementdetector import IWorldElementDetector
-from world.worldelement import WorldElement
+from domain.detector.worldelement.iworldelementdetector import IWorldElementDetector
+from domain.world.worldelement import WorldElement
 from service.image.detectonceproxy import DetectOnceProxy
 from service.image.imagedetectionservice import ImageDetectionService
 
 
-class ImageDetectionTest(TestCase):
+class ImageDetectionServiceTest(TestCase):
     def setUp(self):
         self.mock_detector = mock.create_autospec(IWorldElementDetector)
         self.an_image_detection_service = ImageDetectionService()

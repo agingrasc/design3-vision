@@ -1,11 +1,10 @@
 import cv2
-import numpy as np
 from sklearn.cluster import KMeans
 
-from detector.shape.squaredetector import SquareDetector
-from detector.worldelement.iworldelementdetector import IWorldElementDetector
-from world.drawingarea import DrawingArea
 from config import *
+from domain.detector.shape.squaredetector import SquareDetector
+from domain.detector.worldelement.iworldelementdetector import IWorldElementDetector
+from domain.world.drawingarea import DrawingArea
 
 
 class NoDrawingAreaFoundError(Exception):

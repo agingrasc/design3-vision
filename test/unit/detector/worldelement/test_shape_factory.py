@@ -1,10 +1,10 @@
-import numpy as np
-
 from unittest import TestCase
 
-from shape.rectangle import Rectangle
-from shape.square import Square
-from detector.worldelement.shapefactory import ShapeFactory, NotASquareError, NotARectangleError
+import numpy as np
+
+from domain.shape.square import Square
+from domain.detector.worldelement.shapefactory import ShapeFactory, NotASquareError, NotARectangleError
+from domain.shape.rectangle import Rectangle
 
 
 class ShapeFactoryTest(TestCase):
@@ -14,7 +14,7 @@ class ShapeFactoryTest(TestCase):
         self.shape_factory = ShapeFactory()
 
     def test_given_valid_square_points_when_creating_a_square_then_a_square_is_created(self):
-        valid_square_points = np.array([[0, 0], [0, 50], [50, 50], [50, 0]])
+        valid_square_points = np.array([[[0, 0]], [[0, 50]], [[50, 50]], [[50, 0]]])
 
         square = self.shape_factory.create_square(valid_square_points)
 
@@ -37,7 +37,7 @@ class ShapeFactoryTest(TestCase):
         self.assertRaises(NotASquareError, self.shape_factory.create_square, four_points_not_making_right_angles)
 
     def test_given_valid_rectangle_points_when_creating_a_rectangle_then_a_rectangle_is_created(self):
-        valid_rectangle_points = np.array([[0, 0], [0, 50], [100, 50], [100, 0]])
+        valid_rectangle_points = np.array([[[0, 0]], [[0, 50]], [[100, 50]], [[100, 0]]])
 
         a_rectangle = self.shape_factory.create_rectangle(valid_rectangle_points)
 

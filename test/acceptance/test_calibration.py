@@ -1,9 +1,9 @@
-import cv2
-
 from unittest import TestCase
 
+import cv2
 from camera.camerafactory import CameraFactory
-from camera.calibration import Calibration, CalibrationTargetNotFoundError
+
+from domain.camera.calibration import Calibration, CalibrationTargetNotFoundError
 
 
 class CalibrationTest(TestCase):

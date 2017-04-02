@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from camera.cameramodel import CameraModel
+from domain.camera.cameramodel import CameraModel
 
 
 class CameraFactory:

@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
 
-from detector.worldelement.iworldelementdetector import IWorldElementDetector
-from detector.robotpositiondetector import CircleDetector, NoMatchingCirclesFound
-from world.obstacle import Obstacle
+from domain.detector.robotpositiondetector import CircleDetector, NoMatchingCirclesFound
+from domain.detector.worldelement.iworldelementdetector import IWorldElementDetector
+from domain.world.obstacle import Obstacle
 
 RATIO = 1
 TARGET_MIN_DISTANCE = 20

@@ -1,12 +1,12 @@
-import cv2
 import math
 
-from detector.shape.circledetector import NoMatchingCirclesFound
-from detector.shape.squaredetector import SquareDetector
-from detector.worldelement.iworldelementdetector import IWorldElementDetector
-from config import *
+import cv2
 
-from world.robot import Robot
+from config import *
+from domain.detector.shape.squaredetector import SquareDetector
+from domain.detector.shape.circledetector import NoMatchingCirclesFound
+from domain.detector.worldelement.iworldelementdetector import IWorldElementDetector
+from domain.world.robot import Robot
 
 
 def euc_distance(p1, p2):

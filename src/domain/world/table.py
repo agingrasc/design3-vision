@@ -1,4 +1,4 @@
-from world.worldelement import WorldElement
+from domain.world.worldelement import WorldElement
 
 
 class Table(WorldElement):

@@ -1,6 +1,6 @@
 import json
 
-from camera.cameramodel import CameraModel
+from domain.camera.cameramodel import CameraModel
 
 
 class JSONCameraModelRepository:

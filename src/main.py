@@ -2,12 +2,11 @@ import base64
 import glob
 import json
 import random
-import cv2
-import numpy as np
-
 from io import BytesIO
 from threading import Thread
 
+import cv2
+import numpy as np
 from PIL import Image
 from flask import Flask, jsonify
 from flask import make_response
@@ -15,22 +14,21 @@ from flask import request
 from websocket import create_connection
 
 import config
-from camera.camerafactory import CameraFactory
-from detector.worldelement.drawingareadetector import DrawingAreaDetector
-from detector.worldelement.obstaclepositiondetector import ObstacleDetector
-from detector.worldelement.obstaclepositiondetector import ShapeDetector
-from detector.worldelement.robotdetector import RobotDetector
-from detector.worldelement.shapefactory import ShapeFactory
-from detector.worldelement.tabledetector import TableDetector
-from infrastructure.jsoncameramodelrepository import JSONCameraModelRepository
+from domain.camera.camerafactory import CameraFactory
+from domain.detector.worldelement.drawingareadetector import DrawingAreaDetector
+from domain.detector.worldelement.obstaclepositiondetector import ObstacleDetector
+from domain.detector.worldelement.obstaclepositiondetector import ShapeDetector
+from domain.detector.worldelement.shapefactory import ShapeFactory
+from domain.detector.worldelement.tabledetector import TableDetector
+from domain.detector.worldelement.robotdetector import RobotDetector
 from infrastructure.datalogger import DataLogger
 from infrastructure.imagesource.savevideoimagesource import SaveVideoImageSource
-from infrastructure.imagesource.videostreamimagesource import VideoStreamImageSource
+from infrastructure.jsoncameramodelrepository import JSONCameraModelRepository
 from infrastructure.messageassembler import MessageAssembler
 from infrastructure.renderingengine import RenderingEngine
 from service.image.detectonceproxy import DetectOnceProxy
-from service.image.imagesegmentation import segment_image
 from service.image.imagedetectionservice import ImageDetectionService
+from service.image.imagesegmentation import segment_image
 from service.image.imagestranslationservice import ImageToWorldTranslator
 
 

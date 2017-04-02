@@ -1,6 +1,7 @@
-from camera.calibration import Calibration
-from camera.calibration import CalibrationTargetNotFoundError
 from camera.camerafactory import CameraFactory
+
+from domain.camera.calibration import Calibration
+from domain.camera.calibration import CalibrationTargetNotFoundError
 
 
 class CalibrationService:
