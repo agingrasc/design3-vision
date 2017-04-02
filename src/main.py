@@ -26,7 +26,11 @@ from service.image.imagestranslationservice import ImageToWorldTranslator
 
 
 class VisionApplication:
+    def __init__(self):
+        self._started = False
+
     def start(self):
+        self._started = True
         WEB_SOCKET = True
         VIDEO_DEBUG = not WEB_SOCKET
         VIDEO_WRITE = False
@@ -78,35 +82,36 @@ class VisionApplication:
                 VIDEO_DEBUG = True
                 WEB_SOCKET = False
 
-        while image_source.has_next_image():
-            image = image_source.next_image()
-            image = self.preprocess_image(image, camera_model)
+        while self._started:
+            if image_source.has_next_image():
+                image = image_source.next_image()
+                image = self.preprocess_image(image, camera_model)
 
-            image_elements = detection_service.detect_all_world_elements(image)
-            world_state = image_to_world_translator.translate_image_elements_to_world(image_elements)
+                image_elements = detection_service.detect_all_world_elements(image)
+                world_state = image_to_world_translator.translate_image_elements_to_world(image_elements)
 
-            if world_state.robot_was_detected() and world_state.world_was_detected():
-                data_logger.log_robot_position(world_state.get_robot())
+                if world_state.robot_was_detected() and world_state.world_was_detected():
+                    data_logger.log_robot_position(world_state.get_robot())
 
-            if world_state.robot_was_detected():
-                rendering_engine.render_figure_drawing(image, data_logger.get_figure_drawing())
-                rendering_engine.render_planned_path(image, world_state.get_robot()._world_position,
-                                                     data_logger.get_path())
-                rendering_engine.render_actual_path(image, data_logger.get_robot_positions())
+                if world_state.robot_was_detected():
+                    rendering_engine.render_figure_drawing(image, data_logger.get_figure_drawing())
+                    rendering_engine.render_planned_path(image, world_state.get_robot()._world_position,
+                                                         data_logger.get_path())
+                    rendering_engine.render_actual_path(image, data_logger.get_robot_positions())
 
-            rendering_engine.render_all_elements(image, world_state.get_image_elements())
+                rendering_engine.render_all_elements(image, world_state.get_image_elements())
 
-            if WEB_SOCKET:
-                try:
-                    world_state_dto = message_assembler.create_world_state_dto(image, world_state)
-                    connection.send(json.dumps(world_state_dto))
-                    ok = connection.recv()
-                except NameError as e:
-                    print(e)
+                if WEB_SOCKET:
+                    try:
+                        world_state_dto = message_assembler.create_world_state_dto(image, world_state)
+                        connection.send(json.dumps(world_state_dto))
+                        ok = connection.recv()
+                    except NameError as e:
+                        print(e)
 
-            if VIDEO_DEBUG:
-                cv2.imshow("Image debug", image)
-                cv2.waitKey(1)
+                if VIDEO_DEBUG:
+                    cv2.imshow("Image debug", image)
+                    cv2.waitKey(1)
 
     def preprocess_image(self, image, camera_model):
         image = camera_model.undistort_image(image)
