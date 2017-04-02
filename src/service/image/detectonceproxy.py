@@ -4,16 +4,19 @@ from domain.detector.worldelement.iworldelementdetector import IWorldElementDete
 class DetectOnceProxy(IWorldElementDetector):
     def __init__(self, detector):
         self._detector = detector
-        self._is_detected = False
+        self._has_detected = False
         self._detected_element = None
 
     def detect(self, image):
-        if self._is_detected:
+        if self._has_detected:
             return self._detected_element
         else:
             self._detected_element = self._detector.detect(image)
-            self._is_detected = True
+            self._has_detected = True
             return self._detected_element
 
     def reset_detection(self):
-        self._is_detected = False
+        self._has_detected = False
+
+    def has_detected(self):
+        return self._has_detected
