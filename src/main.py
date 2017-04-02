@@ -1,26 +1,22 @@
 import json
-import cv2
-
 from threading import Thread
+
+import cv2
 from websocket import create_connection
 
 import config
-
 from domain.camera.camerafactory import CameraFactory
 from domain.detector.worldelement.drawingareadetector import DrawingAreaDetector
 from domain.detector.worldelement.obstaclepositiondetector import ObstacleDetector, ShapeDetector
 from domain.detector.worldelement.robotdetector import RobotDetector
 from domain.detector.worldelement.shapefactory import ShapeFactory
 from domain.detector.worldelement.tabledetector import TableDetector
-
 from infrastructure.applicationfactory import ApplicationFactory
-from infrastructure.datalogger import DataLogger
+from infrastructure.graphics.renderingengine import RenderingEngine
 from infrastructure.imagesource.savevideoimagesource import SaveVideoImageSource
-from infrastructure.imagesource.videostreamimagesource import VideoStreamImageSource
-from infrastructure.jsoncameramodelrepository import JSONCameraModelRepository
 from infrastructure.messageassembler import MessageAssembler
-from infrastructure.renderingengine import RenderingEngine
-
+from infrastructure.persistance.datalogger import DataLogger
+from infrastructure.persistance.jsoncameramodelrepository import JSONCameraModelRepository
 from service.image.detectonceproxy import DetectOnceProxy
 from service.image.imagestranslationservice import ImageToWorldTranslator
 
