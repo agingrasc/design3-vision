@@ -32,7 +32,7 @@ def preprocess_image(image, camera_model):
     return image
 
 
-if __name__ == "__main__":
+def start():
     WEB_SOCKET = True
     VIDEO_DEBUG = not WEB_SOCKET
     VIDEO_WRITE = False
@@ -111,3 +111,7 @@ if __name__ == "__main__":
         if VIDEO_DEBUG:
             cv2.imshow("Image debug", image)
             cv2.waitKey(1)
+
+
+if __name__ == "__main__":
+    start()
