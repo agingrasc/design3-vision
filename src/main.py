@@ -1,23 +1,26 @@
 import json
-from threading import Thread
-
 import cv2
-import numpy as np
+
+from threading import Thread
 from websocket import create_connection
 
 import config
+
 from domain.camera.camerafactory import CameraFactory
 from domain.detector.worldelement.drawingareadetector import DrawingAreaDetector
 from domain.detector.worldelement.obstaclepositiondetector import ObstacleDetector, ShapeDetector
 from domain.detector.worldelement.robotdetector import RobotDetector
 from domain.detector.worldelement.shapefactory import ShapeFactory
 from domain.detector.worldelement.tabledetector import TableDetector
+
 from infrastructure.applicationfactory import ApplicationFactory
 from infrastructure.datalogger import DataLogger
 from infrastructure.imagesource.savevideoimagesource import SaveVideoImageSource
+from infrastructure.imagesource.videostreamimagesource import VideoStreamImageSource
 from infrastructure.jsoncameramodelrepository import JSONCameraModelRepository
 from infrastructure.messageassembler import MessageAssembler
 from infrastructure.renderingengine import RenderingEngine
+
 from service.image.detectonceproxy import DetectOnceProxy
 from service.image.imagestranslationservice import ImageToWorldTranslator
 
@@ -33,7 +36,6 @@ if __name__ == "__main__":
     WEB_SOCKET = True
     VIDEO_DEBUG = not WEB_SOCKET
     VIDEO_WRITE = False
-    RENDER_PATH = True
     VERBOSE = True
 
     message_assembler = MessageAssembler()
@@ -84,32 +86,28 @@ if __name__ == "__main__":
 
     while image_source.has_next_image():
         image = image_source.next_image()
+        image = preprocess_image(image, camera_model)
 
-        if image is not None:
-            image = preprocess_image(image, camera_model)
-            world, robot, world_elements = image_to_world_translator.translate_image_to_world(image)
-            rendering_engine.render_all_elements(image, world_elements)
+        world_state = image_to_world_translator.translate_image_to_world(image)
 
-            if robot and world:
-                data_logger.log_robot_position(robot)
+        if world_state.robot_was_detected() and world_state.world_was_detected():
+            data_logger.log_robot_position(world_state.get_robot())
 
-            if RENDER_PATH and robot:
-                if data_logger._figure_drawing is not None:
-                    figure_drawing = np.array(data_logger._figure_drawing).astype('int')
+        if world_state.robot_was_detected():
+            rendering_engine.render_figure_drawing(image, data_logger.get_figure_drawing())
+            rendering_engine.render_actual_trajectory(image, data_logger.get_robot_positions())
+            rendering_engine.render_planned_path(image, world_state.get_robot()._world_position, data_logger.get_path())
 
-                    cv2.drawContours(image, [figure_drawing], -1, (0, 255, 0), 2)
+        rendering_engine.render_all_elements(image, world_state.get_image_elements())
 
-                rendering_engine.render_actual_trajectory(image, data_logger.get_robot_positions())
-                rendering_engine.render_planned_path(image, robot._world_position, data_logger.get_path())
+        if WEB_SOCKET:
+            try:
+                world_state_dto = message_assembler.create_world_state_dto(image, world_state)
+                connection.send(json.dumps(world_state_dto))
+                ok = connection.recv()
+            except NameError as e:
+                print(e)
 
-            if WEB_SOCKET:
-                try:
-                    message = message_assembler.format_message(world, robot, image, world_elements)
-                    connection.send(json.dumps(message))
-                    ok = connection.recv()
-                except NameError as e:
-                    print(e)
-
-            if VIDEO_DEBUG:
-                cv2.imshow("Image debug", image)
-                cv2.waitKey(1)
+        if VIDEO_DEBUG:
+            cv2.imshow("Image debug", image)
+            cv2.waitKey(1)

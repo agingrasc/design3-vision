@@ -9,7 +9,11 @@ IMAGE_DIMINUTION_RATIO = 2
 
 
 class MessageAssembler:
-    def format_message(self, world, robot, image, world_elements):
+    def create_world_state_dto(self, image, world_state):
+        world_elements = world_state._image_elements
+        robot = world_state._robot
+        world = world_state._world
+
         drawing_area = self.extract_drawing_area(world_elements)
         obstacles = self.extract_obstacles(world_elements)
         return {

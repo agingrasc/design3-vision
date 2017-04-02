@@ -26,3 +26,9 @@ class RenderingEngine:
 
         for point in path:
             cv2.circle(image, (int(point[0]), int(point[1])), 2, (40, 200, 40), 5)
+
+    def render_figure_drawing(self, image, figure_drawing):
+        if figure_drawing is not None:
+            figure_drawing = np.array(figure_drawing).astype('int')
+
+            cv2.drawContours(image, [figure_drawing], -1, (0, 255, 0), 2)

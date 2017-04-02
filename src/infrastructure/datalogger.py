@@ -45,5 +45,8 @@ class DataLogger:
     def get_path(self):
         return self._path
 
+    def get_figure_drawing(self):
+        return self._figure_drawing
+
     def set_figure_drawing(self, segments):
         self._figure_drawing = segments
