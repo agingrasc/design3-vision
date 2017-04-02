@@ -1,5 +1,4 @@
-from camera.camerafactory import CameraFactory
-
+from domain.camera.camerafactory import CameraFactory
 from domain.camera.calibration import Calibration
 from domain.camera.calibration import CalibrationTargetNotFoundError
 

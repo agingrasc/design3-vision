@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from domain.detector.robotpositiondetector import CircleDetector, NoMatchingCirclesFound
+from domain.detector.circledetector import CircleDetector, NoMatchingCirclesFound
 from domain.detector.worldelement.iworldelementdetector import IWorldElementDetector
 from domain.world.obstacle import Obstacle
 
