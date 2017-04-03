@@ -14,11 +14,19 @@ from domain.detector.worldelement.tabledetector import TableDetector
 from infrastructure.applicationfactory import ApplicationFactory
 from infrastructure.graphics.renderingengine import RenderingEngine
 from infrastructure.imagesource.savevideoimagesource import SaveVideoImageSource
+from infrastructure.imagesource.videostreamimagesource import VideoStreamImageSource
 from infrastructure.messageassembler import MessageAssembler
 from infrastructure.persistance.datalogger import DataLogger
 from infrastructure.persistance.jsoncameramodelrepository import JSONCameraModelRepository
 from service.image.detectonceproxy import DetectOnceProxy
 from service.image.imagestranslationservice import ImageToWorldTranslator
+
+
+def preprocess_image(image, camera_model):
+    image = camera_model.undistort_image(image)
+    image = cv2.medianBlur(image, ksize=5)
+    image = cv2.GaussianBlur(image, (5, 5), 1)
+    return image
 
 
 class VisionApplication:
@@ -65,8 +73,8 @@ class VisionApplication:
         api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'})
         api_thread.start()
 
-        # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
 
         if WEB_SOCKET:
             try:
@@ -81,7 +89,7 @@ class VisionApplication:
         while self._started:
             if image_source.has_next_image():
                 image = image_source.next_image()
-                image = self.preprocess_image(image, camera_model)
+                image = preprocess_image(image, camera_model)
 
                 image_elements = detection_service.detect_all_world_elements(image)
                 world_state = image_to_world_translator.translate_image_elements_to_world(image_elements)
@@ -108,12 +116,6 @@ class VisionApplication:
                 if VIDEO_DEBUG:
                     cv2.imshow("Image debug", image)
                     cv2.waitKey(1)
-
-    def preprocess_image(self, image, camera_model):
-        image = camera_model.undistort_image(image)
-        image = cv2.medianBlur(image, ksize=5)
-        image = cv2.GaussianBlur(image, (5, 5), 1)
-        return image
 
 
 if __name__ == "__main__":
