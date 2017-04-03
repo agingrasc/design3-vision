@@ -1,7 +1,9 @@
 import cv2
 
+from infrastructure.imagesource.imagesource import ImageSource
 
-class SaveVideoImageSource:
+
+class SaveVideoImageSource(ImageSource):
     def __init__(self, filename):
         self._cap = cv2.VideoCapture(filename)
         self._has_next_image, self._next_image = self._cap.read()

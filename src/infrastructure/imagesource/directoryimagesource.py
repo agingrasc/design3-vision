@@ -2,8 +2,10 @@ import glob
 import cv2
 from time import sleep
 
+from infrastructure.imagesource.imagesource import ImageSource
 
-class DirectoryImageSource:
+
+class DirectoryImageSource(ImageSource):
     def __init__(self, directory_glob):
         self._images = [cv2.imread(filename) for filename in glob.glob(directory_glob)]
         self._current_image_index = 0

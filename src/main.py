@@ -1,7 +1,7 @@
 import json
-from threading import Thread
-
 import cv2
+
+from threading import Thread
 from websocket import create_connection
 
 import config
