@@ -5,8 +5,7 @@ import cv2
 from src.infrastructure.imagesource.httpimagesource import HTTPImageSource
 from src.service.image.imagesegmentation import segment_image
 
-# ROBOT_VIDEO_SERVICE_URL = "http://192.168.0.27:4040/take-picture"
-ROBOT_VIDEO_SERVICE_URL = "http://0.0.0.0:4000/take-picture"
+ROBOT_VIDEO_SERVICE_URL = "http://192.168.0.27:4040/take-picture"
 
 if __name__ == '__main__':
     index = 0
