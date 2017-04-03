@@ -1,13 +1,13 @@
+import cv2
 import datetime
 from threading import Thread
 from time import sleep
 
-import cv2
-
 import config
+from infrastructure.imagesource.imagesource import ImageSource
 
 
-class VideoStreamImageSource:
+class VideoStreamImageSource(ImageSource):
     def __init__(self, camera_index, write=False):
         self._cap = cv2.VideoCapture(camera_index)
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAP_WIDTH)
@@ -29,15 +29,15 @@ class VideoStreamImageSource:
     def has_next_image(self):
         return self._cap.isOpened()
 
+    def next_image(self):
+        if self.has_next_image():
+            return self._next_image
+        else:
+            return None
+
     def _update_image(self):
         while self._cap.isOpened():
             self._has_next_image, self._next_image = self._cap.read()
             if self._has_next_image:
                 if self._write:
                     self._out.write(self._next_image)
-
-    def next_image(self):
-        if self.has_next_image():
-            return self._next_image
-        else:
-            return None
