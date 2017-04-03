@@ -1,25 +1,21 @@
-import base64
-import cv2
-import requests
-import numpy as np
 import datetime
 
-from PIL import Image
-from io import BytesIO
+import cv2
 
+from src.infrastructure.imagesource.httpimagesource import HTTPImageSource
 from src.service.image.imagesegmentation import segment_image
 
-ROBOT_VIDEO_SERVICE_URL = "http://192.168.0.27:4040/take-picture"
+# ROBOT_VIDEO_SERVICE_URL = "http://192.168.0.27:4040/take-picture"
+ROBOT_VIDEO_SERVICE_URL = "http://0.0.0.0:4000/take-picture"
 
 if __name__ == '__main__':
     index = 0
+    image_source = HTTPImageSource(ROBOT_VIDEO_SERVICE_URL)
+
     while True:
         print('Fetching image: {}'.format(datetime.datetime.now()))
-        data = requests.post(url=ROBOT_VIDEO_SERVICE_URL).json()
 
-        image = base64.b64decode(data['image'])
-        img = Image.open(BytesIO(image)).convert('RGB')
-        image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        image = image_source.next_image()
 
         try:
             found_segments, inner_figure, center_of_mass, figure_mask = segment_image(image)

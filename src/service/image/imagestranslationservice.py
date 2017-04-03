@@ -1,6 +1,6 @@
-from math import acos
-
 import numpy as np
+
+from math import acos
 
 import config
 from domain.geometry.coordinate import Coordinate
@@ -8,20 +8,18 @@ from domain.world.drawingarea import DrawingArea
 from domain.world.robot import Robot
 from domain.world.table import Table
 from domain.world.world import World
+from service.image.worldstate import WorldState
 
 
 class ImageToWorldTranslator:
-    def __init__(self, camera_model, image_detection_service):
+    def __init__(self, camera_model):
         self._camera_model = camera_model
-        self._image_detection_service = image_detection_service
         self._world = None
         self._robot = None
         self._obstacles = None
         self._drawing_area = None
 
-    def translate_image_to_world(self, image):
-        image_elements = self._image_detection_service.detect_all_world_elements(image)
-
+    def translate_image_elements_to_world(self, image_elements):
         for image_element in image_elements:
             if isinstance(image_element, Table):
                 self._world = self._translate_table_element_to_world(image_element)
@@ -64,7 +62,7 @@ class ImageToWorldTranslator:
 
             self._obstacles = world_obstacles
 
-        return self._world, self._robot, image_elements
+        return WorldState(self._world, self._robot, image_elements)
 
     def transform_segments(self, segmented_image, segments, scaling_factor):
         segmented_image_width = segmented_image.shape[0]
