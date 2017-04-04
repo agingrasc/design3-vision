@@ -1,8 +1,8 @@
 import cv2
-import math
-import numpy as np
 
 from numpy import cross, dot, array
+
+from domain.geometry.transformationmatrixbuilder import TransformationMatrixBuilder
 
 
 class CameraModel:
@@ -51,15 +51,13 @@ class CameraModel:
         return self._homogeneous_to_cart(dot(transform_matrix, homogeneous_coordinate))
 
     def compute_transform_matrix(self, angle, position):
-        rad = np.deg2rad(angle)
+        transform_matrix = TransformationMatrixBuilder() \
+            .rotate(angle) \
+            .translate(position[0], position[1]) \
+            .inverse() \
+            .build()
 
-        transform_matrix = array([
-            [math.cos(rad), -1 * math.sin(rad), position[0]],
-            [math.sin(rad), math.cos(rad), position[1]],
-            [0, 0, 1]
-        ])
-
-        return np.linalg.inv(transform_matrix)
+        return transform_matrix
 
     def undistort_image(self, image):
         return cv2.undistort(image, self._intrinsic_parameters, self._distortion_coefficients, None, None)

@@ -1,11 +1,12 @@
 import math
 
 from numpy import array, dot, deg2rad
+from numpy.linalg import inv
 
 
 class TransformationMatrixBuilder:
     def __init__(self):
-        self._transformation_matrix = np.array([
+        self._transformation_matrix = array([
             [1, 0, 0],
             [0, 1, 0],
             [0, 0, 1]
@@ -38,6 +39,10 @@ class TransformationMatrixBuilder:
             [0, 0, 1]
         ]), self._transformation_matrix)
 
+        return self
+
+    def inverse(self):
+        self._transformation_matrix = inv(self._transformation_matrix)
         return self
 
     def build(self):
