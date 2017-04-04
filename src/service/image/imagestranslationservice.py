@@ -117,8 +117,13 @@ class ImageToWorldTranslator:
 
         v1[2] = 0.
 
-        target_to_world = self._camera_model.compute_transform_matrix(np.rad2deg(angle), v1)
-        return target_to_world
+        target_to_world_transform_matrix = TransformationMatrixBuilder() \
+            .rotate(np.rad2deg(angle)) \
+            .translate(v1[0], v1[1]) \
+            .inverse() \
+            .build()
+
+        return target_to_world_transform_matrix
 
     def _compute_and_set_projected_coordinates(self, robot):
         target_coordinates = self._camera_model.image_to_target_coordinates(robot._image_position[0],

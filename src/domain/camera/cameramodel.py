@@ -2,8 +2,6 @@ import cv2
 
 from numpy import cross, dot, array
 
-from domain.geometry.transformationmatrixbuilder import TransformationMatrixBuilder
-
 
 class CameraModel:
     def __init__(self, id, intrinsic_parameters, extrinsic_parameters, camera_matrix,
@@ -49,15 +47,6 @@ class CameraModel:
         ])
 
         return self._homogeneous_to_cart(dot(transform_matrix, homogeneous_coordinate))
-
-    def compute_transform_matrix(self, angle, position):
-        transform_matrix = TransformationMatrixBuilder() \
-            .rotate(angle) \
-            .translate(position[0], position[1]) \
-            .inverse() \
-            .build()
-
-        return transform_matrix
 
     def undistort_image(self, image):
         return cv2.undistort(image, self._intrinsic_parameters, self._distortion_coefficients, None, None)
