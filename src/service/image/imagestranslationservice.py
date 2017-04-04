@@ -1,6 +1,9 @@
 from math import acos
 
 import numpy as np
+from numpy import rad2deg
+from numpy import array
+from numpy import dot
 
 import config
 from domain.geometry.coordinate import Coordinate
@@ -69,13 +72,13 @@ class ImageToWorldTranslator:
         segmented_image_width = segmented_image.shape[0]
         drawing_area = self._drawing_area
 
-        drawing_area_center = np.array(drawing_area._inner_square._center)
+        drawing_area_center = array(drawing_area._inner_square._center)
         drawing_area_inner = drawing_area._inner_square.as_coordinates()
 
         drawing_area_inner_width = drawing_area_inner[1].distance_from(drawing_area_inner[0])
         scaling = drawing_area_inner_width / segmented_image_width * scaling_factor
 
-        segmented_image_center = np.array([segmented_image_width / 2 * scaling, segmented_image_width / 2 * scaling])
+        segmented_image_center = array([segmented_image_width / 2 * scaling, segmented_image_width / 2 * scaling])
         translation = (drawing_area_center - segmented_image_center).tolist()
 
         scale_matrix = TransformationMatrixBuilder() \
@@ -86,8 +89,8 @@ class ImageToWorldTranslator:
             .translate(translation[0], translation[1]) \
             .build()
 
-        segments = [np.dot(scale_matrix, np.array([p[0], p[1], 1])).astype('int').tolist()[0:2] for p in
-                    segments[:, 0].tolist()]
+        segments = list(map(lambda p: dot(scale_matrix, array([p[0], p[1], 1])), segments[:, 0].tolist()))
+        segments = list(map(lambda p: p.astype('int').tolist()[0:2], segments))
 
         world_segments = self._image_to_target_list(segments, 0)
         world_segments = self._target_to_world_list(world_segments)
@@ -113,12 +116,12 @@ class ImageToWorldTranslator:
 
         origin_x_axis = np.array([5, 0])
 
-        angle = acos(np.dot(origin_x_axis, x_axis) / (np.linalg.norm(origin_x_axis) * np.linalg.norm(x_axis)))
+        angle_in_rad = acos(np.dot(origin_x_axis, x_axis) / (np.linalg.norm(origin_x_axis) * np.linalg.norm(x_axis)))
 
         v1[2] = 0.
 
         target_to_world_transform_matrix = TransformationMatrixBuilder() \
-            .rotate(np.rad2deg(angle)) \
+            .rotate(rad2deg(angle_in_rad)) \
             .translate(v1[0], v1[1]) \
             .inverse() \
             .build()
