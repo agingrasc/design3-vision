@@ -1,6 +1,7 @@
 import numpy as np
 
 from math import acos
+import math
 
 import config
 from domain.geometry.coordinate import Coordinate
@@ -9,6 +10,47 @@ from domain.world.robot import Robot
 from domain.world.table import Table
 from domain.world.world import World
 from service.image.worldstate import WorldState
+
+
+class TransformBuilder:
+    def __init__(self):
+        self._transform_matrix = np.array([
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ])
+
+    def rotate(self, angle):
+        rad_angle = np.deg2rad(angle)
+
+        self._transform_matrix = np.dot(self._transform_matrix, np.array([
+            [math.cos(rad_angle), -1 * math.sin(rad_angle), 0],
+            [math.sin(rad_angle), math.cos(rad_angle), 0],
+            [0, 0, 1]
+        ]))
+
+        return self
+
+    def scale(self, scale_factor):
+        self._transform_matrix = np.dot(self._transform_matrix, np.array([
+            [scale_factor, 0, 0],
+            [0, scale_factor, 0],
+            [0, 0, 1]
+        ]))
+
+        return self
+
+    def translate(self, x, y):
+        self._transform_matrix = np.dot(self._transform_matrix, np.array([
+            [1, 0, x],
+            [0, 1, y],
+            [0, 0, 1]
+        ]))
+
+        return self
+
+    def build(self):
+        return self._transform_matrix
 
 
 class ImageToWorldTranslator:
@@ -64,7 +106,7 @@ class ImageToWorldTranslator:
 
         return WorldState(self._world, self._robot, image_elements)
 
-    def transform_segments(self, segmented_image, segments, scaling_factor):
+    def transform_segments(self, segmented_image, segments, scaling_factor, orientation):
         segmented_image_width = segmented_image.shape[0]
         drawing_area = self._drawing_area
 
@@ -77,21 +119,16 @@ class ImageToWorldTranslator:
         segmented_image_center = np.array([segmented_image_width / 2 * scaling, segmented_image_width / 2 * scaling])
         translation = (drawing_area_center - segmented_image_center).tolist()
 
-        scale_matrix = np.array([
-            [scaling, 0, 0],
-            [0, scaling, 0],
-            [0, 0, 1]
-        ])
+        scale_matrix = TransformBuilder() \
+            .translate(translation[0], translation[1]) \
+            .translate(segmented_image_center[0], segmented_image_center[1]) \
+            .rotate(orientation) \
+            .translate(-segmented_image_center[0], -segmented_image_center[1]) \
+            .scale(scaling) \
+            .build()
 
-        segments = np.array([np.dot(scale_matrix, np.array([p[0], p[1], 1])) for p in segments[:, 0].tolist()])
-        transform_matrix = np.array([
-            [1, 0, translation[0]],
-            [0, 1, translation[1]],
-            [0, 0, 1]
-        ])
-
-        segments = [np.dot(transform_matrix, np.array([p[0], p[1], 1])).astype('int').tolist()[0:2] for p in
-                    segments]
+        segments = [np.dot(scale_matrix, np.array([p[0], p[1], 1])).astype('int').tolist()[0:2] for p in
+                    segments[:, 0].tolist()]
 
         world_segments = self._image_to_target_list(segments, 0)
         world_segments = self._target_to_world_list(world_segments)

@@ -78,9 +78,10 @@ class ApplicationFactory:
                 image = cv2.imread(random.choice(images))
                 data = request.json
                 scaling_factor = float(data['scaling'])
+                orientation = float(data['orientation'])
                 segments, segmented_image, center_of_mass, mask = segment_image(image)
                 segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
-                                                                                         scaling_factor)
+                                                                                         scaling_factor, orientation)
                 data_logger.set_figure_drawing(segments)
 
                 success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
@@ -97,6 +98,7 @@ class ApplicationFactory:
                 data = request.json
 
                 scaling_factor = float(data['scaling'])
+                orientation = float(data['orientation'])
 
                 try:
                     image = base64.b64decode(data['image'])
@@ -106,7 +108,7 @@ class ApplicationFactory:
                     success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
                     success, mask_encoded = cv2.imencode('.jpg', opencv_image)
                     segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
-                                                                                             scaling_factor)
+                                                                                             scaling_factor, orientation)
                     data_logger.set_figure_drawing(segments)
                     body = {
                         "image": base64.b64encode(segmented_image_encoded).decode('utf-8'),
