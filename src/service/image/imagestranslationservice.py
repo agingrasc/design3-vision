@@ -23,29 +23,29 @@ class TransformBuilder:
     def rotate(self, angle):
         rad_angle = np.deg2rad(angle)
 
-        self._transform_matrix = np.dot(self._transform_matrix, np.array([
+        self._transform_matrix = np.dot(np.array([
             [math.cos(rad_angle), -1 * math.sin(rad_angle), 0],
             [math.sin(rad_angle), math.cos(rad_angle), 0],
             [0, 0, 1]
-        ]))
+        ]), self._transform_matrix)
 
         return self
 
     def scale(self, scale_factor):
-        self._transform_matrix = np.dot(self._transform_matrix, np.array([
+        self._transform_matrix = np.dot(np.array([
             [scale_factor, 0, 0],
             [0, scale_factor, 0],
             [0, 0, 1]
-        ]))
+        ]), self._transform_matrix)
 
         return self
 
     def translate(self, x, y):
-        self._transform_matrix = np.dot(self._transform_matrix, np.array([
+        self._transform_matrix = np.dot(np.array([
             [1, 0, x],
             [0, 1, y],
             [0, 0, 1]
-        ]))
+        ]), self._transform_matrix)
 
         return self
 
@@ -120,11 +120,11 @@ class ImageToWorldTranslator:
         translation = (drawing_area_center - segmented_image_center).tolist()
 
         scale_matrix = TransformBuilder() \
-            .translate(translation[0], translation[1]) \
-            .translate(segmented_image_center[0], segmented_image_center[1]) \
-            .rotate(orientation) \
-            .translate(-segmented_image_center[0], -segmented_image_center[1]) \
             .scale(scaling) \
+            .translate(-segmented_image_center[0], -segmented_image_center[1]) \
+            .rotate(orientation) \
+            .translate(segmented_image_center[0], segmented_image_center[1]) \
+            .translate(translation[0], translation[1]) \
             .build()
 
         segments = [np.dot(scale_matrix, np.array([p[0], p[1], 1])).astype('int').tolist()[0:2] for p in
