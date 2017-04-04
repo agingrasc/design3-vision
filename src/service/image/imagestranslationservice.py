@@ -1,56 +1,15 @@
-import numpy as np
-
 from math import acos
-import math
+
+import numpy as np
 
 import config
 from domain.geometry.coordinate import Coordinate
+from domain.geometry.transformationmatrixbuilder import TransformationMatrixBuilder
 from domain.world.drawingarea import DrawingArea
 from domain.world.robot import Robot
 from domain.world.table import Table
 from domain.world.world import World
 from service.image.worldstate import WorldState
-
-
-class TransformBuilder:
-    def __init__(self):
-        self._transform_matrix = np.array([
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1]
-        ])
-
-    def rotate(self, angle):
-        rad_angle = np.deg2rad(angle)
-
-        self._transform_matrix = np.dot(np.array([
-            [math.cos(rad_angle), -1 * math.sin(rad_angle), 0],
-            [math.sin(rad_angle), math.cos(rad_angle), 0],
-            [0, 0, 1]
-        ]), self._transform_matrix)
-
-        return self
-
-    def scale(self, scale_factor):
-        self._transform_matrix = np.dot(np.array([
-            [scale_factor, 0, 0],
-            [0, scale_factor, 0],
-            [0, 0, 1]
-        ]), self._transform_matrix)
-
-        return self
-
-    def translate(self, x, y):
-        self._transform_matrix = np.dot(np.array([
-            [1, 0, x],
-            [0, 1, y],
-            [0, 0, 1]
-        ]), self._transform_matrix)
-
-        return self
-
-    def build(self):
-        return self._transform_matrix
 
 
 class ImageToWorldTranslator:
@@ -119,7 +78,7 @@ class ImageToWorldTranslator:
         segmented_image_center = np.array([segmented_image_width / 2 * scaling, segmented_image_width / 2 * scaling])
         translation = (drawing_area_center - segmented_image_center).tolist()
 
-        scale_matrix = TransformBuilder() \
+        scale_matrix = TransformationMatrixBuilder() \
             .scale(scaling) \
             .translate(-segmented_image_center[0], -segmented_image_center[1]) \
             .rotate(orientation) \
