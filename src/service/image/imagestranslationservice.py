@@ -189,7 +189,7 @@ class ImageToWorldTranslator:
     def _get_element_dimension(self, corners):
         sides = self._get_four_sides_dimensions(corners)
         return {
-            "length": sides[0],
+            "length": sides[1],
             "width": sides[3]
         }
 

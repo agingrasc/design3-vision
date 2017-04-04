@@ -26,6 +26,6 @@ if __name__ == '__main__':
         image = cv2.resize(image, None, fx=0.7, fy=0.7, interpolation=cv2.INTER_CUBIC)
 
         cv2.imshow('image', image)
-        # cv2.imwrite('./data/images/robot_feed/image{}.jpg'.format(index), image)
+        # cv2.imwrite('../data/images/robot_feed/image{}.jpg'.format(index), image)
         index += 1
         cv2.waitKey(1)
