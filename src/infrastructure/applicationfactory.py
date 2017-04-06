@@ -9,8 +9,14 @@ from io import BytesIO
 
 import config
 from service.image.imagedetectionservice import ImageDetectionService
-from service.image.imagesegmentation import segment_image
+from service.image.imagesegmentation import segment_image, NoSegmentsFound
 
+ORIENTATION = {
+    "SOUTH": 0,
+    "NORTH": 180,
+    "EAST": 270,
+    "WEST": 90
+}
 
 class ApplicationFactory:
     def create_detection_service(self, detectors):
@@ -49,6 +55,7 @@ class ApplicationFactory:
                 data = request.json
 
             path = data['data']['path']
+            data_logger.reset_robot_positions()
             data_logger.set_path(image_to_world_translation.translate_path(path))
             return make_response(jsonify({"message": "ok"}))
 
@@ -78,27 +85,34 @@ class ApplicationFactory:
                 image = cv2.imread(random.choice(images))
                 data = request.json
                 scaling_factor = float(data['scaling'])
-                orientation = float(data['orientation'])
-                segments, segmented_image, center_of_mass, mask = segment_image(image)
-                segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
-                                                                                         scaling_factor, orientation)
-                data_logger.set_figure_drawing(segments)
+                orientation = float(ORIENTATION[data['orientation']])
 
-                success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
-                ret, mask_encoded = cv2.imencode('.jpg', mask)
+                try:
+                    segments, segmented_image, center_of_mass, mask = segment_image(image)
+                    segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
+                                                                                             scaling_factor,
+                                                                                             orientation)
+                    data_logger.set_figure_drawing(segments)
 
-                body = {
-                    "image": base64.b64encode(segmented_image_encoded).decode('utf-8'),
-                    "thresholded_image": base64.b64encode(mask_encoded).decode('utf-8'),
-                    "segments": world_segments
-                }
+                    success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
+                    ret, mask_encoded = cv2.imencode('.jpg', mask)
+
+                    body = {
+                        "image": base64.b64encode(segmented_image_encoded).decode('utf-8'),
+                        "thresholded_image": base64.b64encode(mask_encoded).decode('utf-8'),
+                        "segments": world_segments
+                    }
+                except NoSegmentsFound as e:
+                    body = {
+                        "error": type(e).__name__
+                    }
 
                 return make_response(jsonify(body))
             else:
                 data = request.json
 
                 scaling_factor = float(data['scaling'])
-                orientation = float(data['orientation'])
+                orientation = float(ORIENTATION[data['orientation']])
 
                 try:
                     image = base64.b64decode(data['image'])
@@ -108,7 +122,8 @@ class ApplicationFactory:
                     success, segmented_image_encoded = cv2.imencode('.jpg', segmented_image)
                     success, mask_encoded = cv2.imencode('.jpg', opencv_image)
                     segments, world_segments = image_to_world_translation.transform_segments(segmented_image, segments,
-                                                                                             scaling_factor, orientation)
+                                                                                             scaling_factor,
+                                                                                             orientation)
                     data_logger.set_figure_drawing(segments)
                     body = {
                         "image": base64.b64encode(segmented_image_encoded).decode('utf-8'),
@@ -119,5 +134,7 @@ class ApplicationFactory:
                 except KeyError:
                     error_message = "No image in request"
                     return make_response(jsonify({"error": error_message}), 404)
+                except NoSegmentsFound as e:
+                    return make_response(jsonify({"error": type(e).__name__}), 404)
 
         return api

@@ -18,10 +18,10 @@ if __name__ == '__main__':
 
         try:
             found_segments, inner_figure, center_of_mass, figure_mask = segment_image(image)
-            cv2.imshow('thres', figure_mask)
+            cv2.imshow('thres', inner_figure)
 
         except Exception as e:
-            print(e)
+            print(type(e).__name__)
 
         image = cv2.resize(image, None, fx=0.7, fy=0.7, interpolation=cv2.INTER_CUBIC)
 

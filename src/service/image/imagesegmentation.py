@@ -52,10 +52,14 @@ def find_center_of_mass(contour):
     return [center_x, center_y]
 
 
+class NoSegmentsFound(Exception):
+    pass
+
+
 def segment_image(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_green_hsv = np.array([30, 100, 100])
-    upper_green_hsv = np.array([80, 200, 255])
+    upper_green_hsv = np.array([80, 255, 255])
     mask = cv2.inRange(image, lower_green_hsv, upper_green_hsv)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel, iterations=1)
@@ -68,12 +72,12 @@ def segment_image(image):
         peri = cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, 0.045 * peri, True)
 
-        if len(approx) == 4 and cv2.contourArea(approx) > 10000 and cv2.isContourConvex(approx):
+        if len(approx) == 4 and cv2.contourArea(approx) > 9000 and cv2.isContourConvex(approx):
             src_pts = np.array([x[0] for x in approx])
             inner_figure = straigthen_figure(image, src_pts)
 
             inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_BGR2HSV)
-            lower_background = np.array([0, 0, 150])
+            lower_background = np.array([0, 0, 80])
             upper_background = np.array([180, 50, 255])
             figure_mask = cv2.inRange(inner_figure, lower_background, upper_background)
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
