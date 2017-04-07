@@ -19,14 +19,15 @@ class Calibration:
         self._target_points = self._init_calibration_target_points()
 
     def collect_target_image(self, image):
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         has_target, corners = cv2.findChessboardCorners(image, self._target_shape)
+
         if has_target:
             corners = cv2.cornerSubPix(image, corners, (5, 5), (-1, -1), STOP_CRITERIA)
             self._target_image_points.append(corners)
             self._target_object_points.append(self._target_points)
             self._calibration_images.append(image)
             cv2.drawChessboardCorners(image, self._target_shape, corners, has_target)
+            cv2.imshow('Target', image)
         else:
             raise CalibrationTargetNotFoundError
 

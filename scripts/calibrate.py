@@ -3,14 +3,14 @@ import glob
 import json
 
 import cv2
-from camera.camerafactory import CameraFactory
 
+from domain.camera.camerafactory import CameraFactory
 from domain.camera.calibration import CalibrationTargetNotFoundError
 from service.camera.calibrationservice import CalibrationService
 
 
 def calibrate_from_video_capture(calibration_service, camera_factory):
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
@@ -18,19 +18,21 @@ def calibrate_from_video_capture(calibration_service, camera_factory):
 
     images = 0
 
-    calibration = calibration_service.create_calibration((6, 4))
+    calibration = calibration_service.create_calibration((4, 4))
 
     while images != 20 and cap.isOpened():
         ret, image = cap.read()
 
         if ret:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
             cv2.imshow('Calibration', image)
             key = cv2.waitKey(1)
 
             if key == ord('s'):
                 try:
                     print('Adding image {}'.format(images))
-                    calibration.collect_target_image(image)
+                    calibration.collect_target_image(image.copy())
                     images += 1
                     print(images)
                 except CalibrationTargetNotFoundError as e:
@@ -52,10 +54,10 @@ if __name__ == '__main__':
     now = datetime.datetime.now()
     print('New calibration {}'.format(now))
 
-    # camera_model = calibrate_from_video_capture()
+    camera_model = calibrate_from_video_capture(calibration_service, camera_factory)
 
-    images = [cv2.imread(filename) for filename in glob.glob('../data/images/calibrations/2017-02-25-1/*.jpg')]
-    camera_model = calibration_service.calibrate_from_images((9, 6), images)
+    # images = [cv2.imread(filename) for filename in glob.glob('../data/images/calibrations/2017-02-25-1/*.jpg')]
+    # camera_model = calibration_service.calibrate_from_images((9, 6), images)
 
     camera_model_dto = camera_factory.create_camera_model_dto(camera_model)
     models = [camera_model_dto]
