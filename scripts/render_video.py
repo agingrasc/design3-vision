@@ -18,7 +18,7 @@ if __name__ == '__main__':
     _out = cv2.VideoWriter()
     _out.open('/Users/jeansebastien/Desktop/robot_feed-{}.avi'.format(datetime.datetime.now()), fourcc, 5, (1120, 840), True)
 
-    images = glob.glob('./data/images/robot_feed/*.jpg')
+    images = glob.glob('../data/images/robot_feed/*.jpg')
     images.sort(key=natural_keys)
 
     images_data = []

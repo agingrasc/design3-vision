@@ -21,7 +21,7 @@ if __name__ == '__main__':
             cv2.imshow('thres', inner_figure)
 
         except Exception as e:
-            print(type(e).__name__)
+            print("NoSegmentsInImage")
 
         image = cv2.resize(image, None, fx=0.7, fy=0.7, interpolation=cv2.INTER_CUBIC)
 
