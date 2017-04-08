@@ -18,6 +18,7 @@ ORIENTATION = {
     "WEST": 90
 }
 
+
 class ApplicationFactory:
     def create_detection_service(self, detectors):
         detection_service = ImageDetectionService()
@@ -38,6 +39,11 @@ class ApplicationFactory:
         @api.route('/vision/reset-detection', methods=['POST'])
         def reset_detection():
             detection_service.reset_detection()
+            return make_response(jsonify({"message": "ok"}))
+
+        @api.route('/vision/reset-obstacles', methods=['POST'])
+        def reset_obstacles():
+            detection_service.reset_obstacles()
             return make_response(jsonify({"message": "ok"}))
 
         @api.route('/world-dimensions')

@@ -1,4 +1,5 @@
 from domain.detector.worldelement.iworldelementdetector import IWorldElementDetector
+from domain.detector.worldelement.obstaclepositiondetector import ObstacleDetector
 from service.image.detectonceproxy import DetectOnceProxy
 
 
@@ -31,6 +32,12 @@ class ImageDetectionService:
         for detector in self._detectors:
             if isinstance(detector, DetectOnceProxy):
                 detector.reset_detection()
+
+    def reset_obstacles(self):
+        for detector in self._detectors:
+            if isinstance(detector, DetectOnceProxy):
+                if isinstance(detector._detector, ObstacleDetector):
+                    detector.reset_detection()
 
     def detector_is_registered(self, detector):
         return detector in self._detectors

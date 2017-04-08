@@ -97,7 +97,7 @@ class MessageAssembler:
         if obstacles is not None:
             return [{"position": {"x": obstacle._world_position[0], "y": obstacle._world_position[1]},
                      "tag": obstacle._orientation.upper(),
-                     "dimension": {"width": "190", "length": "190"}}
+                     "dimension": {"width": "200", "length": "200"}}
                     for obstacle in obstacles]
         else:
             return []

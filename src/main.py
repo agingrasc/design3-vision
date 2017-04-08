@@ -108,7 +108,6 @@ class VisionApplication:
                     try:
                         world_state_dto = message_assembler.create_world_state_dto(image, world_state)
                         connection.send(json.dumps(world_state_dto))
-                        ok = connection.recv()
                     except NameError as e:
                         print(e)
 
