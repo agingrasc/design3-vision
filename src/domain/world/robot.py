@@ -8,10 +8,11 @@ from domain.world.worldelement import WorldElement
 
 class Robot(WorldElement):
     def __init__(self, position, orientation_vector, frame):
-        self._image_position = position
+        self._position = position
         self._orientation_vector = orientation_vector
         self._angle = self._get_angle_from(self._orientation_vector)
         self._frame = frame
+        self._image_position = position
         self._world_position = None
 
     def draw_in(self, image):
