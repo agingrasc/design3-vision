@@ -3,7 +3,6 @@ import numpy as np
 BASESTATION_WEBSOCKET_URL = 'ws://localhost:3000'
 CAMERA_MODELS_FILE_PATH = '../data/camera_models/camera_models.json'
 TABLE_CAMERA_MODEL_ID = 2
-TEST_IMAGE_DIRECTORY_PATH = '../data/images/full_scene/*.jpg'
 CAMERA_ID = 1
 CAP_WIDTH = 1280
 CAP_HEIGHT = 800
@@ -12,8 +11,8 @@ CAP_HEIGHT = 800
 LOWER_GREEN_HSV = np.array([45, 45, 100])
 UPPER_GREEN_HSV = np.array([80, 255, 255])
 
-LOWER_FUCHSIA_HSV = np.array([148, 5, 100])
-HIGHER_FUCHSIA_HSV = np.array([180, 255, 255])
+LOWER_FUCHSIA_HSV = np.array([145, 5, 50])
+HIGHER_FUCHSIA_HSV = np.array([175, 255, 255])
 
 LOWER_BACKGROUND = np.array([0, 0, 50])
 UPPER_BACKGROUND = np.array([180, 50, 255])
