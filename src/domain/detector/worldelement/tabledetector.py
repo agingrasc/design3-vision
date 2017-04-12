@@ -22,10 +22,8 @@ class TableDetector(IWorldElementDetector):
         return table
 
     def _threshold_table_color(self, image):
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(image, config.LOWER_TABLE_COLOR, config.UPPER_TABLE_COLOR)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+        mask = cv2.adaptiveThreshold(cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY), 255,
+                                     cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
         return mask
 
     def _find_table(self, image):

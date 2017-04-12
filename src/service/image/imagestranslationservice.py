@@ -50,7 +50,7 @@ class ImageToWorldTranslator:
             elif isinstance(image_element, list):
                 self._obstacles = [self._adjust_obstacle_position(obstacle) for obstacle in image_element]
 
-        if self._robot and self._world is not None:
+        if self._robot and self._world is not None and self._was_detected(Robot, image_elements):
             robot_target_to_world_in_mm = self._target_to_world_coordinate(self._world._target_to_world,
                                                                            self._robot._world_position)
             self._robot.set_world_position(robot_target_to_world_in_mm)
@@ -129,8 +129,8 @@ class ImageToWorldTranslator:
         return target_to_world_transform_matrix
 
     def _compute_and_set_projected_coordinates(self, robot):
-        target_coordinates = self._camera_model.image_to_target_coordinates(robot._image_position[0],
-                                                                            robot._image_position[1],
+        target_coordinates = self._camera_model.image_to_target_coordinates(robot._position[0],
+                                                                            robot._position[1],
                                                                             config.ROBOT_HEIGHT_IN_TARGET_UNIT)
         robot.set_world_position(target_coordinates)
 
@@ -213,6 +213,9 @@ class ImageToWorldTranslator:
                       target_path]
 
         return image_path
+
+    def _was_detected(self, world_element, world_elements):
+        return [isinstance(element, world_element) for element in world_elements].count(True) > 0
 
     def get_obstacles(self):
         return self._obstacles
