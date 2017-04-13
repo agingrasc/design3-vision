@@ -11,11 +11,11 @@ CAP_HEIGHT = 800
 LOWER_GREEN_HSV = np.array([45, 45, 100])
 UPPER_GREEN_HSV = np.array([80, 255, 255])
 
-LOWER_FUCHSIA_HSV = np.array([145, 5, 50])
-HIGHER_FUCHSIA_HSV = np.array([175, 255, 255])
+LOWER_FUCHSIA_HSV = np.array([140, 20, 70])
+HIGHER_FUCHSIA_HSV = np.array([170, 255, 255])
 
 LOWER_BACKGROUND = np.array([0, 0, 50])
-UPPER_BACKGROUND = np.array([180, 50, 255])
+UPPER_BACKGROUND = np.array([180, 60, 255])
 
 LOWER_FIGURE_HSV = np.array([30, 80, 75])
 UPPER_FIGURE_HSV = np.array([80, 255, 255])

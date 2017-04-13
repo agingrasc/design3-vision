@@ -3,9 +3,10 @@ import math
 import cv2
 
 from config import *
-from domain.detector.shape.squaredetector import SquareDetector
 from domain.detector.shape.circledetector import NoMatchingCirclesFound
+from domain.detector.shape.squaredetector import SquareDetector
 from domain.detector.worldelement.iworldelementdetector import IWorldElementDetector
+from domain.geometry.closestpair import closestpair
 from domain.world.robot import Robot
 
 
@@ -20,9 +21,13 @@ class RobotDetector(IWorldElementDetector):
 
     def detect(self, image):
         threshold = self._threshold_robot_makers(image)
+        cv2.imshow('threshold', threshold)
         contours = self._detect_robot_markers_contours(threshold)
 
         robot_markers = np.array([self._find_center_of_mass(contour) for contour in contours])
+
+        if len(robot_markers) > 3:
+            robot_markers = self._filter_contours(robot_markers)
 
         if self._ensure_has_all_markers(robot_markers):
             raise NoMatchingCirclesFound
@@ -41,7 +46,8 @@ class RobotDetector(IWorldElementDetector):
 
     def _detect_robot_markers_contours(self, threshold):
         contours = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
-        contours = [contour for contour in contours if cv2.contourArea(contour) > 200]
+        contours = [contour for contour in contours if
+                    cv2.contourArea(contour) > 300 and cv2.contourArea(contour) < 800]
         return np.array(contours)
 
     def _get_robot_position(self, targets_center):
@@ -55,9 +61,7 @@ class RobotDetector(IWorldElementDetector):
 
     def _get_leading_marker(self, markers):
         distance_1 = euc_distance(markers[0], markers[1])
-
         distance_2 = euc_distance(markers[0], markers[2])
-
         distance_3 = euc_distance(markers[1], markers[2])
 
         if distance_1 > distance_2 and distance_3 > distance_2:
@@ -76,10 +80,15 @@ class RobotDetector(IWorldElementDetector):
     def _ensure_has_all_markers(self, markers):
         return len(markers) < NUMBER_OF_MARKERS
 
-    def _detect_robot_frame(self, image):
-        squares = SquareDetector(self._shape_factory).detect(image)
-        squares = [square for square in squares if 14000 <= square.area() <= 18000]
-        if len(squares) > 0:
-            return squares[0]
-        else:
-            return None
+    def _filter_contours(self, robot_markers):
+        closest = closestpair(robot_markers.astype('int').tolist())
+        other = None
+        for marker in robot_markers.astype('int').tolist():
+            if marker not in closest:
+                if other is None:
+                    other = marker
+                else:
+                    if euc_distance(marker, closest[0]) < euc_distance(other, closest[0]):
+                        other = marker
+        closest.append(other)
+        return np.array(closest)

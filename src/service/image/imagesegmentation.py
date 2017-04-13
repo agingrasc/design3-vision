@@ -100,7 +100,10 @@ def segment_image(image):
                     cv2.drawContours(inner_figure, [approx_2], -1, (10, 255, 255), 2)
 
             inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_HSV2BGR)
-            center_of_mass = find_center_of_mass(found_segments)
+            try:
+                center_of_mass = find_center_of_mass(found_segments)
+            except Exception as e:
+                print(type(e).__name__)
 
             cv2.circle(inner_figure, tuple(center_of_mass), 12, (255, 255, 255), 2)
             cv2.circle(inner_figure, tuple(center_of_mass), 2, (255, 255, 255), 1)
