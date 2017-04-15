@@ -17,6 +17,7 @@ def straigthen_figure(image, contour_pts):
     source_points = order_points(contour_pts)
 
     (tl, tr, br, bl) = source_points
+
     widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
     widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
 
@@ -30,23 +31,23 @@ def straigthen_figure(image, contour_pts):
         [0, max_height]], dtype="float32")
 
     M = cv2.getPerspectiveTransform(source_points, destination_points)
+
     if M is not None:
-        straigthen_image = cv2.warpPerspective(image, M, (max_width, max_height))
-        return straigthen_image
+        return cv2.warpPerspective(image, M, (max_width, max_height))
 
 
 def order_points(pts):
-    rect = np.zeros((4, 2), dtype="float32")
+    rectangle = np.zeros((4, 2), dtype="float32")
 
-    s = pts.sum(axis=1)
-    rect[0] = pts[np.argmin(s)]
-    rect[2] = pts[np.argmax(s)]
+    total_sum = pts.sum(axis=1)
+    rectangle[0] = pts[np.argmin(total_sum)]
+    rectangle[2] = pts[np.argmax(total_sum)]
 
     diff = np.diff(pts, axis=1)
-    rect[1] = pts[np.argmin(diff)]
-    rect[3] = pts[np.argmax(diff)]
+    rectangle[1] = pts[np.argmin(diff)]
+    rectangle[3] = pts[np.argmax(diff)]
 
-    return rect
+    return rectangle
 
 
 def find_center_of_mass(contour):
@@ -56,7 +57,7 @@ def find_center_of_mass(contour):
     return [center_x, center_y]
 
 
-def threshold_image(image):
+def threshold_green(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(image, LOWER_FIGURE_HSV, UPPER_FIGURE_HSV)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
@@ -67,7 +68,7 @@ def threshold_image(image):
 
 
 def segment_image(image):
-    mask = threshold_image(image)
+    mask = threshold_green(image)
 
     ret, contours, hierachy = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -80,15 +81,18 @@ def segment_image(image):
         if len(approx) == 4 and cv2.contourArea(approx) > 9000 and cv2.isContourConvex(approx) and not figure_found:
             src_pts = np.array([x[0] for x in approx])
             inner_figure = straigthen_figure(image, src_pts)
-            inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_BGR2HSV)
 
+            inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_BGR2HSV)
             figure_mask = cv2.inRange(inner_figure, LOWER_BACKGROUND, UPPER_BACKGROUND)
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, ksize=(3, 3))
             figure_mask = cv2.morphologyEx(figure_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
             figure_mask = (255 - figure_mask)
 
-            ret_2, contours_2, hierachy_2 = cv2.findContours(figure_mask.copy(), cv2.RETR_LIST,
-                                                             cv2.CHAIN_APPROX_SIMPLE)
+            ret_2, contours_2, hierachy_2 = cv2.findContours(
+                figure_mask.copy(),
+                cv2.RETR_LIST,
+                cv2.CHAIN_APPROX_SIMPLE
+            )
 
             found_segments = []
             for contour_2 in contours_2:
@@ -100,17 +104,16 @@ def segment_image(image):
                     cv2.drawContours(inner_figure, [approx_2], -1, (10, 255, 255), 2)
 
             inner_figure = cv2.cvtColor(inner_figure, cv2.COLOR_HSV2BGR)
-            try:
+
+            if len(found_segments) > 0:
                 center_of_mass = find_center_of_mass(found_segments)
-            except Exception as e:
-                print(type(e).__name__)
 
-            cv2.circle(inner_figure, tuple(center_of_mass), 12, (255, 255, 255), 2)
-            cv2.circle(inner_figure, tuple(center_of_mass), 2, (255, 255, 255), 1)
+                cv2.circle(inner_figure, tuple(center_of_mass), 12, (255, 255, 255), 2)
+                cv2.circle(inner_figure, tuple(center_of_mass), 2, (255, 255, 255), 1)
 
-            figure_found = True
+                figure_found = True
 
-            return found_segments, inner_figure, center_of_mass, figure_mask
-
-    if not figure_found:
+    if figure_found:
+        return found_segments, inner_figure, center_of_mass, figure_mask
+    else:
         raise NoSegmentsFound

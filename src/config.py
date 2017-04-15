@@ -14,8 +14,8 @@ UPPER_GREEN_HSV = np.array([80, 255, 255])
 LOWER_FUCHSIA_HSV = np.array([140, 20, 70])
 HIGHER_FUCHSIA_HSV = np.array([170, 255, 255])
 
-LOWER_BACKGROUND = np.array([0, 0, 50])
-UPPER_BACKGROUND = np.array([180, 60, 255])
+LOWER_BACKGROUND = np.array([0, 0, 60])
+UPPER_BACKGROUND = np.array([180, 50, 255])
 
 LOWER_FIGURE_HSV = np.array([30, 80, 75])
 UPPER_FIGURE_HSV = np.array([80, 255, 255])
