@@ -18,7 +18,7 @@ def calibrate_from_video_capture(calibration_service, camera_factory):
 
     images = 0
 
-    calibration = calibration_service.create_calibration((4, 4))
+    calibration = calibration_service.create_calibration((9, 9))
 
     while images != 20 and cap.isOpened():
         ret, image = cap.read()

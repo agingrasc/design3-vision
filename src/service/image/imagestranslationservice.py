@@ -194,10 +194,10 @@ class ImageToWorldTranslator:
         }
 
     def _get_four_sides_dimensions(self, table_corners):
-        return sorted([table_corners[0].distance_from(table_corners[1]) * 4.4,
-                       table_corners[1].distance_from(table_corners[2]) * 4.4,
-                       table_corners[2].distance_from(table_corners[3]) * 4.4,
-                       table_corners[3].distance_from(table_corners[0]) * 4.4])
+        return sorted([table_corners[0].distance_from(table_corners[1]) * config.TARGET_SIDE_LENGTH / 10,
+                       table_corners[1].distance_from(table_corners[2]) * config.TARGET_SIDE_LENGTH / 10,
+                       table_corners[2].distance_from(table_corners[3]) * config.TARGET_SIDE_LENGTH / 10,
+                       table_corners[3].distance_from(table_corners[0]) * config.TARGET_SIDE_LENGTH / 10])
 
     def _to_coordinates_list(self, points):
         return [Coordinate(point[0], point[1]) for point in points]

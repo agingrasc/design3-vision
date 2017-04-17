@@ -35,10 +35,10 @@ class VisionApplication:
 
     def start(self):
         self._started = True
-        WEB_SOCKET = True
+        WEB_SOCKET = False
         VIDEO_DEBUG = not WEB_SOCKET
         VIDEO_WRITE = False
-        VERBOSE = True
+        VERBOSE = False
 
         message_assembler = MessageAssembler()
         rendering_engine = RenderingEngine()
@@ -73,8 +73,8 @@ class VisionApplication:
         api_thread = Thread(target=api.run, kwargs={"host": '0.0.0.0'})
         api_thread.start()
 
-        image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
-        # image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video26.avi')
+        # image_source = VideoStreamImageSource(config.CAMERA_ID, VIDEO_WRITE)
+        image_source = SaveVideoImageSource('/Users/jeansebastien/Desktop/videos/video27.avi')
 
         if WEB_SOCKET:
             try:
